@@ -46,5 +46,101 @@
     "level": "info",
     "message": "Session start processing completed",
     "data": null
+  },
+  {
+    "timestamp": "2025-09-17T16:08:43.447092",
+    "level": "info",
+    "message": "Processing session start",
+    "data": null
+  },
+  {
+    "timestamp": "2025-09-17T16:08:43.447368",
+    "level": "info",
+    "message": "Session started",
+    "data": {
+      "session_id": "03b43c36-602b-4794-b6ba-d41f71853cd1",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/03b43c36-602b-4794-b6ba-d41f71853cd1.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "hook_event_name": "SessionStart",
+      "source": "startup"
+    }
+  },
+  {
+    "timestamp": "2025-09-17T16:08:43.646369",
+    "level": "info",
+    "message": "Session start processing completed",
+    "data": null
+  },
+  {
+    "timestamp": "2025-09-17T16:24:17.199548",
+    "level": "info",
+    "message": "Processing session start",
+    "data": null
+  },
+  {
+    "timestamp": "2025-09-17T16:24:17.199903",
+    "level": "info",
+    "message": "Session started",
+    "data": {
+      "session_id": "c5e6a2f0-72df-42db-a227-28c726c0651d",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/c5e6a2f0-72df-42db-a227-28c726c0651d.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "hook_event_name": "SessionStart",
+      "source": "resume"
+    }
+  },
+  {
+    "timestamp": "2025-09-17T16:24:17.395750",
+    "level": "info",
+    "message": "Session start processing completed",
+    "data": null
+  },
+  {
+    "timestamp": "2025-09-17T16:26:09.212748",
+    "level": "info",
+    "message": "Processing session start",
+    "data": null
+  },
+  {
+    "timestamp": "2025-09-17T16:26:09.213063",
+    "level": "info",
+    "message": "Session started",
+    "data": {
+      "session_id": "45a3a68a-0d90-474c-9622-c5403dc32af7",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/45a3a68a-0d90-474c-9622-c5403dc32af7.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "hook_event_name": "SessionStart",
+      "source": "startup"
+    }
+  },
+  {
+    "timestamp": "2025-09-17T16:26:09.366071",
+    "level": "info",
+    "message": "Session start processing completed",
+    "data": null
+  },
+  {
+    "timestamp": "2025-09-17T16:27:28.968387",
+    "level": "info",
+    "message": "Processing session start",
+    "data": null
+  },
+  {
+    "timestamp": "2025-09-17T16:27:28.968706",
+    "level": "info",
+    "message": "Session started",
+    "data": {
+      "session_id": "9340ced5-d5cc-4349-ae86-5598c367d1b6",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/9340ced5-d5cc-4349-ae86-5598c367d1b6.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "hook_event_name": "SessionStart",
+      "source": "startup"
+    }
+  },
+  {
+    "timestamp": "2025-09-17T16:27:29.109974",
+    "level": "info",
+    "message": "Session start processing completed",
+    "data": null
   }
 ]
