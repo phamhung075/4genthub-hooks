@@ -1,0 +1,32 @@
+{
+    "mcpServers": {
+        "sequential-thinking": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ],
+            "env": {}
+        },
+        "agenthub_http": {
+            "type": "http",
+            "url": "http://localhost:8000/mcp",
+            "headers": {
+                "Accept": "application/json, text/event-stream",
+                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMGRlNGM1ZC0yYTk3LTQzMjQtYWJjZC05ZGFlMzkyMjc2MWUiLCJzY29wZXMiOlsib3BlbmlkIiwicHJvZmlsZSIsImVtYWlsIiwib2ZmbGluZV9hY2Nlc3MiLCJtY3AtYXBpIiwibWNwLXJvbGVzIiwibWNwLXByb2ZpbGUiLCJwcm9qZWN0czpjcmVhdGUiLCJwcm9qZWN0czpyZWFkIiwicHJvamVjdHM6dXBkYXRlIiwicHJvamVjdHM6ZGVsZXRlIiwidGFza3M6Y3JlYXRlIiwidGFza3M6cmVhZCIsInRhc2tzOnVwZGF0ZSIsInRhc2tzOmRlbGV0ZSIsInN1YnRhc2tzOmNyZWF0ZSIsInN1YnRhc2tzOnJlYWQiLCJzdWJ0YXNrczp1cGRhdGUiLCJzdWJ0YXNrczpkZWxldGUiLCJjb250ZXh0czpjcmVhdGUiLCJjb250ZXh0czpyZWFkIiwiY29udGV4dHM6dXBkYXRlIiwiY29udGV4dHM6ZGVsZXRlIiwiYWdlbnRzOmNyZWF0ZSIsImFnZW50czpyZWFkIiwiYWdlbnRzOnVwZGF0ZSIsImFnZW50czpkZWxldGUiLCJicmFuY2hlczpjcmVhdGUiLCJicmFuY2hlczpyZWFkIiwiYnJhbmNoZXM6dXBkYXRlIiwiYnJhbmNoZXM6ZGVsZXRlIiwibWNwOmV4ZWN1dGUiLCJtY3A6ZGVsZWdhdGUiXSwidHlwZSI6ImFwaV90b2tlbiIsImF1ZCI6Im1jcC1zZXJ2ZXIiLCJpYXQiOjE3NTgxMTc5NTcsImV4cCI6MTc2MDcwOTk1NywiaXNzIjoiYWdlbnRodWIiLCJqdGkiOiJ0b2tfMWMwMWE3YzUyMDcxYTgxMyJ9.GV2tFw78TTgi-u-XlOli7TCfv4mQLTBpzJcw1BQUQS4"
+            }
+        },
+        "shadcn-ui-server": {
+            "command": "npx",
+            "args": [
+                "@heilgar/shadcn-ui-mcp-server"
+            ]
+        },
+        "browsermcp": {
+            "command": "npx",
+            "args": [
+                "@browsermcp/mcp@latest"
+            ]
+        }
+    }
+}

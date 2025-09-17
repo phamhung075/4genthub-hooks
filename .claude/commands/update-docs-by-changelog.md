@@ -1,0 +1,1 @@
+launch a specialized agent to review the CHANGELOG and clean up the documentation by removing obsolete,duplicate, or similar documents, keeping only one version for easier maintenance.

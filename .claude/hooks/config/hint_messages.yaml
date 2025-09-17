@@ -1,0 +1,163 @@
+# Hint messages configuration for Claude hooks
+# Contextual hints and guidance for AI agents
+
+# System messages
+pending_reminders_header: "📌 PENDING REMINDERS FROM PREVIOUS ACTIONS:"
+
+# Pre-tool hints for guidance
+pre_tool_hints:
+  read_file:
+    message: "📖 Reading file: {file_path}"
+    hint: "Consider if this file needs documentation updates after reading"
+
+  write_file:
+    message: "✍️ Creating file: {file_path}"
+    hint: "Ensure file is in correct location per project structure rules"
+
+  edit_file:
+    message: "🔧 Editing file: {file_path}"
+    hint: "Keep related documentation in sync with changes"
+
+  bash_command:
+    message: "💻 Executing: {command}"
+    hint: "Verify command safety and consider logging for audit trail"
+
+# Post-tool hints for follow-up actions
+post_tool_hints:
+  file_created:
+    message: "✅ File created successfully"
+    hint: "Consider creating documentation if this is an important file"
+
+  file_modified:
+    message: "✅ File modified successfully"
+    hint: "Update any related documentation and tests if needed"
+
+  command_executed:
+    message: "✅ Command executed successfully"
+    hint: "Check output for any warnings or next steps needed"
+
+# MCP operation hints
+mcp_hints:
+  task_creation:
+    message: "Creating MCP task with comprehensive context"
+    hint: "Include specific file paths with line numbers for sub-agents"
+
+  task_delegation:
+    message: "Delegating to sub-agent with task_id only"
+    hint: "This saves 95% of tokens by referencing stored context"
+
+  agent_coordination:
+    message: "Coordinating multiple agents"
+    hint: "Use TodoWrite for tracking parallel agent work"
+
+# Documentation hints
+documentation_hints:
+  missing_docs:
+    message: "No documentation found for this file"
+    hint: "Consider creating documentation if this file is important"
+
+  docs_outdated:
+    message: "Documentation may be outdated"
+    hint: "Review and update documentation to reflect recent changes"
+
+  docs_sync_needed:
+    message: "Documentation update recommended"
+    hint: "Keep documentation in sync with code changes"
+
+# Agent workflow hints
+workflow_hints:
+  agent_switching:
+    message: "Agent context switch detected"
+    hint: "Ensure proper handoff of work context between agents"
+
+  role_violation:
+    message: "Tool not available for current agent role"
+    hint: "Delegate to appropriate agent type for this operation"
+
+  context_missing:
+    message: "Limited context available"
+    hint: "Consider loading additional context for better results"
+
+# Performance hints
+performance_hints:
+  large_operation:
+    message: "Large operation detected"
+    hint: "Consider breaking into smaller chunks for better performance"
+
+  cache_utilization:
+    message: "Using cached configuration"
+    hint: "Cache hit improves performance - configuration is current"
+
+  memory_usage:
+    message: "High memory usage detected"
+    hint: "Consider clearing caches or optimizing memory usage"
+
+# Security hints
+security_hints:
+  sensitive_file:
+    message: "Accessing configuration file"
+    hint: "Ensure no sensitive data is exposed in logs or outputs"
+
+  permission_check:
+    message: "Permission check in progress"
+    hint: "Following security protocols for file access"
+
+  audit_trail:
+    message: "Operation logged for audit"
+    hint: "Security logging active - all operations tracked"
+
+# Quality hints
+quality_hints:
+  code_review:
+    message: "Code changes detected"
+    hint: "Consider running tests and code quality checks"
+
+  test_coverage:
+    message: "New code added"
+    hint: "Ensure adequate test coverage for new functionality"
+
+  documentation_quality:
+    message: "Documentation updated"
+    hint: "Review documentation for clarity and completeness"
+
+# Project structure hints
+structure_hints:
+  root_file:
+    message: "Operating in project root"
+    hint: "Follow root file restrictions - only specific files allowed"
+
+  test_location:
+    message: "Test file operation"
+    hint: "Ensure test files are in designated test directories"
+
+  docs_structure:
+    message: "Documentation operation"
+    hint: "Follow kebab-case naming convention in ai_docs subdirectories"
+
+# Integration hints
+integration_hints:
+  api_call:
+    message: "Making API call"
+    hint: "Include proper error handling and timeout management"
+
+  database_operation:
+    message: "Database operation in progress"
+    hint: "Ensure transaction safety and data consistency"
+
+  external_service:
+    message: "Connecting to external service"
+    hint: "Implement retry logic for reliability"
+
+# Troubleshooting hints
+troubleshooting_hints:
+  error_recovery:
+    message: "Error detected - attempting recovery"
+    hint: "Check logs for detailed error information"
+
+  fallback_active:
+    message: "Using fallback mechanism"
+    hint: "Primary method failed but fallback is working"
+
+  debug_mode:
+    message: "Debug mode active"
+    hint: "Additional logging and traces are enabled"

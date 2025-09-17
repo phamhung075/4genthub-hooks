@@ -1,0 +1,154 @@
+[
+  {
+    "timestamp": "2025-09-17T15:58:46.762644",
+    "version": "v4",
+    "input_data": {
+      "session_id": "ac0f6f25-1d23-4849-a1bf-16cc3417420a",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/ac0f6f25-1d23-4849-a1bf-16cc3417420a.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "model": {
+        "id": "claude-opus-4-1-20250805",
+        "display_name": "Opus 4.1"
+      },
+      "workspace": {
+        "current_dir": "/home/daihungpham/__projects__/4genthub-hooks",
+        "project_dir": "/home/daihungpham/__projects__/4genthub-hooks"
+      },
+      "version": "1.0.117",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0,
+        "total_duration_ms": 1300,
+        "total_api_duration_ms": 0,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[91m\ud83d\udd10 MCP AUTH ERROR:\u001b[0m \u001b[93m.mcp.json file not found\u001b[0m \u001b[90m| Fix .mcp.json configuration\u001b[0m",
+    "error": "MCP Authentication Error: .mcp.json file not found"
+  },
+  {
+    "timestamp": "2025-09-17T15:58:46.762940",
+    "version": "v4",
+    "input_data": {
+      "session_id": "ac0f6f25-1d23-4849-a1bf-16cc3417420a",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/ac0f6f25-1d23-4849-a1bf-16cc3417420a.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "model": {
+        "id": "claude-opus-4-1-20250805",
+        "display_name": "Opus 4.1"
+      },
+      "workspace": {
+        "current_dir": "/home/daihungpham/__projects__/4genthub-hooks",
+        "project_dir": "/home/daihungpham/__projects__/4genthub-hooks"
+      },
+      "version": "1.0.117",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0,
+        "total_duration_ms": 1300,
+        "total_api_duration_ms": 0,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[91m\ud83d\udd10 MCP AUTH ERROR:\u001b[0m \u001b[93m.mcp.json file not found\u001b[0m \u001b[90m| Fix .mcp.json configuration\u001b[0m"
+  },
+  {
+    "timestamp": "2025-09-17T15:58:54.665356",
+    "version": "v4",
+    "input_data": {
+      "session_id": "ac0f6f25-1d23-4849-a1bf-16cc3417420a",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/ac0f6f25-1d23-4849-a1bf-16cc3417420a.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "model": {
+        "id": "claude-sonnet-4-20250514",
+        "display_name": "Sonnet 4"
+      },
+      "workspace": {
+        "current_dir": "/home/daihungpham/__projects__/4genthub-hooks",
+        "project_dir": "/home/daihungpham/__projects__/4genthub-hooks"
+      },
+      "version": "1.0.117",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.0004192,
+        "total_duration_ms": 9503,
+        "total_api_duration_ms": 2848,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[91m\ud83d\udd10 MCP AUTH ERROR:\u001b[0m \u001b[93m.mcp.json file not found\u001b[0m \u001b[90m| Fix .mcp.json configuration\u001b[0m",
+    "error": "MCP Authentication Error: .mcp.json file not found"
+  },
+  {
+    "timestamp": "2025-09-17T15:58:54.665628",
+    "version": "v4",
+    "input_data": {
+      "session_id": "ac0f6f25-1d23-4849-a1bf-16cc3417420a",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/ac0f6f25-1d23-4849-a1bf-16cc3417420a.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "model": {
+        "id": "claude-sonnet-4-20250514",
+        "display_name": "Sonnet 4"
+      },
+      "workspace": {
+        "current_dir": "/home/daihungpham/__projects__/4genthub-hooks",
+        "project_dir": "/home/daihungpham/__projects__/4genthub-hooks"
+      },
+      "version": "1.0.117",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.0004192,
+        "total_duration_ms": 9503,
+        "total_api_duration_ms": 2848,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[91m\ud83d\udd10 MCP AUTH ERROR:\u001b[0m \u001b[93m.mcp.json file not found\u001b[0m \u001b[90m| Fix .mcp.json configuration\u001b[0m"
+  },
+  {
+    "timestamp": "2025-09-17T16:06:18.615368",
+    "version": "v4",
+    "input_data": {
+      "session_id": "21c0e10b-b0a1-4f15-afdb-4bcf4c610d9b",
+      "transcript_path": "/home/daihungpham/.claude/projects/-home-daihungpham---projects---4genthub-hooks/21c0e10b-b0a1-4f15-afdb-4bcf4c610d9b.jsonl",
+      "cwd": "/home/daihungpham/__projects__/4genthub-hooks",
+      "model": {
+        "id": "claude-opus-4-1-20250805",
+        "display_name": "Opus 4.1"
+      },
+      "workspace": {
+        "current_dir": "/home/daihungpham/__projects__/4genthub-hooks",
+        "project_dir": "/home/daihungpham/__projects__/4genthub-hooks"
+      },
+      "version": "1.0.117",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0,
+        "total_duration_ms": 1394,
+        "total_api_duration_ms": 0,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[1;96m\u25c6 Opus 4.1\u001b[0m \u2022 \u001b[1;94m\ud83d\udcc1 4genthub-hooks\u001b[0m \u2022 \u001b[1;92m\ud83c\udf3f main\u001b[0m \u001b[93m\u00b19\u001b[0m \u2022 \u001b[92m\ud83d\udd17 MCP: \u2705 Connected (http://localhost:8000/mcp) 3ms\u001b[0m \u2022 \u001b[92m\ud83c\udfaf Active: master-orchestrator-agent\u001b[0m \u2022 \u001b[94m[Agent] [Orchestrating]\u001b[0m"
+  }
+]

@@ -1,0 +1,204 @@
+# Status line messages configuration for Claude hooks
+# Messages displayed in status lines and system indicators
+
+# Environment status messages
+docker_environment:
+  message: "🐳 Docker Environment"
+  hint: "Running in containerized environment with data persistence"
+
+local_environment:
+  message: "💻 Local Environment"
+  hint: "Running on local system with direct file access"
+
+development_mode:
+  message: "🔧 Development Mode"
+  hint: "Debug logging enabled, additional safety checks active"
+
+production_mode:
+  message: "🚀 Production Mode"
+  hint: "Optimized performance, minimal logging"
+
+# Agent status messages
+agent_active:
+  message: "🤖 {agent_name} Active"
+  hint: "Current agent: {agent_name} with {tool_count} available tools"
+
+agent_switching:
+  message: "🔄 Agent Switch: {old_agent} → {new_agent}"
+  hint: "Agent transition in progress"
+
+no_agent_loaded:
+  message: "⚠️ No Agent Loaded"
+  hint: "Call mcp__agenthub_http__call_agent to initialize"
+
+# Task status indicators
+active_tasks:
+  message: "📋 Active Tasks: {task_count}"
+  hint: "{in_progress} in progress, {pending} pending, {blocked} blocked"
+
+task_progress:
+  message: "⏳ {task_title}: {progress}%"
+  hint: "Current task progress indicator"
+
+no_active_tasks:
+  message: "✅ No Active Tasks"
+  hint: "All tasks completed or no tasks assigned"
+
+# System health indicators
+system_healthy:
+  message: "💚 System Healthy"
+  hint: "All systems operational, no issues detected"
+
+system_warning:
+  message: "⚠️ System Warning"
+  hint: "{warning_count} warnings detected - check logs"
+
+system_error:
+  message: "🔴 System Error"
+  hint: "{error_count} errors detected - immediate attention needed"
+
+# Memory and performance indicators
+memory_normal:
+  message: "💾 Memory: {usage}MB ({percentage}%)"
+  hint: "Memory usage within normal parameters"
+
+memory_high:
+  message: "⚠️ Memory: {usage}MB ({percentage}%)"
+  hint: "High memory usage - consider cleanup"
+
+cache_status:
+  message: "⚡ Cache: {hit_rate}% hit rate"
+  hint: "Cache performance indicator"
+
+# Network status indicators
+online:
+  message: "🌐 Online"
+  hint: "Network connectivity available"
+
+offline:
+  message: "📶 Offline"
+  hint: "No network connectivity - operating in offline mode"
+
+api_connected:
+  message: "🔗 API Connected"
+  hint: "External API services available"
+
+api_disconnected:
+  message: "🔌 API Disconnected"
+  hint: "External API services unavailable"
+
+# Session status indicators
+session_active:
+  message: "⏰ Session: {duration}"
+  hint: "Current session duration and activity level"
+
+session_idle:
+  message: "😴 Session Idle: {idle_time}"
+  hint: "Session idle - will expire in {time_remaining}"
+
+session_expired:
+  message: "⏰ Session Expired"
+  hint: "Session has expired - new session will be created"
+
+# File operation indicators
+file_operations_active:
+  message: "📁 File Ops: {operation_count}"
+  hint: "Active file operations in progress"
+
+documentation_sync:
+  message: "📚 Docs Sync"
+  hint: "Documentation synchronization in progress"
+
+backup_in_progress:
+  message: "💾 Backup Active"
+  hint: "System backup operation in progress"
+
+# Security status indicators
+security_active:
+  message: "🔒 Security Active"
+  hint: "Security monitoring and protection enabled"
+
+audit_logging:
+  message: "📝 Audit Log Active"
+  hint: "All operations being logged for audit trail"
+
+# Configuration status
+config_loaded:
+  message: "⚙️ Config Loaded"
+  hint: "All configuration files loaded successfully"
+
+config_error:
+  message: "⚠️ Config Error"
+  hint: "Configuration loading issues detected"
+
+# Tool usage indicators
+tools_available:
+  message: "🔧 Tools: {tool_count} available"
+  hint: "Currently available tools for active agent"
+
+tools_restricted:
+  message: "🔒 Tools: Restricted mode"
+  hint: "Agent has limited tool access due to role restrictions"
+
+# Quality indicators
+quality_checks_passed:
+  message: "✅ Quality OK"
+  hint: "All quality checks passing"
+
+quality_issues:
+  message: "⚠️ Quality Issues: {issue_count}"
+  hint: "Quality checks found issues requiring attention"
+
+# Integration status
+integrations_active:
+  message: "🔗 Integrations: {active_count}/{total_count}"
+  hint: "External service integrations status"
+
+sync_status:
+  message: "🔄 Sync: {sync_status}"
+  hint: "Data synchronization status across services"
+
+# Maintenance indicators
+maintenance_due:
+  message: "🔧 Maintenance Due"
+  hint: "System maintenance is overdue"
+
+maintenance_active:
+  message: "🔧 Maintenance Active"
+  hint: "System maintenance in progress"
+
+# Error and warning counters
+error_count:
+  message: "❌ Errors: {error_count}"
+  hint: "Total errors in current session"
+
+warning_count:
+  message: "⚠️ Warnings: {warning_count}"
+  hint: "Total warnings in current session"
+
+# Path indicators (for memory)
+ai_data_path:
+  message: "📊 AI_DATA: {path}"
+  hint: "Current AI data directory path"
+
+ai_docs_path:
+  message: "📚 AI_DOCS: {path}"
+  hint: "Current AI documentation directory path"
+
+# Progress indicators
+overall_progress:
+  message: "📈 Progress: {percentage}%"
+  hint: "Overall system progress indicator"
+
+batch_progress:
+  message: "📦 Batch: {current}/{total}"
+  hint: "Batch operation progress"
+
+# Time-based indicators
+uptime:
+  message: "⏱️ Uptime: {uptime}"
+  hint: "System uptime since last restart"
+
+last_activity:
+  message: "🕒 Last Activity: {time_ago}"
+  hint: "Time since last system activity"

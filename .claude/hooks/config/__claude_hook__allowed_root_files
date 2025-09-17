@@ -1,0 +1,53 @@
+# Allowed files in project root
+# One file name per line
+# These file names should be unique across the entire project
+
+# Core project files
+README.md
+CHANGELOG.md
+TEST-CHANGELOG.md
+CLAUDE.md
+CLAUDE.local.md
+
+# Git configuration
+.gitignore
+.gitattributes
+
+# Environment configuration (root only)
+.env
+.env.claude
+.env.sample
+.env.example
+.env.local
+.env.production
+.env.development
+.env.test
+
+# Package management
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+requirements.txt
+requirements-dev.txt
+pyproject.toml
+poetry.lock
+Pipfile
+Pipfile.lock
+
+# Build and deployment
+build-menu.sh
+test-menu.sh
+captain-definition.backend
+captain-definition.frontend
+
+# Python configuration
+setup.py
+setup.cfg
+
+# License
+LICENSE
+LICENSE.md
+
+
+loop-worker_testfix.sh

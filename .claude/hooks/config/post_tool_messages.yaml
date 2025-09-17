@@ -1,0 +1,181 @@
+# Post-tool messages configuration for Claude hooks
+# Messages displayed after tool execution
+
+# File operation post-messages
+read_success:
+  message: "✅ Read complete: {file_path}"
+  hint: "File content loaded - {line_count} lines, {size} bytes"
+
+write_success:
+  message: "✅ File created: {file_path}"
+  hint: "New file created successfully - consider adding documentation"
+
+edit_success:
+  message: "✅ Edit complete: {file_path}"
+  hint: "File modified - update related documentation if needed"
+
+multi_edit_success:
+  message: "✅ Multi-edit complete: {file_count} files modified"
+  hint: "Batch editing completed - verify all changes are correct"
+
+# Command execution post-messages
+bash_success:
+  message: "✅ Command executed: {command}"
+  hint: "Exit code: {exit_code}, Duration: {duration}ms"
+
+bash_failure:
+  message: "❌ Command failed: {command}"
+  hint: "Exit code: {exit_code}, Error: {error_message}"
+
+# Search and discovery post-messages
+grep_results:
+  message: "🔍 Search complete: {matches} matches found"
+  hint: "Pattern '{pattern}' found in {file_count} files"
+
+glob_results:
+  message: "📂 Pattern match: {file_count} files found"
+  hint: "Pattern '{pattern}' matched files in {directory_count} directories"
+
+# MCP tool post-messages
+mcp_task_success:
+  message: "📋 MCP Task {action} successful"
+  hint: "Task ID: {task_id}, Status: {status}"
+
+mcp_context_success:
+  message: "🗂️ MCP Context {action} successful"
+  hint: "Context updated for {entity_type}: {entity_id}"
+
+mcp_agent_success:
+  message: "🤖 MCP Agent {action} successful"
+  hint: "Agent: {agent_name}, Status: {status}"
+
+# Documentation post-messages
+documentation_updated:
+  message: "📚 Documentation synchronized"
+  hint: "Documentation at {doc_path} reflects current state"
+
+documentation_created:
+  message: "📝 Documentation created: {doc_path}"
+  hint: "New documentation file created for {target_file}"
+
+documentation_indexed:
+  message: "📊 Documentation index updated"
+  hint: "Index updated with {changes_count} changes"
+
+# Permission and security post-messages
+permission_granted:
+  message: "🔓 Permission granted for: {operation}"
+  hint: "Agent {agent_type} authorized for {tool_name}"
+
+security_scan_clean:
+  message: "✅ Security scan passed"
+  hint: "No sensitive data exposure detected"
+
+access_logged:
+  message: "📝 Access logged: {operation}"
+  hint: "Operation recorded in audit log"
+
+# Agent coordination post-messages
+agent_switched:
+  message: "🔄 Agent switched: {old_agent} → {new_agent}"
+  hint: "New agent tools and permissions now active"
+
+context_injected:
+  message: "💉 Context injected: {context_size} bytes"
+  hint: "Relevant context loaded for improved operation"
+
+delegation_complete:
+  message: "📋 Delegation complete: {target_agent}"
+  hint: "Sub-agent reported task completion"
+
+# Performance post-messages
+cache_hit:
+  message: "⚡ Cache hit: {cache_key}"
+  hint: "Data loaded from cache - performance improved"
+
+cache_miss:
+  message: "📁 Cache miss: {cache_key}"
+  hint: "Data loaded from source and cached for future use"
+
+performance_metrics:
+  message: "📊 Performance: {duration}ms"
+  hint: "Memory: {memory_mb}MB, Cache hits: {cache_hits}"
+
+# Workflow post-messages
+parallel_complete:
+  message: "🔀 Parallel operations complete"
+  hint: "All {operation_count} operations finished successfully"
+
+sequential_complete:
+  message: "➡️ Sequential operations complete"
+  hint: "All operations completed in order - total time: {duration}ms"
+
+batch_complete:
+  message: "📦 Batch processing complete"
+  hint: "Processed {item_count} items - {success_count} successful, {error_count} errors"
+
+# Validation post-messages
+validation_passed:
+  message: "✅ Validation successful: {validation_type}"
+  hint: "All checks passed - data is valid and consistent"
+
+validation_failed:
+  message: "❌ Validation failed: {validation_type}"
+  hint: "Errors found: {error_count} - check details for corrections needed"
+
+# Network operation post-messages
+api_call_success:
+  message: "🌐 API call successful: {endpoint}"
+  hint: "Status: {status_code}, Response time: {response_time}ms"
+
+api_call_failure:
+  message: "❌ API call failed: {endpoint}"
+  hint: "Status: {status_code}, Error: {error_message}"
+
+service_connected:
+  message: "🔗 Service connected: {service}"
+  hint: "Connection established - ready for operations"
+
+service_disconnected:
+  message: "🔌 Service disconnected: {service}"
+  hint: "Connection closed cleanly"
+
+# Recovery post-messages
+fallback_success:
+  message: "✅ Fallback successful"
+  hint: "Alternative method worked - primary method failed"
+
+retry_success:
+  message: "✅ Retry successful on attempt {attempt}"
+  hint: "Operation succeeded after {attempt} attempts"
+
+recovery_complete:
+  message: "🔄 Recovery complete"
+  hint: "System recovered from error - operations resumed"
+
+# Cleanup and maintenance post-messages
+cleanup_complete:
+  message: "🧹 Cleanup complete"
+  hint: "Removed {item_count} items, freed {space_mb}MB"
+
+maintenance_complete:
+  message: "🔧 Maintenance complete"
+  hint: "System maintenance finished - all systems operational"
+
+# Quality assurance post-messages
+quality_check_passed:
+  message: "✅ Quality check passed"
+  hint: "Code meets quality standards - no issues found"
+
+test_results:
+  message: "🧪 Test results: {passed}/{total} passed"
+  hint: "Test coverage: {coverage}%, Duration: {duration}s"
+
+# Integration post-messages
+integration_success:
+  message: "🔗 Integration successful: {integration_type}"
+  hint: "Services integrated and communicating properly"
+
+sync_complete:
+  message: "🔄 Synchronization complete"
+  hint: "Data synchronized across {system_count} systems"

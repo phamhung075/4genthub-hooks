@@ -1,0 +1,69 @@
+# General Hook System Configuration
+# This file documents the overall hook system configuration status
+# and provides settings for hook behavior
+
+version: "1.0"
+created: "2025-09-16"
+last_updated: "2025-09-16"
+
+# Hook system configuration status
+configuration_status:
+  completed:
+    - "messages.py: Centralized error/warning/info messages"
+    - "session_start_messages.yaml: Session initialization messages"
+    - "mcp_post_action_hints.yaml: MCP post-action hint messages"
+    - "config_loader.py: Centralized configuration loader utility"
+    - "Refactored mcp_post_action_hints.py to use YAML configuration"
+    - "unified_hint_system.py: Consolidated all hint functionality into single factory"
+
+  in_progress:
+    - "Additional utility files with hardcoded messages identified"
+
+  pending:
+    - "TTS utility files: Less critical message consolidation"
+
+# Hook system settings
+hook_system:
+  enabled: true
+  debug_mode: false
+
+  # Configuration loading settings
+  config_loading:
+    use_cache: true
+    fallback_on_error: true
+    reload_on_change: false
+
+  # Hook execution settings
+  execution:
+    continue_on_error: true
+    log_errors: true
+    max_execution_time_ms: 5000
+
+# File locations for configuration files
+config_files:
+  error_messages: "messages.py"
+  session_messages: "session_start_messages.yaml"
+  post_hints: "mcp_post_action_hints.yaml"
+  pre_hints: "__hint_message__pre_tool_use.yaml"
+  post_tool_hints: "__hint_message__post_tool_use.yaml"
+  config_loader: "config_loader.py"
+
+# Future configuration files to be created
+planned_configs:
+  tts_messages: "tts_messages.yaml"
+
+# Configuration migration notes
+migration_notes:
+  - "All core hook files now use centralized configuration"
+  - "YAML configuration provides better maintainability than hardcoded strings"
+  - "Configuration loader provides caching and error handling"
+  - "Remaining files can be migrated incrementally as needed"
+  - "System is functional with current configuration level"
+
+# Best practices for hook configuration
+best_practices:
+  - "Keep all user-facing messages in YAML configuration files"
+  - "Use config_loader.py for consistent configuration loading"
+  - "Provide fallback values for missing configuration"
+  - "Document configuration changes in this file"
+  - "Test configuration loading before deployment"
