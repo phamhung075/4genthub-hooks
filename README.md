@@ -1,12 +1,34 @@
 # 🚀 4genthub-hooks
 
-> **Intelligent Claude Code Hooks Client for 4agenthub MCP Server**
+> **Intelligent Claude Code Hooks Client for 4agenthub Hosted Service**
 >
-> A sophisticated hooks implementation that transforms Claude Code into an enterprise-grade AI agent orchestration system powered by the 4agenthub MCP server.
+> A sophisticated hooks implementation that transforms Claude Code into an enterprise-grade AI agent orchestration system powered by the **hosted** 4agenthub service.
+
+---
+
+## 🎆 **QUICK START - HOSTED SERVICE**
+
+**⚡ Get started in 3 minutes - no server setup required!**
+
+1. **Create Account**: [Register at 4genthub.com](https://www.4genthub.com) → Verify email
+2. **Get API Token**: Dashboard → API Tokens → Generate new token
+3. **Clone & Setup**: Clone hooks client → Remove `.git` → Rename folder → Initialize your own repo
+4. **Configure Client**: Update `.mcp.json` with your token
+5. **Start Coding**: Open in Claude Code - all 31+ agents ready instantly!
+
+✅ **Fully Hosted** - No local server installation
+✅ **Enterprise Security** - SOC2 compliant infrastructure
+✅ **99.9% Uptime** - Global CDN with high availability
+✅ **Auto-scaling** - Handles any workload automatically
+
+---
 
 ## 🌟 Overview
 
-4genthub-hooks is a comprehensive **client-side implementation** that seamlessly integrates Claude Code with the [4agenthub MCP Server](http://localhost:8000) to create a complete enterprise AI orchestration platform:
+> **⚡ HOSTED SERVICE - NO SERVER SETUP REQUIRED!**
+> 4genthub is a **fully hosted SaaS platform** - just create an account, get your API token, and start developing. No local server installation, configuration, or maintenance needed.
+
+4genthub-hooks is a comprehensive **client-side implementation** that seamlessly integrates Claude Code with the **hosted 4agenthub service** to create a complete enterprise AI orchestration platform:
 
 - 🤖 **31+ Specialized AI Agents** - From coding to architecture, testing to documentation
 - 📊 **Real-time Task Management** - Visual status tracking and progress monitoring
@@ -18,10 +40,10 @@
 
 ### The Complete System Architecture
 
-**4agenthub** (MCP Server) + **4genthub-hooks** (Claude Code Client) = Enterprise AI Orchestration Platform
+**4agenthub** (Hosted Service) + **4genthub-hooks** (Claude Code Client) = Enterprise AI Orchestration Platform
 
-#### 🖥️ 4agenthub MCP Server (`http://localhost:8000`)
-The **backend orchestration engine** that provides:
+#### 🖥️ 4agenthub Hosted Service (`https://api.4genthub.com`)
+The **cloud-based orchestration engine** that provides:
 - **Agent Management** - 31+ specialized AI agents with distinct capabilities
 - **Task Persistence** - Full context storage and retrieval across sessions
 - **Project Organization** - Hierarchical structure (Global → Project → Branch → Task)
@@ -44,6 +66,75 @@ The **frontend integration layer** that provides:
 - **Parallel Execution** with multiple specialized agents working simultaneously
 - **Enterprise Transparency** with complete audit trails and progress monitoring
 - **Professional Workflows** with proper task delegation and quality assurance
+
+## 🌐 4genthub Frontend Interface - Visual Dashboard
+
+### Real-Time Visual Monitoring at 4genthub.com
+
+The 4genthub platform provides a comprehensive **web frontend interface** that gives you visual access to everything happening behind the scenes with your AI agents:
+
+#### 🎯 **Project Context Visualization**
+- **Real-time project overview** - See all your projects, branches, and active work streams
+- **Project context display** - Visual representation of project scope, goals, and current status
+- **Multi-project dashboard** - Manage multiple projects from a unified interface
+- **Project health monitoring** - Quick overview of project progress and any issues
+
+#### 📊 **Task Management Dashboard**
+- **Task hierarchy visualization** - See parent tasks, subtasks, and dependencies in an intuitive tree view
+- **Progress tracking** - Real-time progress bars and completion percentages for all tasks
+- **Task details view** - Full context, requirements, and implementation notes for each task
+- **Dependency mapping** - Visual representation of task dependencies and workflow sequences
+- **Status indicators** - Clear visual status (todo, in-progress, blocked, completed) for all work items
+
+#### 🤖 **Agent Activity Monitoring**
+- **Real-time agent status** - See which agents are currently active and what they're working on
+- **Agent assignment tracking** - Visual overview of which agents are assigned to which tasks
+- **Agent performance metrics** - Response times, completion rates, and efficiency indicators
+- **Agent coordination view** - Monitor parallel agent work and coordination patterns
+
+#### 🔄 **MCP Data Synchronization**
+- **Instant synchronization** - All MCP task updates from AI agents are immediately reflected in the web interface
+- **Bidirectional updates** - Changes made in the web interface are instantly available to AI agents
+- **Real-time notifications** - Get notified when agents complete tasks, encounter blockers, or need attention
+- **Live activity feed** - Stream of all agent activities and task updates in real-time
+
+#### 🔍 **Audit Trail & History**
+- **Complete audit trail** - Visual timeline of all actions, decisions, and changes
+- **Task history tracking** - See the full lifecycle of every task from creation to completion
+- **Agent decision logs** - Understand why agents made specific choices and recommendations
+- **Progress timeline** - Visual representation of project progress over time
+
+#### 📈 **Analytics & Insights**
+- **Project analytics** - Completion rates, time tracking, and productivity metrics
+- **Agent performance insights** - Which agents are most effective for different types of work
+- **Bottleneck identification** - Visual identification of workflow bottlenecks and delays
+- **Trend analysis** - Track improvements and patterns in your development workflow
+
+### 🎯 **Dual Access Model: The Best of Both Worlds**
+
+Users get **two complementary interfaces** to their AI orchestration system:
+
+#### 🖥️ **Claude Code Integration (via 4genthub-hooks)**
+- **Programmatic access** - Work directly with AI agents through natural language
+- **Command-line efficiency** - Execute complex workflows through conversation
+- **Context-aware assistance** - AI agents understand your codebase and current work
+- **Seamless development flow** - No context switching - work where you code
+
+#### 🌐 **Web Frontend Dashboard (at 4genthub.com)**
+- **Visual monitoring** - See everything happening in your projects at a glance
+- **Management interface** - Organize projects, assign agents, and manage workflows
+- **Team collaboration** - Share project status and progress with team members
+- **Strategic overview** - High-level view of all projects and their health
+
+### 🔗 **Synchronized Experience**
+
+Both interfaces work together seamlessly:
+- **Work in Claude Code** → **See progress in web dashboard**
+- **Assign tasks in web interface** → **Agents pick them up in Claude Code**
+- **Agent updates from Claude** → **Instantly visible in web dashboard**
+- **Project changes from web** → **Immediately available to Claude agents**
+
+This dual-interface approach ensures you have both the **deep, context-aware assistance** of Claude Code and the **visual project management capabilities** of a modern web dashboard - all synchronized in real-time through the MCP system.
 
 ## 🏗️ Technical Architecture
 
@@ -70,8 +161,8 @@ The **frontend integration layer** that provides:
                   │ MCP Protocol (HTTP + JWT)
                   ▼
 ┌─────────────────────────────────────────────┐
-│       4agenthub MCP Server (BACKEND)        │
-│         http://localhost:8000               │
+│      4agenthub Hosted Service (BACKEND)     │
+│        https://api.4genthub.com             │
 │  ┌─────────────────────────────────────┐    │
 │  │  Enterprise Orchestration Engine    │    │
 │  │  • 31+ Specialized Agents           │    │
@@ -100,21 +191,22 @@ The **frontend integration layer** that provides:
 ### Data Flow:
 1. **User** submits request via Claude Code
 2. **4genthub-hooks** intercepts and analyzes request
-3. **Hooks** create MCP task with full context on **4agenthub server**
+3. **Hooks** create MCP task with full context on **hosted 4agenthub service**
 4. **Master orchestrator** delegates to appropriate specialized agent
 5. **Specialized agent** executes work and reports back
-6. **Results** flow back through MCP to Claude Code UI
+6. **Results** flow back through hosted service to Claude Code UI
 
 ## 💎 Value Proposition
 
 ### Why Use 4agenthub + 4genthub-hooks?
 
-#### 🏢 **Enterprise-Grade AI Orchestration**
+#### 🏢 **Enterprise-Grade AI Orchestration (Fully Hosted)**
 Transform Claude Code from a single AI assistant into a **coordinated team of 31+ specialized agents** with:
-- **Persistent Memory**: All work tracked and stored across sessions
+- **Persistent Memory**: All work tracked and stored in the cloud across sessions
 - **Professional Workflows**: Task delegation, progress tracking, and quality assurance
 - **Audit Trails**: Complete transparency for compliance and team coordination
 - **Parallel Execution**: Multiple agents working simultaneously on different aspects
+- **Zero Infrastructure**: No servers to maintain - fully managed cloud service
 
 #### 🎯 **Intelligent Work Distribution**
 - **Auto-routing**: Requests automatically routed to the most suitable specialist
@@ -128,63 +220,121 @@ Transform Claude Code from a single AI assistant into a **coordinated team of 31
 - **Performance Monitoring**: Response times, completion rates, and bottlenecks
 - **Team Coordination**: Multiple developers can see project status and progress
 
-#### 🔒 **Enterprise Security & Compliance**
+#### 🔒 **Enterprise Security & Compliance (Cloud-Native)**
 - **JWT Authentication**: Secure token-based access control
 - **Role-Based Permissions**: Dynamic tool restrictions based on agent roles
 - **Activity Logging**: Complete audit trail of all actions and decisions
 - **Data Isolation**: User-specific contexts and secure data handling
+- **Enterprise Security**: SOC2 compliant hosted infrastructure
+- **High Availability**: 99.9% uptime SLA with global CDN
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-**Two-Component Setup Required:**
+**Simple Setup - No Local Server Required:**
 
-1. **4agenthub MCP Server** (Backend)
-   - Enterprise orchestration engine
-   - Account at [https://www.4genthub.com](https://www.4genthub.com)
+1. **4genthub Account** (Primary Requirement)
+   - Create account at [https://www.4genthub.com](https://www.4genthub.com)
+   - Generate API token from your dashboard
+   - **No server installation needed** - fully hosted service
 
-2. **4genthub-hooks** (Frontend Client)
+2. **4genthub-hooks** (Claude Code Client)
    - Claude Code integration layer
-   - Python 3.12+ required
+   - **Python 3.12** required (exact version)
    - This repository
 
 3. **Claude Code** (latest version)
 
+4. **Supported Platforms**
+   - ✅ **Linux** (Ubuntu, Debian, Fedora, etc.)
+   - ✅ **macOS** (Intel & Apple Silicon)
+   - ✅ **Windows** (via WSL - Windows Subsystem for Linux)
+
 ### Installation Steps
 
-#### Step 1: Setup 4agenthub MCP Server (Backend)
+#### Step 1: Create 4genthub Account
 ```bash
-# 1. Create 4agenthub account and get JWT token
-# Visit: https://www.4genthub.com
-# → Create account → Generate API token
-
-# 2. Verify MCP server is running
-curl http://localhost:8000/mcp/health
-# Should return: {"status": "healthy", "server": "4agenthub"}
+# 1. Register at https://www.4genthub.com
+# 2. Complete account verification
+# 3. Navigate to Dashboard → API Tokens
+# 4. Generate new API token and copy it
+# 5. Ready to use - no server setup required!
 ```
 
-#### Step 2: Setup 4genthub-hooks Client (Frontend)
+#### Step 2: Install Python 3.12 (if needed)
+
+**Linux:**
+```bash
+# Ubuntu/Debian
+sudo apt update && sudo apt install python3.12 python3.12-venv
+
+# Fedora
+sudo dnf install python3.12
+
+# Verify installation
+python3.12 --version
+```
+
+**macOS:**
+```bash
+# Using Homebrew
+brew install python@3.12
+
+# Verify installation
+python3.12 --version
+```
+
+**Windows (WSL):**
+```bash
+# First, ensure WSL is installed and running Ubuntu
+# Then follow Linux instructions above
+sudo apt update && sudo apt install python3.12 python3.12-venv
+```
+
+#### Step 3: Setup 4genthub-hooks Client
 ```bash
 # 1. Clone this repository (client implementation)
-git clone https://github.com/yourusername/4genthub-hooks.git
+git clone https://github.com/phamhung075/4genthub-hooks.git
+
+# 2. Rename folder to your project name and set up your own git
 cd 4genthub-hooks
+rm -rf .git                          # Remove original git history
+cd ..
+mv 4genthub-hooks your-project-name  # Rename to your project
+cd your-project-name
+git init                              # Initialize your own git repository
+git add .
+git commit -m "Initial commit - 4genthub-hooks setup"
 
-# 2. Configure MCP connection with your JWT token
+# 3. Configure connection with your API token
 nano .mcp.json
-# Replace Bearer token with your 4agenthub JWT from Step 1
 
-# 3. Test connection to 4agenthub server
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" http://localhost:8000/mcp/health
+# Update the configuration to include your token:
+# {
+#   "mcpServers": {
+#     "agenthub_http": {
+#       "type": "http",
+#       "url": "http://localhost:8000/mcp",  # Or https://api.4genthub.com/mcp for hosted
+#       "headers": {
+#         "Accept": "application/json, text/event-stream",
+#         "Authorization": "Bearer YOUR_API_TOKEN_HERE"  # Replace with your actual token
+#       }
+#     }
+#   }
+# }
+
+# 4. Test connection to hosted service
+curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.4genthub.com/mcp/health
 ```
 
-#### Step 3: Launch Integrated System
+#### Step 4: Launch Claude Code
 ```bash
 # Open in Claude Code (hooks will auto-activate)
 claude-code .
 
 # System will automatically:
-# ✅ Connect to 4agenthub MCP server
+# ✅ Connect to hosted 4agenthub service
 # ✅ Load master-orchestrator-agent
 # ✅ Enable real-time status tracking
 # ✅ Activate all 31+ specialized agents
@@ -194,7 +344,7 @@ claude-code .
 
 After setup, you should see:
 ```
-🎯 master-orchestrator | 🔄 Ready for requests [0▶ 0⏸ 0⚠] | 📊 Branch: main | ⚡ Fast
+🎯 Active: master-orchestrator-agent | 🔗 MCP: ✅ Connected | 🌿 main
 ```
 
 **Test the integration:**
@@ -205,14 +355,32 @@ Expected: Auto-delegation to coding-agent with MCP task tracking
 
 ## ⚙️ Configuration
 
-### MCP Server Configuration (`.mcp.json`)
+### Hosted Service Configuration (`.mcp.json`)
 
-The project connects to multiple MCP servers:
+The project connects to multiple hosted services:
 
-- **agenthub_http** - Main 4agenthub orchestration server
+- **agenthub_http** - Main 4agenthub orchestration service (hosted at api.4genthub.com)
 - **sequential-thinking** - Chain-of-thought reasoning
 - **shadcn-ui-server** - UI component management
 - **browsermcp** - Browser automation capabilities
+
+**Example configuration:**
+```json
+{
+  "mcpServers": {
+    "agenthub_http": {
+      "type": "http",
+      "url": "https://api.4genthub.com/mcp",
+      "headers": {
+        "Accept": "application/json, text/event-stream",
+        "Authorization": "Bearer YOUR_API_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+**Note**: If you're using a local development server, change the URL to `http://localhost:8000/mcp`
 
 ### Hooks Configuration (`.claude/settings.json`)
 
@@ -255,14 +423,12 @@ The hooks system includes:
 The intelligent status line provides real-time visibility:
 
 ```
-🎯 master-orchestrator | 🔄 Implementing auth system [2▶ 3⏸ 1⚠] | 📊 Branch: feature/auth | ⚡ Fast
+🎯 Active: master-orchestrator-agent | 🔗 MCP: ✅ Connected | 🌿 feature/auth
 ```
 
 - **Current Agent** - Shows active agent role
-- **Active Task** - Current work in progress
-- **Task Counts** - `[in-progress▶ pending⏸ blocked⚠]`
-- **Branch Context** - Active git branch
-- **Performance** - Response time indicators
+- **MCP Connection** - Real-time connection status to 4genthub service
+- **Git Branch** - Active git branch name
 
 ## 🔧 Key Features
 
@@ -303,31 +469,30 @@ User: "Implement user authentication with JWT"
 🔄 4genthub-hooks Flow:
 1. Session hook auto-loads master-orchestrator-agent
 2. Request analysis → Complex task detected
-3. Creates MCP task on 4agenthub server:
-   POST /api/v2/tasks {
+3. Creates MCP task on hosted 4agenthub service:
+   POST https://api.4genthub.com/api/v2/tasks {
      title: "Implement JWT authentication",
      assignees: "coding-agent",
      details: "Full requirements and context..."
    }
 4. Delegates to coding-agent with task_id only
-5. Status line updates: "🔄 Implementing JWT auth [1▶ 0⏸ 0⚠]"
-6. coding-agent fetches context from MCP server
-7. Implementation proceeds with real-time progress updates
-8. Task completion stored in MCP with full audit trail
+5. coding-agent fetches context from hosted service
+6. Implementation proceeds with real-time progress updates
+7. Task completion stored in hosted service with full audit trail
 ```
 
 ### Debugging an Issue
 ```
 User: "Fix the login bug where users get stuck"
 
-🔄 MCP Server Interaction:
-1. 4genthub-hooks creates debug task on 4agenthub
+🔄 Hosted Service Interaction:
+1. 4genthub-hooks creates debug task on hosted 4agenthub service
 2. Master orchestrator analyzes and delegates to debugger-agent
-3. debugger-agent queries MCP for related context:
+3. debugger-agent queries hosted service for related context:
    - Previous login implementations
    - Related bug reports
    - Test case history
-4. Root cause analysis performed and logged in MCP
+4. Root cause analysis performed and logged in hosted service
 5. Fix implementation tracked as subtasks
 6. Verification and testing logged with results
 7. Complete solution stored with troubleshooting notes
@@ -338,30 +503,94 @@ User: "Fix the login bug where users get stuck"
 User: "Build complete CRUD for products"
 
 🔄 Enterprise Orchestration:
-1. Master orchestrator creates parent task in MCP
-2. Spawns parallel subtasks on 4agenthub server:
+1. Master orchestrator creates parent task in hosted service
+2. Spawns parallel subtasks on hosted 4agenthub service:
    - Backend API → coding-agent
    - Frontend UI → ui-specialist-agent
    - Tests → test-orchestrator-agent
    - Documentation → documentation-agent
-3. Status line shows: "🔄 Building CRUD [4▶ 0⏸ 0⚠]"
-4. Each agent fetches context from MCP independently
-5. Progress tracked in real-time across all parallel streams
-6. Results coordinated through MCP task dependencies
-7. Integrated solution delivered with full audit trail
+3. Each agent fetches context from hosted service independently
+4. Progress tracked in real-time across all parallel streams
+5. Results coordinated through hosted service task dependencies
+6. Integrated solution delivered with full audit trail
 ```
 
-### Real-Time Status Line Examples
-```
-# Single agent working
-🎯 coding-agent | 🔄 Implementing JWT auth [1▶ 0⏸ 0⚠] | 📊 Branch: feature/auth | ⚡ Fast
+### Real-Time Status Line
 
-# Parallel development
-🎯 master-orchestrator | 🔄 Building CRUD system [4▶ 2⏸ 0⚠] | 📊 Branch: feature/products | ⚡ Fast
-
-# Blocked task requiring attention
-🎯 master-orchestrator | ⚠️ Database migration [0▶ 3⏸ 1⚠] | 📊 Branch: hotfix/db | 🐌 Blocked
+**Current Status Line Display:**
 ```
+🎯 Active: master-orchestrator-agent | 🔗 MCP: ✅ Connected | 🌿 main
+```
+
+The status line shows:
+- **Active Agent**: Currently loaded agent (e.g., master-orchestrator-agent)
+- **MCP Connection**: Status of connection to 4genthub service (✅ Connected or ❌ Disconnected)
+- **Git Branch**: Current git branch name
+
+## 🔧 Troubleshooting
+
+### Status Line Not Displaying
+
+If you're not seeing the dynamic status line features described in this documentation, here are the most common causes and solutions:
+
+#### 1. Status Line Display Issues
+
+**The status line requires Claude Code to properly load and execute the Python script**
+- Ensure **Python 3.12** is installed and accessible
+- The status line updates when there are active MCP tasks
+- Check that `.mcp.json` is properly configured with your API token
+- The status line will show "JSON Error" if MCP connection fails
+
+#### 2. How to Verify Status Line is Working
+
+**Create a test task to verify functionality:**
+- Create a task using MCP: Any request that creates a task (most complex requests)
+- The status line should update to show agent and task information
+- If you see `"[Agent] [Claude] 💭 JSON Error"` - check MCP connection
+- Expected format: `🎯 Active: agent-name | 🔗 MCP: ✅ Connected | 🌿 main`
+
+#### 3. Common Issues and Solutions
+
+**No active tasks = minimal status line display**
+- The fancy status line examples require active MCP tasks
+- Simple requests that don't create tasks show basic status only
+- Complex requests (implementing features, debugging, etc.) create tasks and show full status
+
+**MCP not connected = error messages**
+- Check `.mcp.json` configuration
+- Verify your 4genthub API token is valid
+- Test connection: `curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.4genthub.com/mcp/health`
+- Ensure network connectivity to hosted service
+
+**Python not found = status line won't load**
+- Install Python 3.12 (exact version required)
+- Verify with: `python3.12 --version`
+- Ensure Python is in your system PATH
+
+#### 4. Manual Testing Command
+
+**Test the status line script directly:**
+```bash
+python3 ./.claude/status_lines/status_line_mcp.py
+```
+
+This command will test the status line functionality independently and show any errors in loading or MCP communication.
+
+#### 5. Understanding Status Line Behavior
+
+**The status line behavior varies based on your activity:**
+- **No MCP tasks**: Shows basic agent name and ready status
+- **Active tasks**: Shows detailed progress with counts and descriptions
+- **Multiple parallel tasks**: Shows coordination and progress across all tasks
+- **Blocked tasks**: Shows warning indicators and blocked status
+
+**Note**: The sophisticated status line features demonstrated in this documentation require:
+- Active MCP connection to 4genthub hosted service
+- Tasks created through the MCP system
+- Proper Python 3.12 installation
+- Valid API token configuration
+
+If you're just reading documentation or asking simple questions, you may not see the full status line features until you start working on complex tasks that trigger MCP task creation.
 
 ## 🛠️ Development
 
@@ -405,10 +634,10 @@ python -m pytest test_*.py
 
 ## 🔐 Security
 
-- **JWT Authentication** - Secure token-based access to 4agenthub
+- **JWT Authentication** - Secure token-based access to hosted 4agenthub service
 - **Tool Permission Enforcement** - Dynamic restrictions based on agent roles
-- **Audit Logging** - Complete activity tracking
-- **Context Isolation** - User-specific data separation
+- **Audit Logging** - Complete activity tracking in cloud
+- **Context Isolation** - User-specific data separation in hosted environment
 
 ## 📚 Documentation
 
@@ -444,10 +673,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/4genthub-hooks/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/4genthub-hooks/discussions)
+- **Issues**: [GitHub Issues](https://github.com/phamhung075/4genthub-hooks/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/phamhung075/4genthub-hooks/discussions)
 - **4agenthub Website**: [https://www.4genthub.com](https://www.4genthub.com)
-- **4agenthub API Server**: http://localhost:8000
+- **4agenthub Hosted API**: https://api.4genthub.com
 
 ---
 
