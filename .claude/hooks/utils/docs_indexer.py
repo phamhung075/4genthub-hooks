@@ -137,8 +137,14 @@ def check_documentation_requirement(file_path, ai_docs_path):
         relative_path = file_path.relative_to(project_root)
         doc_path = ai_docs_path / '_absolute_docs' / relative_path.parent / doc_name
     except ValueError:
-        # If file is not under project root, try with cwd
-        doc_path = ai_docs_path / '_absolute_docs' / file_path.parent.relative_to(Path.cwd()) / doc_name
+        # If file is not under project root, try with resolved path
+        try:
+            from env_loader import get_project_root
+            actual_root = get_project_root()
+            doc_path = ai_docs_path / '_absolute_docs' / file_path.parent.relative_to(actual_root) / doc_name
+        except:
+            # Last resort: use absolute path structure
+            doc_path = ai_docs_path / '_absolute_docs' / doc_name
     
     if doc_path.exists():
         # Check if source file is newer than doc

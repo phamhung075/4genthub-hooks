@@ -10,9 +10,22 @@ from pathlib import Path
 from datetime import datetime
 
 
+def find_project_root():
+    """Find the project root by looking for marker files."""
+    current = Path(__file__).parent.parent.parent  # Go up from hooks to .claude to project root
+
+    # Walk up the directory tree looking for .env.claude or .git
+    for parent in [current] + list(current.parents):
+        if (parent / '.env.claude').exists() or (parent / '.git').exists():
+            return parent
+
+    return current
+
+
 def load_env_claude():
     """Load environment variables from .env.claude file."""
-    env_file = Path.cwd() / '.env.claude'
+    project_root = find_project_root()
+    env_file = project_root / '.env.claude'
     if env_file.exists():
         with open(env_file, 'r') as f:
             for line in f:
@@ -26,8 +39,8 @@ def load_env_claude():
 def migrate_data():
     """Migrate data from old locations to new consolidated locations."""
     load_env_claude()
-    
-    project_root = Path.cwd()
+
+    project_root = find_project_root()
     
     # Define target directories from .env.claude
     target_data_dir = project_root / os.getenv('AI_DATA', '.claude/data')

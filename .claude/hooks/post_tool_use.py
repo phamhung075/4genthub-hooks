@@ -30,6 +30,16 @@ from abc import ABC, abstractmethod
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Import the project root finder
+from utils.find_project_root import ProjectRootFinder
+
+# Find project root dynamically
+root_finder = ProjectRootFinder()
+PROJECT_ROOT = root_finder.find_project_root()
+if not PROJECT_ROOT:
+    # Fallback to old method if finder fails
+    PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 
 # ============================================================================
 # Abstract Base Classes
@@ -267,7 +277,7 @@ class PostToolUseHook:
         from utils.env_loader import get_ai_data_path
 
         self.log_dir = get_ai_data_path()
-        self.ai_docs_path = Path.cwd() / 'ai_docs'
+        self.ai_docs_path = PROJECT_ROOT / 'ai_docs'
 
         # Create components using factory
         self.factory = ComponentFactory()

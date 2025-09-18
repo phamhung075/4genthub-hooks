@@ -33,6 +33,16 @@ from abc import ABC, abstractmethod
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Import the project root finder
+from utils.find_project_root import ProjectRootFinder
+
+# Find project root dynamically
+root_finder = ProjectRootFinder()
+PROJECT_ROOT = root_finder.find_project_root()
+if not PROJECT_ROOT:
+    # Fallback to old method if finder fails
+    PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 
 # ============================================================================
 # Abstract Base Classes
@@ -125,7 +135,7 @@ class RootFileValidator(Validator):
 
     def _load_allowed_files(self) -> List[str]:
         """Load allowed root files from configuration."""
-        project_root = Path.cwd()
+        project_root = PROJECT_ROOT
         config_path = project_root / '.claude' / 'hooks' / 'config' / '__claude_hook__allowed_root_files'
 
         default_allowed = [
@@ -158,7 +168,7 @@ class RootFileValidator(Validator):
             return True, None
 
         path_obj = Path(file_path)
-        project_root = Path.cwd()
+        project_root = PROJECT_ROOT
 
         # Check if trying to create file in root
         try:

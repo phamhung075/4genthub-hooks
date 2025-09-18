@@ -536,13 +536,14 @@ class MCPContextQuery:
     def _get_documentation_path(self, file_path: str) -> Optional[Path]:
         """Get documentation path for a file."""
         try:
+            from env_loader import get_project_root
             path_obj = Path(file_path)
-            project_root = Path.cwd()
-            
+            project_root = get_project_root()
+
             # Build documentation path
             relative_path = path_obj.relative_to(project_root)
             doc_path = project_root / 'ai_docs' / '_absolute_docs' / relative_path.parent / f"{relative_path.name}.md"
-            
+
             return doc_path
         except Exception:
             return None

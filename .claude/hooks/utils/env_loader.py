@@ -5,20 +5,32 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-def find_project_root():
-    """Find the project root by looking for .env.claude or .git directory."""
-    current = Path.cwd()
-    
-    # Walk up the directory tree looking for .env.claude or .git
-    for parent in [current] + list(current.parents):
-        if (parent / '.env.claude').exists() or (parent / '.git').exists():
-            return parent
-    
-    # Fallback to current directory if no markers found
-    return current
+# Import our robust project root finder
+try:
+    from find_project_root import ProjectRootFinder
+    root_finder = ProjectRootFinder()
+    PROJECT_ROOT = root_finder.find_project_root()
+except ImportError:
+    # Fallback to using file location to find project root
+    def find_project_root():
+        """Find the project root by looking for .env.claude or .git directory."""
+        # Start from this file's location (4 levels up: utils -> hooks -> .claude -> project root)
+        current = Path(__file__).parent.parent.parent.parent
 
-# Find project root and load .env.claude file once at module level
-PROJECT_ROOT = find_project_root()
+        # Walk up the directory tree looking for .env.claude or .git
+        for parent in [current] + list(current.parents):
+            if (parent / '.env.claude').exists() or (parent / '.git').exists():
+                return parent
+
+        # Use the calculated path if no markers found
+        return current
+
+    PROJECT_ROOT = find_project_root()
+
+# Ensure PROJECT_ROOT is not None
+if PROJECT_ROOT is None:
+    # Use the file's location to find project root (4 levels up from utils/env_loader.py)
+    PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 ENV_CLAUDE_PATH = PROJECT_ROOT / '.env.claude'
 
 if ENV_CLAUDE_PATH.exists():

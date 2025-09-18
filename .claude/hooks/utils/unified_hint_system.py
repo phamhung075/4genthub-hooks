@@ -201,7 +201,9 @@ class HintBridge:
     """Manages hint communication between different hooks."""
 
     def __init__(self):
-        self.hint_storage_file = Path.cwd() / '.claude' / 'hooks' / 'data' / 'pending_hints.json'
+        from env_loader import get_project_root
+        project_root = get_project_root()
+        self.hint_storage_file = project_root / '.claude' / 'hooks' / 'data' / 'pending_hints.json'
         self.hint_storage_file.parent.mkdir(parents=True, exist_ok=True)
         self.time_window = 300  # 5 minutes
 

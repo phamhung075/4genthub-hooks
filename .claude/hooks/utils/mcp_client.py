@@ -116,7 +116,8 @@ class TokenManager:
         """Extract Bearer token from .mcp.json file if available."""
         try:
             # Look for .mcp.json in project root
-            project_root = Path.cwd()
+            from env_loader import get_project_root
+            project_root = get_project_root()
             mcp_json_path = project_root / ".mcp.json"
             
             if not mcp_json_path.exists():
