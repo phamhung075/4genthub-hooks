@@ -28,6 +28,7 @@ import subprocess
 import os
 import argparse
 import yaml
+import hashlib
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional, List
@@ -447,13 +448,16 @@ class SessionStartProcessor(SessionProcessor):
             # Log session start
             self.logger.log('info', 'Session started', input_data)
 
+            # Get or generate session ID
+            session_id = self._get_session_id(input_data)
+
             # Detect session type
             session_type = self._detect_session_type()
             agent_type = self._detect_agent_from_context(input_data)
 
             output_parts = []
 
-            # Add session info
+            # Add session info with session ID
             if session_type or agent_type:
                 session_info = []
                 if session_type:
@@ -461,7 +465,9 @@ class SessionStartProcessor(SessionProcessor):
                 if agent_type:
                     session_info.append(f"Detected Agent: {agent_type}")
 
-                output_parts.append("🚀 Session Context:\n" + "\n".join(session_info))
+                # Format session header with ID
+                session_header = f"🚀 Session {session_id} Context:"
+                output_parts.append(session_header + "\n" + "\n".join(session_info))
 
             return "\n\n".join(output_parts) if output_parts else None
 
@@ -504,6 +510,24 @@ class SessionStartProcessor(SessionProcessor):
             return None
         except:
             return None
+
+    def _get_session_id(self, input_data: Dict) -> str:
+        """Get session ID from input data or generate a new one."""
+        try:
+            # Try to get session ID from input data first
+            session_id = input_data.get("session_id")
+            if session_id:
+                # Return a shortened version for display (first 8 characters)
+                return session_id[:8] if len(session_id) > 8 else session_id
+
+            # Generate a new session ID if not provided
+            timestamp = datetime.now().isoformat()
+            full_session_id = hashlib.md5(timestamp.encode()).hexdigest()
+            # Return first 8 characters for readability
+            return full_session_id[:8]
+        except Exception:
+            # Fallback to a simple timestamp-based ID
+            return datetime.now().strftime("%H%M%S")
 
 
 class ContextFormatterProcessor(SessionProcessor):
