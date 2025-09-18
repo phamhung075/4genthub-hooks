@@ -4,7 +4,8 @@ Execute Hook Wrapper - Universal hook executor for Claude Code
 
 This wrapper solves the path resolution issue where relative paths in
 .claude/settings.json cause nested ././ path problems when Claude Code
-executes hooks from subdirectories.
+executes hooks from subdirectories. It also handles symlinked .claude
+directories properly.
 
 Instead of having commands like:
   "command": "python3 ./.claude/hooks/user_prompt_submit.py --args"
@@ -14,9 +15,14 @@ We use:
 
 This wrapper:
 1. Finds the correct project root regardless of execution directory
-2. Resolves the hook path correctly
+2. Resolves the hook path correctly, handling symlinked .claude directories
 3. Executes the hook with proper environment setup
 4. Maintains all original functionality
+
+Symlink Support:
+- If .claude is a symlink, resolves to the real directory where hooks exist
+- Works from any subdirectory in projects with symlinked .claude folders
+- Maintains compatibility with regular (non-symlinked) .claude directories
 
 Usage: python3 execute_hook.py <hook_name> [args...]
 """
@@ -64,9 +70,21 @@ def find_project_root():
                     marker_path = current / marker
                     if marker_path.exists():
                         # Verify it's a Claude project by checking for .claude/hooks
-                        claude_hooks = current / '.claude' / 'hooks'
-                        if claude_hooks.exists():
-                            return current
+                        # Handle symlinked .claude directories
+                        claude_dir = current / '.claude'
+                        if claude_dir.exists():
+                            # If .claude is a symlink, resolve it
+                            if claude_dir.is_symlink():
+                                try:
+                                    real_claude_dir = claude_dir.resolve()
+                                    claude_hooks = real_claude_dir / 'hooks'
+                                except (OSError, RuntimeError):
+                                    claude_hooks = claude_dir / 'hooks'
+                            else:
+                                claude_hooks = claude_dir / 'hooks'
+
+                            if claude_hooks.exists():
+                                return current
 
                 current = current.parent
 
@@ -74,6 +92,38 @@ def find_project_root():
             continue
 
     return None
+
+
+def resolve_claude_hooks_path(project_root):
+    """
+    Resolve the path to .claude/hooks, handling symlinked .claude directories.
+
+    Args:
+        project_root: Path to the project root
+
+    Returns:
+        Path to the hooks directory, resolving symlinks if necessary
+    """
+    claude_dir = project_root / '.claude'
+
+    # Check if .claude exists
+    if not claude_dir.exists():
+        return None
+
+    # If .claude is a symlink, resolve it to the real path
+    if claude_dir.is_symlink():
+        try:
+            # Resolve the symlink to get the real .claude directory
+            real_claude_dir = claude_dir.resolve()
+            hooks_dir = real_claude_dir / 'hooks'
+        except (OSError, RuntimeError):
+            # If symlink resolution fails, fall back to original path
+            hooks_dir = claude_dir / 'hooks'
+    else:
+        # .claude is a regular directory
+        hooks_dir = claude_dir / 'hooks'
+
+    return hooks_dir if hooks_dir.exists() else None
 
 
 def main():
@@ -93,25 +143,43 @@ def main():
         print("Error: Could not find project root", file=sys.stderr)
         sys.exit(1)
 
-    # Construct absolute path to the hook
+    # Resolve the hooks directory, handling symlinked .claude directories
+    hooks_dir = resolve_claude_hooks_path(project_root)
+    if not hooks_dir:
+        print("Error: Could not find .claude/hooks directory", file=sys.stderr)
+        sys.exit(1)
+
+    # Get the base .claude directory (may be symlinked)
+    claude_dir = project_root / '.claude'
+    # Resolve symlink if necessary
+    if claude_dir.is_symlink():
+        try:
+            real_claude_dir = claude_dir.resolve()
+        except (OSError, RuntimeError):
+            real_claude_dir = claude_dir
+    else:
+        real_claude_dir = claude_dir
+
     # First try in hooks directory
-    hook_path = project_root / '.claude' / 'hooks' / hook_name
+    hook_path = hooks_dir / hook_name
 
     # If not found, try in status_lines directory (for status line scripts)
     if not hook_path.exists() and 'status_line' in hook_name:
-        hook_path = project_root / '.claude' / 'status_lines' / hook_name
+        status_lines_dir = real_claude_dir / 'status_lines'
+        if status_lines_dir.exists():
+            hook_path = status_lines_dir / hook_name
 
     # If still not found, try to find it in any .claude subdirectory
     if not hook_path.exists():
         for subdir in ['hooks', 'status_lines', 'scripts']:
-            potential_path = project_root / '.claude' / subdir / hook_name
+            potential_path = real_claude_dir / subdir / hook_name
             if potential_path.exists():
                 hook_path = potential_path
                 break
 
     if not hook_path.exists():
         print(f"Error: Hook not found: {hook_name}", file=sys.stderr)
-        print(f"Searched in: {project_root}/.claude/hooks/, {project_root}/.claude/status_lines/", file=sys.stderr)
+        print(f"Searched in: {hooks_dir}, {real_claude_dir}/status_lines/", file=sys.stderr)
         sys.exit(1)
 
     # Construct command with absolute path
