@@ -16,7 +16,9 @@ class MCPPostActionHints:
     
     def __init__(self):
         """Initialize the post-action hint system."""
-        self.task_tracking_file = Path.cwd() / '.claude' / 'hooks' / 'data' / 'task_tracking.json'
+        from env_loader import get_project_root
+        project_root = get_project_root()
+        self.task_tracking_file = project_root / '.claude' / 'hooks' / 'data' / 'task_tracking.json'
         self.task_tracking_file.parent.mkdir(parents=True, exist_ok=True)
         self.load_task_tracking()
     
