@@ -77,6 +77,18 @@ git commit -m "chore: update .claude submodule to latest"
 ✅ **99.9% Uptime** - Global CDN with high availability
 ✅ **Auto-scaling** - Handles any workload automatically
 
+### 📋 **Version Tracking & Changelog**
+
+The 4genthub-hooks client follows semantic versioning and maintains detailed changelog documentation:
+
+- **Project Changelog**: [../CHANGELOG.md](../CHANGELOG.md) - Complete version history following [Keep a Changelog](https://keepachangelog.com/) format
+- **Release Management**: Integrated with main agenthub project versioning
+- **Version Compatibility**: Each hooks version is tested with specific agenthub API versions
+- **Migration Support**: Upgrade guides provided for breaking changes
+- **Development Tracking**: Iteration-based tracking with comprehensive test results
+
+**Current Status**: Development version with 107+ consecutive perfect test iterations
+
 ---
 
 ## 🌟 Overview
@@ -1192,7 +1204,7 @@ python -m pytest test_*.py
 - **CLAUDE.md** - Complete agent system instructions
 - **CLAUDE.local.md** - Local project-specific rules
 - **ai_docs/** - Knowledge base for AI agents
-- **CHANGELOG.md** - Version history and updates
+- **[CHANGELOG.md](../CHANGELOG.md)** - Version history and updates (Keep a Changelog format)
 
 ## 🤝 Contributing
 
@@ -1218,6 +1230,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [4agenthub API Documentation](https://api.4genthub.com/docs)
 - [Claude Code Documentation](https://docs.anthropic.com/claude-code)
 - [MCP Protocol Specification](https://modelcontextprotocol.io)
+- [Project Changelog](../CHANGELOG.md) - Version history and release notes
+- [Keep a Changelog](https://keepachangelog.com/) - Changelog format specification
 
 ## 📞 Support
 
@@ -1225,6 +1239,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Discussions**: [GitHub Discussions](https://github.com/phamhung075/4genthub-hooks/discussions)
 - **4agenthub Website**: [https://www.4genthub.com](https://www.4genthub.com)
 - **4agenthub Hosted API**: https://api.4genthub.com
+- **Version History**: [Project Changelog](../CHANGELOG.md) - Check for known issues and recent fixes
 
 ---
 
