@@ -71,8 +71,6 @@ ai_docs/
 - **Path mapping**: `ai_docs/_absolute_docs/{path}/file.ext.md` for `/path/file.ext`
 
 ### Documentation Structure Rules
-- **Test files**: Must write in correct location (`agenthub_main/src/tests/`)
-- **Document files**: Must write in correct location (`ai_docs/`)
 - **Kebab-case folders**: All ai_docs subfolders must use lowercase-with-dashes
 - **Organization**: Create subfolders for easy management
 - **Index files**: Auto-generated index.json (not index.md anymore)
