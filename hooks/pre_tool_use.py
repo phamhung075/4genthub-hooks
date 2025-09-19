@@ -461,6 +461,18 @@ class PreToolUseHook:
         # Log the execution
         self.logger.log('info', f'Pre-processing: {tool_name}')
 
+        # Debug: Log the file being accessed
+        if tool_name in ['Read', 'Write', 'Edit', 'MultiEdit']:
+            file_path = tool_input.get('file_path', '')
+            if file_path:
+                self.logger.log('info', f'File access attempt: {file_path}')
+                # Immediate blocking for .env files
+                filename = Path(file_path).name.lower()
+                if filename.startswith('.env') and filename not in ['.env.sample', '.env.example', '.env.template', '.env.default', '.env.dist']:
+                    error_msg = f"\n⚠️  BLOCKED: Access to {Path(file_path).name} is not allowed!\n✅ Environment files contain sensitive data and cannot be read.\n💡 Use environment variables in your code instead of reading .env files directly.\n"
+                    print(error_msg, file=sys.stderr)
+                    return 1
+
         # Run all validators
         for validator in self.validators:
             try:
