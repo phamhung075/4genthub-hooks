@@ -530,9 +530,19 @@ class PreToolUseHook:
 
 def main():
     """Main entry point for the hook."""
+    # Debug: Write to file to confirm hook is running
+    with open('/tmp/test_hook.txt', 'a') as f:
+        f.write(f"Hook called at {datetime.now()}\n")
+
     try:
         # Read JSON input from stdin
         input_data = json.load(sys.stdin)
+
+        # Debug: Log the tool being called
+        with open('/tmp/test_hook.txt', 'a') as f:
+            f.write(f"Tool: {input_data.get('tool_name', 'unknown')}\n")
+            if input_data.get('tool_name') in ['Read', 'Write', 'Edit']:
+                f.write(f"File: {input_data.get('tool_input', {}).get('file_path', 'none')}\n")
 
         # Create and execute hook
         hook = PreToolUseHook()
