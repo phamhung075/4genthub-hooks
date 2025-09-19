@@ -3,6 +3,8 @@
 > **Intelligent Claude Code Hooks Client for 4agenthub Hosted Service**
 >
 > A sophisticated hooks implementation that transforms Claude Code into an enterprise-grade AI agent orchestration system powered by the **hosted** 4agenthub service.
+>
+> **Git Submodule Repository**: This is maintained as a Git submodule for easy updates and synchronization.
 
 ---
 
@@ -683,3 +685,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
 Built with ❤️ for intelligent AI orchestration
 </div>
+## Submodule Usage
+This repository is used as a Git submodule in the main 4genthub project.

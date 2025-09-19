@@ -1,1 +1,0 @@
-"""Config package for Claude hooks system."""
