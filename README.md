@@ -10,6 +10,30 @@
 
 > **This `.claude` directory is managed as a Git submodule for easy version control and updates**
 
+### Adding 4genthub-hooks to a New Project
+
+**Initialize 4genthub-hooks in your project:**
+```bash
+# 1. Remove .claude from .gitignore if it exists
+sed -i '/^\.claude$/d' .gitignore
+
+# 2. Add 4genthub-hooks as a submodule
+git submodule add git@github.com:phamhung075/4genthub-hooks.git .claude
+
+# 3. Configure the submodule to track main branch
+cd .claude
+git checkout main
+cd ..
+
+# 4. Commit the submodule addition
+git add .gitmodules .claude
+git commit -m "feat: add 4genthub-hooks as .claude submodule"
+
+# 5. Configure your API token in .mcp.json
+cp .claude/.mcp.json.sample .claude/.mcp.json
+# Edit .claude/.mcp.json with your 4genthub API token
+```
+
 ### Working with the Submodule
 
 **Edit and Push Changes:**
@@ -18,7 +42,7 @@ cd .claude
 # Make your changes to hooks/agents/commands
 git add -A
 git commit -m "feat: your changes"
-git push origin working-structure
+git push origin main
 # Update parent repository
 cd ..
 git add .claude
@@ -28,14 +52,14 @@ git commit -m "chore: update .claude submodule"
 **Pull Latest Updates:**
 ```bash
 cd .claude
-git pull origin working-structure
+git pull origin main
 cd ..
 git add .claude
 git commit -m "chore: update .claude submodule to latest"
 ```
 
 **Repository:** `git@github.com:phamhung075/4genthub-hooks.git`
-**Branch:** `working-structure` (flat structure without nesting)
+**Branch:** `main` (main development branch)
 
 ---
 
