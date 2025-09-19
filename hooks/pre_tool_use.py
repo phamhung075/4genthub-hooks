@@ -36,19 +36,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Find project root dynamically - simplified approach
 def find_project_root():
     """Find project root by looking for marker files."""
-    markers = ['CLAUDE.md', '.git', 'package.json', '.env']
-    current = Path(__file__).resolve()
-
-    # Walk up the directory tree
-    for _ in range(10):  # Limit depth to prevent infinite loop
-        if any((current / marker).exists() for marker in markers):
-            return current
-        if current.parent == current:
-            break
-        current = current.parent
-
-    # Fallback to old method
-    return Path(__file__).parent.parent.parent
+    # Start from the hook file's directory and go up to find actual project root
+    # The hook is in .claude/hooks/pre_tool_use.py, so project root is 2 levels up
+    hook_file = Path(__file__).resolve()
+    project_root = hook_file.parent.parent.parent
+    return project_root
 
 PROJECT_ROOT = find_project_root()
 
@@ -498,7 +490,8 @@ class PreToolUseHook:
                     print(error_message, file=sys.stderr)
                     self.logger.log('warning', f'Validation failed: {validator.__class__.__name__}',
                                   {'tool': tool_name, 'error': error_message})
-                    return 1
+                    # Use exit code 2 for blocking (Claude Code respects this)
+                    return 2
             except Exception as e:
                 self.logger.log('error', f'Validator {validator.__class__.__name__} failed: {e}')
 
