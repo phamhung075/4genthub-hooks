@@ -477,10 +477,15 @@ class PreToolUseHook:
                 self.logger.log('info', f'File access attempt: {file_path}')
                 # Immediate blocking for .env files
                 filename = Path(file_path).name.lower()
+                with open('/tmp/test_hook.txt', 'a') as f:
+                    f.write(f"Checking file: {filename}\n")
+                    f.write(f"Starts with .env: {filename.startswith('.env')}\n")
                 if filename.startswith('.env') and filename not in ['.env.sample', '.env.example', '.env.template', '.env.default', '.env.dist']:
+                    with open('/tmp/test_hook.txt', 'a') as f:
+                        f.write(f"BLOCKING {filename}!\n")
                     error_msg = f"\n⚠️  BLOCKED: Access to {Path(file_path).name} is not allowed!\n✅ Environment files contain sensitive data and cannot be read.\n💡 Use environment variables in your code instead of reading .env files directly.\n"
                     print(error_msg, file=sys.stderr)
-                    return 1
+                    sys.exit(1)  # Use sys.exit instead of return
 
         # Run all validators
         for validator in self.validators:
