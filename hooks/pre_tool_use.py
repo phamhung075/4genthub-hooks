@@ -483,9 +483,12 @@ class PreToolUseHook:
                 if filename.startswith('.env') and filename not in ['.env.sample', '.env.example', '.env.template', '.env.default', '.env.dist']:
                     with open('/tmp/test_hook.txt', 'a') as f:
                         f.write(f"BLOCKING {filename}!\n")
+                    # For Claude Code, we need to print to stderr but exit with 0
                     error_msg = f"\n⚠️  BLOCKED: Access to {Path(file_path).name} is not allowed!\n✅ Environment files contain sensitive data and cannot be read.\n💡 Use environment variables in your code instead of reading .env files directly.\n"
                     print(error_msg, file=sys.stderr)
-                    sys.exit(1)  # Use sys.exit instead of return
+                    # Important: Claude Code only respects blocking when we exit with specific codes
+                    # Exit with 2 to indicate blocking
+                    sys.exit(2)
 
         # Run all validators
         for validator in self.validators:
