@@ -18,7 +18,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "python3 ./.claude/hooks/execute_hook.py status_line_mcp.py",
+    "command": "./.claude/hooks/claude_hook_exec status_line_mcp.py",
     "padding": 0
   },
   "includeCoAuthoredBy": false,
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./.claude/hooks/execute_hook.py pre_tool_use.py"
+            "command": "./.claude/hooks/claude_hook_exec pre_tool_use.py"
           }
         ]
       }
@@ -40,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./.claude/hooks/execute_hook.py post_tool_use.py"
+            "command": "./.claude/hooks/claude_hook_exec post_tool_use.py"
           }
         ]
       }
@@ -51,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./.claude/hooks/execute_hook.py notification.py --notify"
+            "command": "./.claude/hooks/claude_hook_exec notification.py --notify"
           }
         ]
       }
@@ -62,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./.claude/hooks/execute_hook.py stop.py --chat"
+            "command": "./.claude/hooks/claude_hook_exec stop.py --chat"
           }
         ]
       }
@@ -73,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./.claude/hooks/execute_hook.py subagent_stop.py --notify"
+            "command": "./.claude/hooks/claude_hook_exec subagent_stop.py --notify"
           }
         ]
       }
@@ -83,7 +83,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./.claude/hooks/execute_hook.py user_prompt_submit.py --log-only --store-last-prompt --name-agent"
+            "command": "./.claude/hooks/claude_hook_exec user_prompt_submit.py --log-only --store-last-prompt --name-agent"
           }
         ]
       }
@@ -94,7 +94,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./.claude/hooks/execute_hook.py pre_compact.py"
+            "command": "./.claude/hooks/claude_hook_exec pre_compact.py"
           }
         ]
       }
@@ -105,7 +105,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ./.claude/hooks/execute_hook.py session_start.py"
+            "command": "./.claude/hooks/claude_hook_exec session_start.py"
           }
         ]
       }
