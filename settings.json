@@ -1,0 +1,114 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(uv:*)",
+      "Bash(find:*)",
+      "Bash(mv:*)",
+      "Bash(grep:*)",
+      "Bash(npm:*)",
+      "Bash(ls:*)",
+      "Bash(cp:*)",
+      "Write",
+      "Edit",
+      "Bash(chmod:*)",
+      "Bash(touch:*)"
+    ],
+    "deny": []
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;status_path=claude_dir/'status_lines'/'status_line_mcp.py' if claude_dir else None;subprocess.run([sys.executable, str(status_path)]) if status_path and status_path.exists() else sys.exit(1)\"",
+    "padding": 0
+  },
+  "includeCoAuthoredBy": false,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;hook_path=claude_dir/'hooks'/'execute_hook.py' if claude_dir else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" pre_tool_use.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;hook_path=claude_dir/'hooks'/'execute_hook.py' if claude_dir else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" post_tool_use.py"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;hook_path=claude_dir/'hooks'/'execute_hook.py' if claude_dir else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" notification.py --notify"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;hook_path=claude_dir/'hooks'/'execute_hook.py' if claude_dir else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" stop.py --chat"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;hook_path=claude_dir/'hooks'/'execute_hook.py' if claude_dir else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" subagent_stop.py --notify"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;hook_path=claude_dir/'hooks'/'execute_hook.py' if claude_dir else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" user_prompt_submit.py --log-only --store-last-prompt --name-agent"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;hook_path=claude_dir/'hooks'/'execute_hook.py' if claude_dir else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" pre_compact.py"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;hook_path=claude_dir/'hooks'/'execute_hook.py' if claude_dir else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" session_start.py"
+          }
+        ]
+      }
+    ]
+  }
+}

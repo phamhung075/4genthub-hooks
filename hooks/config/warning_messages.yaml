@@ -1,0 +1,87 @@
+# Warning messages configuration for Claude hooks
+# Non-blocking warnings that provide guidance
+
+# Context and system warnings
+context_switch_failed: "Warning: Agent context switch failed: {error}"
+
+context_injection_error: "Warning: Failed to inject context: {error}"
+
+session_tracking_error: "Warning: Session tracking error: {error}"
+
+hint_display_error: "Warning: Failed to display hints: {error}"
+
+# Documentation warnings
+documentation_needed:
+  message: "📝 Documentation needed: Please {action} {doc_path} for file: {file_path}"
+  hint: "Keeping documentation in sync helps maintain project knowledge"
+
+documentation_outdated:
+  message: "⚠️ Documentation may be outdated"
+  hint: "Consider reviewing and updating documentation to reflect recent changes"
+
+# Configuration warnings
+config_fallback:
+  message: "Using fallback configuration for '{config_name}'"
+  hint: "The requested configuration file was not found, using defaults"
+
+cache_miss:
+  message: "Configuration cache miss for '{config_name}'"
+  hint: "Loading from file - consider warming cache if this happens frequently"
+
+deprecated_config:
+  message: "Configuration '{config_name}' is deprecated"
+  hint: "Please migrate to the new configuration format: {new_format}"
+
+# Tool usage warnings
+tool_performance:
+  message: "Tool '{tool}' execution took {duration}ms"
+  hint: "Consider optimizing if this operation runs frequently"
+
+tool_fallback:
+  message: "Tool '{tool}' failed, using fallback method"
+  hint: "Primary method failed but fallback succeeded. Check logs for details"
+
+# File system warnings
+large_file_operation:
+  message: "Operating on large file ({size} MB): {file_path}"
+  hint: "Large file operations may take longer and consume more memory"
+
+temp_file_cleanup:
+  message: "Temporary files remain in {path}"
+  hint: "Consider cleaning up temporary files to free disk space"
+
+# Network and service warnings
+slow_response:
+  message: "Slow response from '{service}' ({duration}ms)"
+  hint: "Service may be under load. Consider implementing retry logic"
+
+rate_limit_approaching:
+  message: "Approaching rate limit for '{service}' ({remaining}/{total} remaining)"
+  hint: "Consider implementing request throttling to avoid hitting limits"
+
+# Agent workflow warnings
+agent_switching:
+  message: "Switching from '{old_agent}' to '{new_agent}'"
+  hint: "Agent context switch detected - ensure work continuity"
+
+missing_context:
+  message: "Missing context for operation '{operation}'"
+  hint: "Some context could not be loaded - operation may have limited information"
+
+# Memory and performance warnings
+memory_usage_high:
+  message: "High memory usage detected ({usage} MB)"
+  hint: "Consider clearing caches or reducing memory-intensive operations"
+
+cache_size_large:
+  message: "Configuration cache is large ({size} entries)"
+  hint: "Consider clearing cache periodically to free memory"
+
+# Legacy and migration warnings
+legacy_format_detected:
+  message: "Legacy format detected in '{file}'"
+  hint: "Consider migrating to the new format for better performance and features"
+
+migration_needed:
+  message: "Migration needed for '{component}'"
+  hint: "This component uses deprecated patterns. Migration guide: {guide_url}"

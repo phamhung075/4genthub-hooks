@@ -1,0 +1,1 @@
+rewrite the CHANGELOG.md file to create a more concise and organized version while keeping all the essential changes

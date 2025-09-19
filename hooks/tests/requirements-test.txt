@@ -1,0 +1,32 @@
+# Testing dependencies for Claude hooks system
+# Core testing framework
+pytest>=8.3.3
+pytest-asyncio>=0.23.5
+pytest-cov>=6.1.1
+pytest-env>=1.1.5
+pytest-timeout>=2.4.0
+pytest-xdist>=3.6.1
+pytest-mock>=3.12.0
+
+# Code quality and coverage
+coverage>=7.6.1
+pytest-html>=4.1.1
+pytest-json-report>=1.5.0
+
+# HTTP and API testing
+httpx>=0.28.1
+requests-mock>=1.12.1
+responses>=0.25.3
+
+# File system and environment testing
+pytest-tempdir>=2019.10.12
+pyfakefs>=5.6.0
+
+# Additional utilities
+freezegun>=1.5.1  # Time mocking
+factory-boy>=3.3.1  # Test data generation
+faker>=30.8.1  # Fake data generation
+
+# Type checking (optional)
+mypy>=1.11.2
+types-requests>=2.32.0.20241016
