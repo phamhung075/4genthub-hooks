@@ -33,15 +33,24 @@ from abc import ABC, abstractmethod
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Import the project root finder
-from utils.find_project_root import ProjectRootFinder
+# Find project root dynamically - simplified approach
+def find_project_root():
+    """Find project root by looking for marker files."""
+    markers = ['CLAUDE.md', '.git', 'package.json', '.env']
+    current = Path(__file__).resolve()
 
-# Find project root dynamically
-root_finder = ProjectRootFinder()
-PROJECT_ROOT = root_finder.find_project_root()
-if not PROJECT_ROOT:
-    # Fallback to old method if finder fails
-    PROJECT_ROOT = Path(__file__).parent.parent.parent
+    # Walk up the directory tree
+    for _ in range(10):  # Limit depth to prevent infinite loop
+        if any((current / marker).exists() for marker in markers):
+            return current
+        if current.parent == current:
+            break
+        current = current.parent
+
+    # Fallback to old method
+    return Path(__file__).parent.parent.parent
+
+PROJECT_ROOT = find_project_root()
 
 
 # ============================================================================
