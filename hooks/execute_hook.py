@@ -129,23 +129,15 @@ def main():
         print("Error: Could not find .claude/hooks directory", file=sys.stderr)
         sys.exit(1)
 
-    # Get the base .claude directory (may be symlinked)
+    # Get the base .claude directory (Git submodule - no symlink resolution needed)
     claude_dir = project_root / '.claude'
-    # Resolve symlink if necessary
-    if claude_dir.is_symlink():
-        try:
-            real_claude_dir = claude_dir.resolve()
-        except (OSError, RuntimeError):
-            real_claude_dir = claude_dir
-    else:
-        real_claude_dir = claude_dir
 
     # First try in hooks directory
     hook_path = hooks_dir / hook_name
 
     # If not found, try in status_lines directory (for status line scripts)
     if not hook_path.exists() and 'status_line' in hook_name:
-        status_lines_dir = real_claude_dir / 'status_lines'
+        status_lines_dir = claude_dir / 'status_lines'
         if status_lines_dir.exists():
             hook_path = status_lines_dir / hook_name
 
