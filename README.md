@@ -6,6 +6,52 @@
 
 ---
 
+## ⚡ **SIMPLE SETUP - NO LOCAL SERVER REQUIRED**
+
+> **🎯 Get started in 3 minutes with our fully hosted service!**
+
+Transform Claude Code into an enterprise AI orchestration platform **without any server setup**. The 4agenthub service is completely hosted - just create an account and start developing.
+
+### 🚀 **3-Minute Quick Start**
+
+1. **Create Account**: [Register at 4genthub.com](https://www.4genthub.com) → Verify email
+2. **Get API Token**: Dashboard → API Tokens → Generate new token
+3. **Configure Client**: Copy `.mcp.json.sample` to `.mcp.json` and add your token
+4. **Start Coding**: Open in Claude Code - all 42+ specialized agents ready instantly!
+
+### ✨ **Why Choose Hosted 4agenthub?**
+
+✅ **Fully Hosted** - No local server installation or maintenance
+✅ **Enterprise Security** - SOC2 compliant infrastructure with JWT authentication
+✅ **99.9% Uptime** - Global CDN with high availability guarantees
+✅ **Auto-scaling** - Handles any workload automatically
+✅ **42+ Specialized Agents** - Ready instantly without configuration
+✅ **Real-time Task Management** - Full MCP orchestration with audit trails
+✅ **Zero Infrastructure** - No databases, no containers, no DevOps required
+
+### 🔥 **Instant Value Delivery**
+
+**From Claude Code to Enterprise AI Platform in Minutes:**
+- **Before**: Single AI assistant with limited capabilities
+- **After**: Coordinated team of 42+ specialized agents with persistent memory
+- **Setup Time**: 3 minutes vs. hours of server configuration
+- **Maintenance**: Zero vs. ongoing infrastructure management
+
+---
+
+## 🌟 Overview
+
+> **⚡ HOSTED SERVICE - NO SERVER SETUP REQUIRED!**
+> 4genthub is a **fully hosted SaaS platform** - just create an account, get your API token, and start developing. No local server installation, configuration, or maintenance needed.
+
+4genthub-hooks is a comprehensive **client-side implementation** that seamlessly integrates Claude Code with the **hosted 4agenthub service** to create a complete enterprise AI orchestration platform:
+
+- 🤖 **31+ Specialized AI Agents** - From coding to architecture, testing to documentation
+- 📊 **Real-time Task Management** - Visual status tracking and progress monitoring
+- 🔄 **Intelligent Session Management** - Automatic agent loading and context preservation
+- 🎯 **Smart Tool Enforcement** - Dynamic permissions based on agent roles
+- 📈 **Enterprise Workflow Orchestration** - Professional task delegation and coordination
+
 ## 📦 Git Submodule Setup
 
 > **This `.claude` directory is managed as a Git submodule for easy version control and updates**
@@ -61,22 +107,6 @@ git commit -m "chore: update .claude submodule to latest"
 **Repository:** `git@github.com:phamhung075/4genthub-hooks.git`
 **Branch:** `main` (main development branch)
 
----
-
-## 🎆 **QUICK START - HOSTED SERVICE**
-
-**⚡ Get started in 3 minutes - no server setup required!**
-
-1. **Create Account**: [Register at 4genthub.com](https://www.4genthub.com) → Verify email
-2. **Get API Token**: Dashboard → API Tokens → Generate new token
-3. **Configure Client**: Copy `.mcp.json.sample` to `.mcp.json` and add your token
-4. **Start Coding**: Open in Claude Code - all 42+ specialized agents ready instantly!
-
-✅ **Fully Hosted** - No local server installation
-✅ **Enterprise Security** - SOC2 compliant infrastructure
-✅ **99.9% Uptime** - Global CDN with high availability
-✅ **Auto-scaling** - Handles any workload automatically
-
 ### 📋 **Version Tracking & Changelog**
 
 The 4genthub-hooks client follows semantic versioning and maintains detailed changelog documentation:
@@ -89,20 +119,139 @@ The 4genthub-hooks client follows semantic versioning and maintains detailed cha
 
 **Current Status**: Development version with 107+ consecutive perfect test iterations
 
----
+## 🚀 Quick Start Guide
 
-## 🌟 Overview
+### Prerequisites
 
-> **⚡ HOSTED SERVICE - NO SERVER SETUP REQUIRED!**
-> 4genthub is a **fully hosted SaaS platform** - just create an account, get your API token, and start developing. No local server installation, configuration, or maintenance needed.
+**Simple Setup - No Local Server Required:**
 
-4genthub-hooks is a comprehensive **client-side implementation** that seamlessly integrates Claude Code with the **hosted 4agenthub service** to create a complete enterprise AI orchestration platform:
+1. **4genthub Account** (Primary Requirement)
+   - Create account at [https://www.4genthub.com](https://www.4genthub.com)
+   - Generate API token from your dashboard
+   - **No server installation needed** - fully hosted service
 
-- 🤖 **31+ Specialized AI Agents** - From coding to architecture, testing to documentation
-- 📊 **Real-time Task Management** - Visual status tracking and progress monitoring
-- 🔄 **Intelligent Session Management** - Automatic agent loading and context preservation
-- 🎯 **Smart Tool Enforcement** - Dynamic permissions based on agent roles
-- 📈 **Enterprise Workflow Orchestration** - Professional task delegation and coordination
+2. **4genthub-hooks** (Claude Code Client)
+   - Claude Code integration layer
+   - **Python 3.12** required (exact version)
+   - This repository
+
+3. **Claude Code** (latest version)
+
+4. **Supported Platforms**
+   - ✅ **Linux** (Ubuntu, Debian, Fedora, etc.)
+   - ✅ **macOS** (Intel & Apple Silicon)
+   - ✅ **Windows** (via WSL - Windows Subsystem for Linux)
+
+### Installation Steps
+
+#### Step 1: Create 4genthub Account
+```bash
+# 1. Register at https://www.4genthub.com
+# 2. Complete account verification
+# 3. Navigate to Dashboard → API Tokens
+# 4. Generate new API token and copy it
+# 5. Ready to use - no server setup required!
+```
+
+#### Step 2: Install Python 3.12 (if needed)
+
+**Linux:**
+```bash
+# Ubuntu/Debian
+sudo apt update && sudo apt install python3.12 python3.12-venv
+
+# Fedora
+sudo dnf install python3.12
+
+# Verify installation
+python3.12 --version
+```
+
+**macOS:**
+```bash
+# Using Homebrew
+brew install python@3.12
+
+# Verify installation
+python3.12 --version
+```
+
+**Windows (WSL):**
+```bash
+# First, ensure WSL is installed and running Ubuntu
+# Then follow Linux instructions above
+sudo apt update && sudo apt install python3.12 python3.12-venv
+```
+
+#### Step 3: Setup 4genthub-hooks Client in New Project
+```bash
+# 1. Navigate to your existing project directory
+cd your-existing-project
+
+# 2. Remove .claude from .gitignore if it exists
+sed -i '/^\.claude$/d' .gitignore
+
+# 3. Add 4genthub-hooks as a submodule
+git submodule add git@github.com:phamhung075/4genthub-hooks.git .claude
+
+# 4. Initialize and update the submodule
+git submodule update --init --recursive
+
+# 5. Configure the submodule to track main branch
+cd .claude
+git checkout main
+cd ..
+
+# 6. Configure connection with your API token
+cp .claude/.mcp.json.sample .claude/.mcp.json
+nano .claude/.mcp.json
+
+# Update the configuration to include your token:
+# {
+#   "mcpServers": {
+#     "agenthub_http": {
+#       "type": "http",
+#       "url": "https://api.4genthub.com/mcp",  # Use hosted service
+#       "headers": {
+#         "Accept": "application/json, text/event-stream",
+#         "Authorization": "Bearer YOUR_API_TOKEN_HERE"  # Replace with your actual token
+#       }
+#     }
+#   }
+# }
+
+# 7. Test connection to hosted service
+curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.4genthub.com/mcp/health
+
+# 8. Commit the submodule addition
+git add .gitmodules .claude .gitignore
+git commit -m "feat: add 4genthub-hooks as .claude submodule"
+```
+
+#### Step 4: Launch Claude Code
+```bash
+# Open in Claude Code (hooks will auto-activate)
+claude-code .
+
+# System will automatically:
+# ✅ Connect to hosted 4agenthub service
+# ✅ Load master-orchestrator-agent
+# ✅ Enable real-time status tracking
+# ✅ Activate all 42+ specialized agents
+```
+
+### Verification
+
+After setup, you should see:
+```
+🎯 Active: master-orchestrator-agent | 🔗 MCP: ✅ Connected | 🌿 main
+```
+
+**Test the integration:**
+```
+User: "Create a simple hello world function"
+Expected: Auto-delegation to coding-agent with MCP task tracking
+```
 
 ## 🔗 How It Works Together
 
@@ -563,15 +712,29 @@ subscription AgentActivity {
 
 ## 💎 Value Proposition
 
-### Why Use 4agenthub + 4genthub-hooks?
+### Why Choose 4genthub Hosted Service?
 
-#### 🏢 **Enterprise-Grade AI Orchestration (Fully Hosted)**
-Transform Claude Code from a single AI assistant into a **coordinated team of 42+ specialized agents** with:
+> **⚡ From Setup to Enterprise AI in 3 Minutes - No Infrastructure Required**
+
+#### 🚀 **Instant Enterprise Transformation (Fully Hosted)**
+Transform Claude Code from a single AI assistant into a **coordinated team of 42+ specialized agents** in **3 minutes**:
+
+✅ **Zero Infrastructure Setup** - No servers, databases, or DevOps required
+✅ **Instant Agent Activation** - All 42+ specialized agents ready immediately
+✅ **3-Minute Deployment** - From account creation to full productivity
+✅ **Global Scale Ready** - Enterprise-grade infrastructure from day one
+✅ **Maintenance-Free** - Fully managed service with automatic updates
+
+**Compare the Setup Experience:**
+- **Traditional Self-Hosted**: Hours of server setup, configuration, maintenance
+- **4genthub Hosted**: 3 minutes from signup to full enterprise AI platform
+
+#### 🏢 **Enterprise-Grade Features (Cloud-Native)**
 - **Persistent Memory**: All work tracked and stored in the cloud across sessions
 - **Professional Workflows**: Task delegation, progress tracking, and quality assurance
 - **Audit Trails**: Complete transparency for compliance and team coordination
 - **Parallel Execution**: Multiple agents working simultaneously on different aspects
-- **Zero Infrastructure**: No servers to maintain - fully managed cloud service
+- **Auto-scaling**: Handle any workload without capacity planning
 
 #### 🎯 **Intelligent Work Distribution**
 - **Auto-routing**: Requests automatically routed to the most suitable specialist
@@ -579,153 +742,27 @@ Transform Claude Code from a single AI assistant into a **coordinated team of 42
 - **Quality Assurance**: Built-in review processes and error handling
 - **Scalable Architecture**: Handle complex, multi-phase projects efficiently
 
-#### 📊 **Real-Time Visibility**
-- **Status Dashboard**: Live progress tracking in Claude Code status line
+#### 📊 **Real-Time Visibility & Monitoring**
+- **Dual Interface**: Claude Code integration + web dashboard at 4genthub.com
+- **Live Status Tracking**: Real-time progress in Claude Code status line
 - **Task Management**: Full MCP task hierarchy with subtasks and dependencies
 - **Performance Monitoring**: Response times, completion rates, and bottlenecks
 - **Team Coordination**: Multiple developers can see project status and progress
 
-#### 🔒 **Enterprise Security & Compliance (Cloud-Native)**
+#### 🔒 **Enterprise Security & Compliance (SOC2 Compliant)**
+- **SOC2 Compliant Infrastructure**: Enterprise-grade security from day one
+- **99.9% Uptime SLA**: Global CDN with high availability guarantees
 - **JWT Authentication**: Secure token-based access control
 - **Role-Based Permissions**: Dynamic tool restrictions based on agent roles
 - **Activity Logging**: Complete audit trail of all actions and decisions
-- **Data Isolation**: User-specific contexts and secure data handling
-- **Enterprise Security**: SOC2 compliant hosted infrastructure
-- **High Availability**: 99.9% uptime SLA with global CDN
+- **Data Isolation**: User-specific contexts and secure multi-tenant architecture
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-**Simple Setup - No Local Server Required:**
-
-1. **4genthub Account** (Primary Requirement)
-   - Create account at [https://www.4genthub.com](https://www.4genthub.com)
-   - Generate API token from your dashboard
-   - **No server installation needed** - fully hosted service
-
-2. **4genthub-hooks** (Claude Code Client)
-   - Claude Code integration layer
-   - **Python 3.12** required (exact version)
-   - This repository
-
-3. **Claude Code** (latest version)
-
-4. **Supported Platforms**
-   - ✅ **Linux** (Ubuntu, Debian, Fedora, etc.)
-   - ✅ **macOS** (Intel & Apple Silicon)
-   - ✅ **Windows** (via WSL - Windows Subsystem for Linux)
-
-### Installation Steps
-
-#### Step 1: Create 4genthub Account
-```bash
-# 1. Register at https://www.4genthub.com
-# 2. Complete account verification
-# 3. Navigate to Dashboard → API Tokens
-# 4. Generate new API token and copy it
-# 5. Ready to use - no server setup required!
-```
-
-#### Step 2: Install Python 3.12 (if needed)
-
-**Linux:**
-```bash
-# Ubuntu/Debian
-sudo apt update && sudo apt install python3.12 python3.12-venv
-
-# Fedora
-sudo dnf install python3.12
-
-# Verify installation
-python3.12 --version
-```
-
-**macOS:**
-```bash
-# Using Homebrew
-brew install python@3.12
-
-# Verify installation
-python3.12 --version
-```
-
-**Windows (WSL):**
-```bash
-# First, ensure WSL is installed and running Ubuntu
-# Then follow Linux instructions above
-sudo apt update && sudo apt install python3.12 python3.12-venv
-```
-
-#### Step 3: Setup 4genthub-hooks Client in New Project
-```bash
-# 1. Navigate to your existing project directory
-cd your-existing-project
-
-# 2. Remove .claude from .gitignore if it exists
-sed -i '/^\.claude$/d' .gitignore
-
-# 3. Add 4genthub-hooks as a submodule
-git submodule add git@github.com:phamhung075/4genthub-hooks.git .claude
-
-# 4. Initialize and update the submodule
-git submodule update --init --recursive
-
-# 5. Configure the submodule to track main branch
-cd .claude
-git checkout main
-cd ..
-
-# 6. Configure connection with your API token
-cp .claude/.mcp.json.sample .claude/.mcp.json
-nano .claude/.mcp.json
-
-# Update the configuration to include your token:
-# {
-#   "mcpServers": {
-#     "agenthub_http": {
-#       "type": "http",
-#       "url": "https://api.4genthub.com/mcp",  # Use hosted service
-#       "headers": {
-#         "Accept": "application/json, text/event-stream",
-#         "Authorization": "Bearer YOUR_API_TOKEN_HERE"  # Replace with your actual token
-#       }
-#     }
-#   }
-# }
-
-# 7. Test connection to hosted service
-curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.4genthub.com/mcp/health
-
-# 8. Commit the submodule addition
-git add .gitmodules .claude .gitignore
-git commit -m "feat: add 4genthub-hooks as .claude submodule"
-```
-
-#### Step 4: Launch Claude Code
-```bash
-# Open in Claude Code (hooks will auto-activate)
-claude-code .
-
-# System will automatically:
-# ✅ Connect to hosted 4agenthub service
-# ✅ Load master-orchestrator-agent
-# ✅ Enable real-time status tracking
-# ✅ Activate all 42+ specialized agents
-```
-
-### Verification
-
-After setup, you should see:
-```
-🎯 Active: master-orchestrator-agent | 🔗 MCP: ✅ Connected | 🌿 main
-```
-
-**Test the integration:**
-```
-User: "Create a simple hello world function"
-Expected: Auto-delegation to coding-agent with MCP task tracking
-```
+#### 💰 **Total Cost of Ownership Benefits**
+- **No Infrastructure Costs**: Eliminate server, database, and maintenance expenses
+- **No DevOps Team Required**: Fully managed service reduces operational overhead
+- **Instant Scaling**: Pay only for usage, no capacity planning required
+- **Zero Downtime Updates**: Continuous improvements without service interruption
+- **Expert Support**: Professional support team included with hosted service
 
 ## ⚙️ Configuration
 
