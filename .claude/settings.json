@@ -18,7 +18,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md','.git','package.json']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;real_claude=claude_dir.resolve() if claude_dir and claude_dir.is_symlink() else claude_dir;hook_path=real_claude/'hooks'/'execute_hook.py' if real_claude else None;subprocess.run([sys.executable, str(hook_path)] + sys.argv[1:]) if hook_path and hook_path.exists() else sys.exit(1)\" status_line_mcp.py",
+    "command": "python3 -c \"import os,sys,subprocess;from pathlib import Path;current=Path.cwd().resolve();paths=[current]+list(current.parents);root=next((p for p in paths if any((p/m).exists() for m in ['CLAUDE.md','.git','package.json']) and (p/'.claude').exists()), None);claude_dir=root/'.claude' if root else None;real_claude=claude_dir.resolve() if claude_dir and claude_dir.is_symlink() else claude_dir;status_path=real_claude/'status_lines'/'status_line_mcp.py' if real_claude else None;subprocess.run([sys.executable, str(status_path)]) if status_path and status_path.exists() else sys.exit(1)\"",
     "padding": 0
   },
   "includeCoAuthoredBy": false,
