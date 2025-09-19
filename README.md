@@ -1243,6 +1243,20 @@ python -m pytest test_*.py
 - **ai_docs/** - Knowledge base for AI agents
 - **[CHANGELOG.md](../CHANGELOG.md)** - Version history and updates (Keep a Changelog format)
 
+### Configuration Files for Your Project
+
+To set up Claude Code configuration in your project, you can use these template files:
+
+- **copy-to-root-project-rename-to:CLAUDE.local.md** - Template for local project-specific AI agent rules
+  - Copy this file to your project root and rename to `CLAUDE.local.md`
+  - Contains local environment rules and overrides (not checked into version control)
+  - Customize for your specific project needs
+
+- **copy-to-root-project-rename-to:CLAUDE.md** - Template for main AI agent instructions
+  - Copy this file to your project root and rename to `CLAUDE.md`
+  - Contains enterprise system instructions for AI agents (checked into repository)
+  - Shared across team for consistent AI agent behavior
+
 ## 🤝 Contributing
 
 1. Fork the repository
