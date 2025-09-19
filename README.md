@@ -348,30 +348,35 @@ python3.12 --version
 sudo apt update && sudo apt install python3.12 python3.12-venv
 ```
 
-#### Step 3: Setup 4genthub-hooks Client
+#### Step 3: Setup 4genthub-hooks Client in New Project
 ```bash
-# 1. Clone this repository (client implementation)
-git clone https://github.com/phamhung075/4genthub-hooks.git
+# 1. Navigate to your existing project directory
+cd your-existing-project
 
-# 2. Rename folder to your project name and set up your own git
-cd 4genthub-hooks
-rm -rf .git                          # Remove original git history
+# 2. Remove .claude from .gitignore if it exists
+sed -i '/^\.claude$/d' .gitignore
+
+# 3. Add 4genthub-hooks as a submodule
+git submodule add git@github.com:phamhung075/4genthub-hooks.git .claude
+
+# 4. Initialize and update the submodule
+git submodule update --init --recursive
+
+# 5. Configure the submodule to track main branch
+cd .claude
+git checkout main
 cd ..
-mv 4genthub-hooks your-project-name  # Rename to your project
-cd your-project-name
-git init                              # Initialize your own git repository
-git add .
-git commit -m "Initial commit - 4genthub-hooks setup"
 
-# 3. Configure connection with your API token
-nano .mcp.json
+# 6. Configure connection with your API token
+cp .claude/.mcp.json.sample .claude/.mcp.json
+nano .claude/.mcp.json
 
 # Update the configuration to include your token:
 # {
 #   "mcpServers": {
 #     "agenthub_http": {
 #       "type": "http",
-#       "url": "http://localhost:8000/mcp",  # Or https://api.4genthub.com/mcp for hosted
+#       "url": "https://api.4genthub.com/mcp",  # Use hosted service
 #       "headers": {
 #         "Accept": "application/json, text/event-stream",
 #         "Authorization": "Bearer YOUR_API_TOKEN_HERE"  # Replace with your actual token
@@ -380,8 +385,12 @@ nano .mcp.json
 #   }
 # }
 
-# 4. Test connection to hosted service
+# 7. Test connection to hosted service
 curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.4genthub.com/mcp/health
+
+# 8. Commit the submodule addition
+git add .gitmodules .claude .gitignore
+git commit -m "feat: add 4genthub-hooks as .claude submodule"
 ```
 
 #### Step 4: Launch Claude Code
