@@ -512,3 +512,7 @@ settings.json
 # ✅ ALWAYS review .env.example files to ensure no real credentials
 # ✅ ALWAYS use placeholder values in template files
 # =============================================================================captain-definition
+
+# Local settings and configs (auto-generated)
+hooks/config/__claude_hook__allowed_root_files
+hooks/config/__claude_hook__valid_test_paths

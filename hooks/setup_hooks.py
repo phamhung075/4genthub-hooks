@@ -220,10 +220,11 @@ def update_gitignore(project_root):
     gitignore_path = project_root / '.gitignore'
     claude_gitignore_path = project_root / '.claude' / '.gitignore'
 
-    # Entries to add
+    # Entries to add to root .gitignore
     entries_to_add = [
         '.claude/settings.json',
-        '# Local Claude Code settings (auto-generated)',
+        '.claude/hooks/config/__claude_hook__allowed_root_files',
+        '.claude/hooks/config/__claude_hook__valid_test_paths'
     ]
 
     # Check and update root .gitignore
@@ -232,29 +233,52 @@ def update_gitignore(project_root):
             with open(gitignore_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            if '.claude/settings.json' not in content:
+            entries_added = []
+            for entry in entries_to_add:
+                if entry not in content:
+                    entries_added.append(entry)
+
+            if entries_added:
                 with open(gitignore_path, 'a', encoding='utf-8') as f:
-                    f.write('\n# Local Claude Code settings (auto-generated)\n')
-                    f.write('.claude/settings.json\n')
-                print(f"✅ Added .claude/settings.json to {gitignore_path}")
+                    f.write('\n# Local Claude Code settings and configs (auto-generated)\n')
+                    for entry in entries_added:
+                        f.write(f'{entry}\n')
+                print(f"✅ Added {len(entries_added)} entries to {gitignore_path}")
+                for entry in entries_added:
+                    print(f"   • {entry}")
             else:
-                print(f"ℹ️  .claude/settings.json already in {gitignore_path}")
+                print(f"ℹ️  All entries already in {gitignore_path}")
     except Exception as e:
         print(f"⚠️  Warning: Could not update .gitignore: {e}")
 
     # Check and update .claude/.gitignore
     try:
+        # Entries to add to .claude/.gitignore (relative paths from .claude/)
+        claude_entries = [
+            'settings.json',
+            'hooks/config/__claude_hook__allowed_root_files',
+            'hooks/config/__claude_hook__valid_test_paths'
+        ]
+
         if claude_gitignore_path.exists():
             with open(claude_gitignore_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            if 'settings.json' not in content:
+            entries_added = []
+            for entry in claude_entries:
+                if entry not in content:
+                    entries_added.append(entry)
+
+            if entries_added:
                 with open(claude_gitignore_path, 'a', encoding='utf-8') as f:
-                    f.write('\n# Local settings (auto-generated)\n')
-                    f.write('settings.json\n')
-                print(f"✅ Added settings.json to {claude_gitignore_path}")
+                    f.write('\n# Local settings and configs (auto-generated)\n')
+                    for entry in entries_added:
+                        f.write(f'{entry}\n')
+                print(f"✅ Added {len(entries_added)} entries to {claude_gitignore_path}")
+                for entry in entries_added:
+                    print(f"   • {entry}")
             else:
-                print(f"ℹ️  settings.json already in {claude_gitignore_path}")
+                print(f"ℹ️  All entries already in {claude_gitignore_path}")
     except Exception as e:
         print(f"⚠️  Warning: Could not update .claude/.gitignore: {e}")
 
@@ -376,6 +400,86 @@ def untrack_settings_from_git(project_root):
         print(f"⚠️  Warning: Could not perform git operations: {e}")
 
 
+def untrack_hook_configs_from_git(project_root):
+    """
+    Remove hook configuration files from git tracking if they're currently tracked.
+    These files should be local-only for each developer.
+
+    Args:
+        project_root: Path to the project root directory
+    """
+    import subprocess
+
+    print("\n🔒 Untracking hook configuration files from git...")
+
+    # Hook configuration files that should be local-only
+    hook_configs = [
+        '.claude/hooks/config/__claude_hook__allowed_root_files',
+        '.claude/hooks/config/__claude_hook__valid_test_paths'
+    ]
+
+    try:
+        # First, check if .claude is a submodule
+        is_submodule = False
+        gitmodules_path = project_root / '.gitmodules'
+        if gitmodules_path.exists():
+            with open(gitmodules_path, 'r', encoding='utf-8') as f:
+                if '.claude' in f.read():
+                    is_submodule = True
+
+        for config_file in hook_configs:
+            if is_submodule:
+                # Handle submodule case
+                # Extract just the filename for checking within the submodule
+                config_name = Path(config_file).name
+                config_dir = project_root / Path(config_file).parent
+
+                # Check if file is tracked in the submodule
+                result = subprocess.run(['git', 'ls-files', config_name],
+                                      capture_output=True, text=True,
+                                      cwd=config_dir)
+
+                if config_name in result.stdout:
+                    # File is tracked, untrack it within the submodule
+                    print(f"🔧 Removing {config_file} from git submodule tracking...")
+
+                    result = subprocess.run(['git', 'rm', '--cached', config_name],
+                                          capture_output=True, text=True,
+                                          cwd=config_dir)
+
+                    if result.returncode == 0:
+                        print(f"✅ Successfully untracked {config_file}")
+                    else:
+                        print(f"⚠️  Could not untrack {config_file}: {result.stderr}")
+                else:
+                    print(f"ℹ️  {config_file} is not tracked (good!)")
+
+            else:
+                # Handle regular repository case
+                # Check if file is tracked in main repo
+                result = subprocess.run(['git', 'ls-files', config_file],
+                                      capture_output=True, text=True, cwd=project_root)
+
+                if config_file in result.stdout:
+                    # File is tracked, untrack it
+                    print(f"🔧 Removing {config_file} from git tracking...")
+
+                    result = subprocess.run(['git', 'rm', '--cached', config_file],
+                                          capture_output=True, text=True, cwd=project_root)
+
+                    if result.returncode == 0:
+                        print(f"✅ Successfully untracked {config_file}")
+                    else:
+                        print(f"⚠️  Could not untrack {config_file}: {result.stderr}")
+                else:
+                    print(f"ℹ️  {config_file} is not tracked (good!)")
+
+    except FileNotFoundError:
+        print("⚠️  Git is not installed or not in PATH, skipping git operations")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not perform git operations: {e}")
+
+
 def test_hook_execution(project_root):
     """
     Test that hook execution works with the new settings.
@@ -446,6 +550,9 @@ def main():
 
     # Untrack settings.json from git
     untrack_settings_from_git(project_root)
+
+    # Untrack hook configuration files from git
+    untrack_hook_configs_from_git(project_root)
 
     # Test hook execution
     test_hook_execution(project_root)
