@@ -628,49 +628,6 @@ GET    /api/v2/agents/status       // Real-time agent status
 'project:updated'  → { projectId, changes, healthMetrics }
 ```
 
-#### **GraphQL Subscriptions**
-```graphql
-subscription TaskUpdates($projectId: ID!) {
-  taskUpdated(projectId: $projectId) {
-    id
-    status
-    progress
-    assignedAgent {
-      id
-      name
-      currentStatus
-    }
-    subtasks {
-      id
-      status
-      progress
-    }
-    dependencies {
-      id
-      status
-      blockingReason
-    }
-  }
-}
-
-subscription AgentActivity {
-  agentStatusChanged {
-    id
-    name
-    status
-    currentTask {
-      id
-      title
-      progress
-    }
-    performance {
-      averageResponseTime
-      completionRate
-      currentLoad
-    }
-  }
-}
-```
 
 #### **MCP Protocol Bridge**
 - **HTTP-to-WebSocket Adapter**: Converts MCP HTTP calls to WebSocket events
