@@ -579,6 +579,84 @@ def test_hook_execution(project_root):
         print(f"⚠️  Warning: Could not test hook execution: {e}")
 
 
+def fix_infinite_loop_in_hook():
+    """Fix the infinite loop issue in pre_tool_use.py hook."""
+    print("\n🔧 Fixing infinite loop in pre_tool_use.py...")
+
+    project_root = find_project_root()
+    hook_file = project_root / '.claude' / 'hooks' / 'pre_tool_use.py'
+
+    if not hook_file.exists():
+        print(f"⚠️ Hook file not found: {hook_file}")
+        return False
+
+    # Read the current hook content
+    content = hook_file.read_text()
+
+    # Check if already fixed
+    if '_recursion_depth' in content or 'RECURSION_CHECK' in content:
+        print("ℹ️ Hook already has recursion protection")
+        return True
+
+    # Find line 356 where get_hint_system is imported
+    lines = content.split('\n')
+
+    # Add recursion check at the top of the file after imports
+    recursion_check = """
+# Recursion prevention - add after imports
+import os
+_RECURSION_CHECK_VAR = 'CLAUDE_HOOK_RECURSION_DEPTH'
+
+def _is_recursive_call():
+    \"\"\"Check if we're in a recursive hook call.\"\"\"
+    depth = int(os.environ.get(_RECURSION_CHECK_VAR, '0'))
+    return depth > 0
+
+def _enter_recursion():
+    \"\"\"Mark entering a recursive section.\"\"\"
+    depth = int(os.environ.get(_RECURSION_CHECK_VAR, '0'))
+    os.environ[_RECURSION_CHECK_VAR] = str(depth + 1)
+
+def _exit_recursion():
+    \"\"\"Mark exiting a recursive section.\"\"\"
+    depth = int(os.environ.get(_RECURSION_CHECK_VAR, '0'))
+    if depth > 0:
+        os.environ[_RECURSION_CHECK_VAR] = str(depth - 1)
+"""
+
+    # Insert recursion check after the imports section
+    import_end_index = 0
+    for i, line in enumerate(lines):
+        if line.startswith('from utils.unified_hint_system import get_hint_system'):
+            # Found the problematic import, insert our fix after it
+            lines.insert(i + 1, recursion_check)
+            import_end_index = i + 1
+            break
+
+    # Now modify the calls to get_hint_system to check for recursion
+    for i in range(import_end_index, len(lines)):
+        # Line 356 - HintProcessor
+        if 'hint_system = get_hint_system()' in lines[i]:
+            indent = len(lines[i]) - len(lines[i].lstrip())
+            lines[i] = ' ' * indent + 'if not _is_recursive_call():\n' + ' ' * (indent + 4) + 'hint_system = get_hint_system()\n' + ' ' * indent + 'else:\n' + ' ' * (indent + 4) + 'hint_system = None'
+
+        # Line 503 - main execute method
+        if 'hint_system = get_hint_system()' in lines[i] and 'unified hint system' in lines[i-1]:
+            indent = len(lines[i]) - len(lines[i].lstrip())
+            lines[i] = ' ' * indent + 'if not _is_recursive_call():\n' + ' ' * (indent + 4) + '_enter_recursion()\n' + ' ' * (indent + 4) + 'try:\n' + ' ' * (indent + 8) + 'hint_system = get_hint_system()\n' + ' ' * (indent + 4) + 'finally:\n' + ' ' * (indent + 8) + '_exit_recursion()\n' + ' ' * indent + 'else:\n' + ' ' * (indent + 4) + 'hint_system = None'
+
+    # Create backup
+    backup_file = hook_file.with_suffix('.py.backup_loop_fix')
+    shutil.copy2(hook_file, backup_file)
+    print(f"✅ Created backup at: {backup_file}")
+
+    # Write the fixed content
+    fixed_content = '\n'.join(lines)
+    hook_file.write_text(fixed_content)
+    print(f"✅ Fixed infinite loop protection in: {hook_file}")
+
+    return True
+
 def main():
     """Enhanced main setup function with environment detection."""
     print("🚀 Claude Code Hooks Setup (Enhanced)")
@@ -717,6 +795,13 @@ def main():
 
     # Test hook execution
     test_hook_execution(project_root)
+
+    # Fix infinite loop issue
+    print("\n🔐 Checking for infinite loop issues...")
+    if fix_infinite_loop_in_hook():
+        print("✅ Infinite loop protection is in place")
+    else:
+        print("⚠️ Could not add infinite loop protection automatically")
 
     print("\n🎉 Setup completed successfully!")
     print("\n" + "=" * 70)

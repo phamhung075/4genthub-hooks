@@ -25,7 +25,6 @@ Refactored with:
 import json
 import sys
 import re
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
@@ -33,15 +32,6 @@ from abc import ABC, abstractmethod
 
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
-
-# Recursion prevention guard - prevent infinite loops
-_RECURSION_GUARD = os.environ.get('CLAUDE_PRE_TOOL_HOOK_ACTIVE', '0')
-if _RECURSION_GUARD == '1':
-    # We're already in a hook execution, exit immediately to prevent loop
-    sys.exit(0)
-
-# Mark that we're entering hook execution
-os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '1'
 
 # Find project root dynamically - simplified approach
 def find_project_root():
@@ -559,13 +549,10 @@ def main():
         hook = PreToolUseHook()
         exit_code = hook.execute(input_data)
 
-        # Clear recursion guard before exiting
-        os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '0'
         sys.exit(exit_code)
 
     except json.JSONDecodeError:
         # Handle JSON decode errors gracefully
-        os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '0'
         sys.exit(0)
     except Exception as e:
         # Log error but exit cleanly
@@ -577,7 +564,6 @@ def main():
                 f.write(f"{datetime.now().isoformat()} - Fatal error: {e}\n")
         except:
             pass
-        os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '0'
         sys.exit(0)
 
 
