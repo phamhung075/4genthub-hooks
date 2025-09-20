@@ -1,261 +1,300 @@
 # 🚀 4genthub-hooks
 
-> **Intelligent Claude Code Hooks Client for 4agenthub Hosted Service**
+> **Intelligent Claude Code Hooks Client for 4agenthub Service**
 >
-> A sophisticated hooks implementation that transforms Claude Code into an enterprise-grade AI agent orchestration system powered by the **hosted** 4agenthub service.
+> Transform Claude Code into an enterprise-grade AI agent orchestration system with 42+ specialized agents.
 
 ---
 
-## ⚡ **SIMPLE SETUP - NO LOCAL SERVER REQUIRED**
+## 📋 **Table of Contents**
 
-> **🎯 Get started in 3 minutes with our fully hosted service!**
-
-Transform Claude Code into an enterprise AI orchestration platform **without any server setup**. The 4agenthub service is completely hosted - just create an account and start developing.
-
-### 🚀 **3-Minute Quick Start**
-
-1. **Create Account**: [Register at 4genthub.com](https://www.4genthub.com) → Verify email
-2. **Get API Token**: Dashboard → API Tokens → Generate new token
-3. **Configure Client**: Copy `.mcp.json.sample` to `.mcp.json` and add your token
-4. **Start Coding**: Open in Claude Code - all 42+ specialized agents ready instantly!
-
-### ✨ **Why Choose Hosted 4agenthub?**
-
-✅ **Fully Hosted** - No local server installation or maintenance
-✅ **Enterprise Security** - SOC2 compliant infrastructure with JWT authentication
-✅ **99.9% Uptime** - Global CDN with high availability guarantees
-✅ **Auto-scaling** - Handles any workload automatically
-✅ **42+ Specialized Agents** - Ready instantly without configuration
-✅ **Real-time Task Management** - Full MCP orchestration with audit trails
-✅ **Zero Infrastructure** - No databases, no containers, no DevOps required
-
-### 🔥 **Instant Value Delivery**
-
-**From Claude Code to Enterprise AI Platform in Minutes:**
-- **Before**: Single AI assistant with limited capabilities
-- **After**: Coordinated team of 42+ specialized agents with persistent memory
-- **Setup Time**: 3 minutes vs. hours of server configuration
-- **Maintenance**: Zero vs. ongoing infrastructure management
+1. [📦 Prerequisites](#-prerequisites)
+2. [🔧 Get the Code](#-get-the-code)
+3. [🚀 Quick Setup](#-quick-setup)
+4. [📁 Configuration Files](#-configuration-files)
+5. [🌐 Service Options](#-service-options)
+6. [🤖 Available Agents](#-available-agents)
+7. [🔍 Troubleshooting](#-troubleshooting)
 
 ---
 
-## 🌟 Overview
+## 📦 **Prerequisites**
 
-> **⚡ HOSTED SERVICE - NO SERVER SETUP REQUIRED!**
-> 4genthub is a **fully hosted SaaS platform** - just create an account, get your API token, and start developing. No local server installation, configuration, or maintenance needed.
+Before starting, ensure you have:
 
-4genthub-hooks is a comprehensive **client-side implementation** that seamlessly integrates Claude Code with the **hosted 4agenthub service** to create a complete enterprise AI orchestration platform:
+1. **Python 3.12** (exact version required)
+   ```bash
+   python3.12 --version  # Should show 3.12.x
+   ```
 
-- 🤖 **31+ Specialized AI Agents** - From coding to architecture, testing to documentation
-- 📊 **Real-time Task Management** - Visual status tracking and progress monitoring
-- 🔄 **Intelligent Session Management** - Automatic agent loading and context preservation
-- 🎯 **Smart Tool Enforcement** - Dynamic permissions based on agent roles
-- 📈 **Enterprise Workflow Orchestration** - Professional task delegation and coordination
+2. **Git** (for submodule management)
+   ```bash
+   git --version  # Any recent version
+   ```
 
-## 📦 Git Submodule Setup
+3. **Claude Code** (latest version installed)
 
-> **This `.claude` directory is managed as a Git submodule for easy version control and updates**
+4. **4genthub Account** (free signup)
+   - Register at: https://www.4genthub.com
+   - Get API token from dashboard
 
-### Adding 4genthub-hooks to a New Project
+---
 
-**Initialize 4genthub-hooks in your project:**
+## 🔧 **Get the Code**
+
+### Option 1: Add as Git Submodule (Recommended)
+
 ```bash
-# 1. Remove .claude from .gitignore if it exists
-sed -i '/^\.claude$/d' .gitignore
+# Navigate to your project
+cd your-project
 
-# 2. Add 4genthub-hooks as a submodule
+# Add 4genthub-hooks as .claude submodule
 git submodule add git@github.com:phamhung075/4genthub-hooks.git .claude
 
-# 3. Configure the submodule to track main branch
-cd .claude
-git checkout main
-cd ..
+# Initialize and checkout main branch
+git submodule update --init --recursive
+cd .claude && git checkout main && cd ..
 
-# 4. Commit the submodule addition
+# Commit the addition
 git add .gitmodules .claude
-git commit -m "feat: add 4genthub-hooks as .claude submodule"
-
-# 5. Configure your API token in .mcp.json
-cp .claude/.mcp.json.sample .claude/.mcp.json
-# Edit .claude/.mcp.json with your 4genthub API token
+git commit -m "Add 4genthub-hooks as .claude submodule"
 ```
 
-### Working with the Submodule
+### Option 2: Direct Clone
 
-**Edit and Push Changes:**
 ```bash
-cd .claude
-# Make your changes to hooks/agents/commands
-git add -A
-git commit -m "feat: your changes"
-git push origin main
-# Update parent repository
-cd ..
-git add .claude
-git commit -m "chore: update .claude submodule"
+# Clone directly into .claude folder
+git clone git@github.com:phamhung075/4genthub-hooks.git .claude
 ```
 
-**Pull Latest Updates:**
+---
+
+## 🚀 **Quick Setup**
+
+### Step 1: Run Setup Script (MANDATORY)
+```bash
+python3 .claude/hooks/setup_hooks.py
+```
+
+### Step 2: Follow Instructions
+The script will guide you to:
+- Copy configuration files to project root
+- Create `.mcp.json` from template
+- Add your API token
+
+### Step 3: Start Claude Code
+```bash
+claude-code .
+```
+
+✅ **Done!** Your AI agents are now ready.
+
+---
+
+## 📁 **Configuration Files**
+
+### Required Files Overview
+
+| File | Purpose | Location | Git Status |
+|------|---------|----------|------------|
+| **CLAUDE.md** | Team-wide AI agent rules | `./CLAUDE.md` | ✅ Tracked |
+| **CLAUDE.local.md** | Your personal settings | `./CLAUDE.local.md` | ❌ Ignored |
+| **.mcp.json** | API token configuration | `./.claude/.mcp.json` | ❌ Ignored |
+| **settings.json** | Auto-generated paths | `./.claude/settings.json` | ❌ Ignored |
+
+### File Details
+
+#### 📄 **CLAUDE.md** (Team Shared Configuration)
+- **Purpose**: Defines AI agent behavior for entire team
+- **Contents**: Project rules, workflows, best practices
+- **Location**: `./CLAUDE.md` (project root)
+- **Git Status**: ✅ Tracked (shared with team)
+
+### 📄 **CLAUDE.local.md** (Personal Configuration)
+- **Purpose**: Your personal AI settings and overrides
+- **Contents**: Local environment settings, personal notes
+- **Location**: `./CLAUDE.local.md` (project root)
+- **Git Status**: ❌ Ignored (stays on your machine)
+
+### 📄 **.mcp.json** (API Connection)
+- **Purpose**: Connect to 4genthub service
+- **Contents**: API token and server URL
+- **Location**: `./.claude/.mcp.json`
+- **Git Status**: ❌ Ignored (contains secret token)
+
+### 📄 **settings.json** (Hook Paths)
+- **Purpose**: Maps hooks to absolute paths
+- **Generated By**: `setup_hooks.py` script
+- **Location**: `./.claude/settings.json`
+- **Git Status**: ❌ Ignored (machine-specific paths)
+
+---
+
+## 🌐 **Service Options**
+
+### 🚀 **Option 1: Hosted Service (Recommended)**
+
+**No server setup required** - Use the fully managed 4genthub cloud service:
+
+- **URL**: `https://api.4genthub.com/mcp`
+- **Setup Time**: 3 minutes
+- **Infrastructure**: None required
+- **Maintenance**: Zero
+- **Cost**: Pay per use
+- **Best For**: Most users and teams
+
+**Configuration (.mcp.json):**
+```json
+{
+  "url": "https://api.4genthub.com/mcp",
+  "headers": {
+    "Authorization": "Bearer YOUR_TOKEN"
+  }
+}
+```
+
+### 💻 **Option 2: Local Development Server**
+
+**For development and testing** - Run your own local instance:
+
+- **URL**: `http://localhost:8000/mcp`
+- **Setup Time**: 30+ minutes
+- **Infrastructure**: Docker, PostgreSQL, Redis
+- **Maintenance**: Self-managed
+- **Cost**: Infrastructure only
+- **Best For**: Development, testing, air-gapped environments
+
+**Configuration (.mcp.json):**
+```json
+{
+  "url": "http://localhost:8000/mcp",
+  "headers": {
+    "Authorization": "Bearer LOCAL_DEV_TOKEN"
+  }
+}
+```
+
+> **💡 TIP**: Start with hosted service, switch to local only if needed.
+
+---
+
+## 🤖 **Available Agents**
+
+### Development & Coding (4 agents)
+- `coding-agent` - Implementation and feature development
+- `debugger-agent` - Bug fixing and troubleshooting
+- `code-reviewer-agent` - Code quality and review
+- `prototyping-agent` - Rapid prototyping and POCs
+
+### Testing & QA (3 agents)
+- `test-orchestrator-agent` - Comprehensive test management
+- `uat-coordinator-agent` - User acceptance testing
+- `performance-load-tester-agent` - Performance and load testing
+
+### Architecture & Design (4 agents)
+- `system-architect-agent` - System design and architecture
+- `design-system-agent` - Design system and UI patterns
+- `shadcn-ui-expert-agent` - UI/UX design and frontend
+- `core-concept-agent` - Core concepts and fundamentals
+
+### Additional Specialized Agents (28+ more)
+Including DevOps, Security, Documentation, Research, Marketing, and more.
+
+**Total: 42+ specialized agents** ready to work on your projects.
+
+---
+
+## 🔍 **Troubleshooting**
+
+### Common Issues and Solutions
+
+#### ❌ **"Settings not found" error**
+```bash
+# Solution: Run the setup script
+python3 .claude/hooks/setup_hooks.py
+```
+
+#### ❌ **"Hook execution failed"**
+```bash
+# Solution: Check Python version
+python3 --version  # Must be 3.12.x
+```
+
+#### ❌ **"Wrong paths in settings"**
+```bash
+# Solution: Delete and regenerate
+rm .claude/settings.json
+python3 .claude/hooks/setup_hooks.py
+```
+
+#### ❌ **"Permission denied"**
+```bash
+# Solution: Fix permissions
+chmod 755 .claude/hooks/
+chmod +x .claude/hooks/*.py
+```
+
+#### ❌ **"Git tracking settings.json"**
+```bash
+# Solution: Already handled by setup script
+# Or manually: git rm --cached .claude/settings.json
+```
+
+#### ❌ **"API Token invalid"**
+```bash
+# Solution: Check your token
+nano .claude/.mcp.json
+# Ensure format: "Authorization": "Bearer YOUR_ACTUAL_TOKEN"
+```
+
+#### ❌ **"Status line not showing"**
+- Ensure Python 3.12 is installed
+- Check MCP connection in .mcp.json
+- Create a task to see full status display
+
+### Advanced Git Submodule Management
+
+#### Update to Latest Version
 ```bash
 cd .claude
 git pull origin main
 cd ..
 git add .claude
-git commit -m "chore: update .claude submodule to latest"
+git commit -m "Update .claude submodule to latest"
 ```
 
-**Repository:** `git@github.com:phamhung075/4genthub-hooks.git`
-**Branch:** `main` (main development branch)
-
-### 📋 **Version Tracking & Changelog**
-
-The 4genthub-hooks client follows semantic versioning and maintains detailed changelog documentation:
-
-- **Project Changelog**: [../CHANGELOG.md](../CHANGELOG.md) - Complete version history following [Keep a Changelog](https://keepachangelog.com/) format
-- **Release Management**: Integrated with main agenthub project versioning
-- **Version Compatibility**: Each hooks version is tested with specific agenthub API versions
-- **Migration Support**: Upgrade guides provided for breaking changes
-- **Development Tracking**: Iteration-based tracking with comprehensive test results
-
-**Current Status**: Development version with 107+ consecutive perfect test iterations
-
-## 🚀 Quick Start Guide
-
-### Prerequisites
-
-**Simple Setup - No Local Server Required:**
-
-1. **4genthub Account** (Primary Requirement)
-   - Create account at [https://www.4genthub.com](https://www.4genthub.com)
-   - Generate API token from your dashboard
-   - **No server installation needed** - fully hosted service
-
-2. **4genthub-hooks** (Claude Code Client)
-   - Claude Code integration layer
-   - **Python 3.12** required (exact version)
-   - This repository
-
-3. **Claude Code** (latest version)
-
-4. **Supported Platforms**
-   - ✅ **Linux** (Ubuntu, Debian, Fedora, etc.)
-   - ✅ **macOS** (Intel & Apple Silicon)
-   - ✅ **Windows** (via WSL - Windows Subsystem for Linux)
-
-### Installation Steps
-
-#### Step 1: Create 4genthub Account
+#### Push Your Changes
 ```bash
-# 1. Register at https://www.4genthub.com
-# 2. Complete account verification
-# 3. Navigate to Dashboard → API Tokens
-# 4. Generate new API token and copy it
-# 5. Ready to use - no server setup required!
-```
-
-#### Step 2: Install Python 3.12 (if needed)
-
-**Linux:**
-```bash
-# Ubuntu/Debian
-sudo apt update && sudo apt install python3.12 python3.12-venv
-
-# Fedora
-sudo dnf install python3.12
-
-# Verify installation
-python3.12 --version
-```
-
-**macOS:**
-```bash
-# Using Homebrew
-brew install python@3.12
-
-# Verify installation
-python3.12 --version
-```
-
-**Windows (WSL):**
-```bash
-# First, ensure WSL is installed and running Ubuntu
-# Then follow Linux instructions above
-sudo apt update && sudo apt install python3.12 python3.12-venv
-```
-
-#### Step 3: Setup 4genthub-hooks Client in New Project
-```bash
-# 1. Navigate to your existing project directory
-cd your-existing-project
-
-# 2. Remove .claude from .gitignore if it exists
-sed -i '/^\.claude$/d' .gitignore
-
-# 3. Add 4genthub-hooks as a submodule
-git submodule add git@github.com:phamhung075/4genthub-hooks.git .claude
-
-# 4. Initialize and update the submodule
-git submodule update --init --recursive
-
-# 5. Configure the submodule to track main branch
 cd .claude
-git checkout main
+git add -A
+git commit -m "Your changes"
+git push origin main
 cd ..
-
-# 6. Configure connection with your API token
-cp .claude/.mcp.json.sample .claude/.mcp.json
-nano .claude/.mcp.json
-
-# Update the configuration to include your token:
-# {
-#   "mcpServers": {
-#     "agenthub_http": {
-#       "type": "http",
-#       "url": "https://api.4genthub.com/mcp",  # Use hosted service
-#       "headers": {
-#         "Accept": "application/json, text/event-stream",
-#         "Authorization": "Bearer YOUR_API_TOKEN_HERE"  # Replace with your actual token
-#       }
-#     }
-#   }
-# }
-
-# 7. Test connection to hosted service
-curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.4genthub.com/mcp/health
-
-# 8. Commit the submodule addition
-git add .gitmodules .claude .gitignore
-git commit -m "feat: add 4genthub-hooks as .claude submodule"
+git add .claude
+git commit -m "Update .claude submodule"
 ```
 
-#### Step 4: Launch Claude Code
+#### Remove Submodule (if needed)
 ```bash
-# Open in Claude Code (hooks will auto-activate)
-claude-code .
-
-# System will automatically:
-# ✅ Connect to hosted 4agenthub service
-# ✅ Load master-orchestrator-agent
-# ✅ Enable real-time status tracking
-# ✅ Activate all 42+ specialized agents
+git submodule deinit -f .claude
+rm -rf .git/modules/.claude
+git rm -f .claude
 ```
 
-### Verification
+### Performance Monitoring
 
-After setup, you should see:
+The status line displays real-time metrics:
 ```
-🎯 Active: master-orchestrator-agent | 🔗 MCP: ✅ Connected | 🌿 main
-```
-
-**Test the integration:**
-```
-User: "Create a simple hello world function"
-Expected: Auto-delegation to coding-agent with MCP task tracking
+🎯 Active: master-orchestrator-agent | 🔗 MCP: ✅ Connected (45ms) | 🌿 main
 ```
 
-## 🔗 How It Works Together
+- **Active**: Current agent role
+- **MCP**: Connection status and response time
+- **Branch**: Current git branch
 
-### The Complete System Architecture
+---
+
+## 📊 **How It Works**
 
 **4agenthub** (Hosted Service) + **4genthub-hooks** (Claude Code Client) = Enterprise AI Orchestration Platform
 
@@ -805,26 +844,6 @@ The hooks system includes comprehensive performance monitoring and optimization:
 | **PostToolUse** | Progress updates & result processing | • Documentation index updates<br>• Context synchronization<br>• Hint generation & storage<br>• Agent state tracking |
 | **StatusLine** | Real-time monitoring & metrics | • < 50ms status updates<br>• Connection health monitoring<br>• Performance metrics display<br>• Response time tracking |
 
-## 🤖 Available Agents
-
-### Development & Coding
-- `coding-agent` - Implementation and feature development
-- `debugger-agent` - Bug fixing and troubleshooting
-- `code-reviewer-agent` - Code quality and review
-- `prototyping-agent` - Rapid prototyping and POCs
-
-### Testing & QA
-- `test-orchestrator-agent` - Comprehensive test management
-- `uat-coordinator-agent` - User acceptance testing
-- `performance-load-tester-agent` - Performance and load testing
-
-### Architecture & Design
-- `system-architect-agent` - System design and architecture
-- `design-system-agent` - Design system and UI patterns
-- `ui-specialist-agent` - UI/UX design and frontend
-- `core-concept-agent` - Core concepts and fundamentals
-
-### [+ 20 more specialized agents...]
 
 ## ⚡ Performance Metrics & Optimization
 
@@ -1078,222 +1097,42 @@ The status line shows:
 - **MCP Connection**: Status of connection to 4genthub service (✅ Connected or ❌ Disconnected)
 - **Git Branch**: Current git branch name
 
-## 🔧 Troubleshooting
 
-### Status Line Not Displaying
 
-If you're not seeing the dynamic status line features described in this documentation, here are the most common causes and solutions:
+---
 
-#### 1. Status Line Display Issues
+## 📞 **Support & Resources**
 
-**The status line requires Claude Code to properly load and execute the Python script**
-- Ensure **Python 3.12** is installed and accessible
-- The status line updates when there are active MCP tasks
-- Check that `.mcp.json` is properly configured with your API token
-- The status line will show "JSON Error" if MCP connection fails
+### Quick Links
+- **Get API Token**: https://www.4genthub.com/dashboard/api-tokens
+- **API Status**: https://api.4genthub.com/health
+- **GitHub Issues**: https://github.com/phamhung075/4genthub-hooks/issues
+- **Website**: https://www.4genthub.com
 
-#### 2. How to Verify Status Line is Working
-
-**Create a test task to verify functionality:**
-- Create a task using MCP: Any request that creates a task (most complex requests)
-- The status line should update to show agent and task information
-- If you see `"[Agent] [Claude] 💭 JSON Error"` - check MCP connection
-- Expected format: `🎯 Active: agent-name | 🔗 MCP: ✅ Connected | 🌿 main`
-
-#### 3. Common Issues and Solutions
-
-**No active tasks = minimal status line display**
-- The fancy status line examples require active MCP tasks
-- Simple requests that don't create tasks show basic status only
-- Complex requests (implementing features, debugging, etc.) create tasks and show full status
-
-**MCP not connected = error messages**
-- Check `.mcp.json` configuration
-- Verify your 4genthub API token is valid
-- Test connection: `curl -H "Authorization: Bearer YOUR_API_TOKEN" https://api.4genthub.com/mcp/health`
-- Ensure network connectivity to hosted service
-
-**Python not found = status line won't load**
-- Install Python 3.12 (exact version required)
-- Verify with: `python3.12 --version`
-- Ensure Python is in your system PATH
-
-#### 4. Manual Testing Command
-
-**Test the status line script directly:**
-```bash
-python3 ./.claude/status_lines/status_line_mcp.py
-```
-
-This command will test the status line functionality independently and show any errors in loading or MCP communication.
-
-#### 5. Understanding Status Line Behavior
-
-**The status line behavior varies based on your activity:**
-- **No MCP tasks**: Shows basic agent name and ready status
-- **Active tasks**: Shows detailed progress with counts and descriptions
-- **Multiple parallel tasks**: Shows coordination and progress across all tasks
-- **Blocked tasks**: Shows warning indicators and blocked status
-
-**Note**: The sophisticated status line features demonstrated in this documentation require:
-- Active MCP connection to 4genthub hosted service
-- Tasks created through the MCP system
-- Proper Python 3.12 installation
-- Valid API token configuration
-
-If you're just reading documentation or asking simple questions, you may not see the full status line features until you start working on complex tasks that trigger MCP task creation.
-
-### 🔧 Performance Troubleshooting
-
-#### **Slow Response Times**
-If you're experiencing slow performance:
-
-1. **Check connection metrics in status line**:
-   ```bash
-   # Good performance: ✅ Connected (api.4genthub.com) 45ms
-   # Slow performance: ✅ Connected (api.4genthub.com) 2500ms
-   # Timeout issues: ❌ Timeout (api.4genthub.com)
-   ```
-
-2. **Performance diagnosis commands**:
-   ```bash
-   # Test MCP connection directly
-   python3 ./.claude/hooks/utils/mcp_client.py
-
-   # Check status line performance
-   python3 ./.claude/status_lines/status_line_mcp.py
-
-   # Verify authentication
-   curl -H "Authorization: Bearer YOUR_TOKEN" https://api.4genthub.com/health
-   ```
-
-3. **Performance optimization environment variables**:
-   ```bash
-   # Faster status checks (trade freshness for speed)
-   export MCP_STATUS_CACHE_DURATION="120"    # 2-minute cache
-   export MCP_CONNECTION_TIMEOUT="1.0"       # 1-second timeout
-
-   # Connection pool optimization
-   export HTTP_POOL_CONNECTIONS="20"         # Larger pool
-   export HTTP_POOL_MAXSIZE="20"             # More connections
-   ```
-
-#### **Authentication Performance Issues**
-- **Token refresh**: Automatic refresh 60 seconds before expiry
-- **Cache management**: Tokens cached securely at `~/.claude/.mcp_token_cache`
-- **Performance impact**: < 1s for token validation and renewal
-
-#### **Status Line Performance Tuning**
-- **Default cache TTL**: 45 seconds (configurable via `MCP_STATUS_CACHE_DURATION`)
-- **Connection timeout**: 2 seconds (configurable via `MCP_CONNECTION_TIMEOUT`)
-- **Retry strategy**: Exponential backoff with max 3 retries
-- **Performance target**: < 50ms for cached status, < 2s for live checks
-
-## 🛠️ Development
-
-### Project Structure
-```
-4genthub-hooks/
-├── .claude/
-│   ├── hooks/           # Python hook implementations
-│   ├── status_lines/    # Status line renderers
-│   ├── output-styles/   # Output formatting
-│   └── settings.json    # Claude Code configuration
-├── ai_docs/             # AI knowledge base
-├── logs/                # Session and debug logs
-├── .mcp.json           # MCP server connections
-├── CLAUDE.md           # Agent instructions
-└── README.md           # This file
-```
-
-### Adding Custom Hooks
-```python
-# .claude/hooks/custom_hook.py
-import json
-import sys
-
-def process_hook(data):
-    # Your hook logic here
-    return {"success": True}
-
-if __name__ == "__main__":
-    data = json.loads(sys.stdin.read())
-    result = process_hook(data)
-    print(json.dumps(result))
-```
-
-### Testing Hooks
-```bash
-# Run hook tests
-cd .claude/hooks/tests
-python -m pytest test_*.py
-```
-
-## 🔐 Security
-
-- **JWT Authentication** - Secure token-based access to hosted 4agenthub service
-- **Tool Permission Enforcement** - Dynamic restrictions based on agent roles
-- **Audit Logging** - Complete activity tracking in cloud
-- **Context Isolation** - User-specific data separation in hosted environment
-
-## 📚 Documentation
-
-- **CLAUDE.md** - Complete agent system instructions
-- **CLAUDE.local.md** - Local project-specific rules
-- **ai_docs/** - Knowledge base for AI agents
-- **[CHANGELOG.md](../CHANGELOG.md)** - Version history and updates (Keep a Changelog format)
-
-### Configuration Files for Your Project
-
-To set up Claude Code configuration in your project, you can use these template files:
-
-- **copy-to-root-project-rename-to:CLAUDE.local.md** - Template for local project-specific AI agent rules
-  - Copy this file to your project root and rename to `CLAUDE.local.md`
-  - Contains local environment rules and overrides (not checked into version control)
-  - Customize for your specific project needs
-
-- **copy-to-root-project-rename-to:CLAUDE.md** - Template for main AI agent instructions
-  - Copy this file to your project root and rename to `CLAUDE.md`
-  - Contains enterprise system instructions for AI agents (checked into repository)
-  - Shared across team for consistent AI agent behavior
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **4agenthub Team** - For the powerful MCP orchestration server
-- **Anthropic** - For Claude and Claude Code
-- **MCP Protocol** - For enabling agent communication standards
-
-## 🔗 Links
-
-- [4agenthub Website](https://www.4genthub.com)
-- [4agenthub API Documentation](https://api.4genthub.com/docs)
-- [Claude Code Documentation](https://docs.anthropic.com/claude-code)
-- [MCP Protocol Specification](https://modelcontextprotocol.io)
-- [Project Changelog](../CHANGELOG.md) - Version history and release notes
-- [Keep a Changelog](https://keepachangelog.com/) - Changelog format specification
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/phamhung075/4genthub-hooks/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/phamhung075/4genthub-hooks/discussions)
-- **4agenthub Website**: [https://www.4genthub.com](https://www.4genthub.com)
-- **4agenthub Hosted API**: https://api.4genthub.com
-- **Version History**: [Project Changelog](../CHANGELOG.md) - Check for known issues and recent fixes
+### Documentation
+- **This README**: Complete setup and usage guide
+- **CLAUDE.md**: Team AI agent instructions
+- **CLAUDE.local.md**: Personal configuration
+- **ai_docs/**: Knowledge base
 
 ---
 
 <div align="center">
-Built with ❤️ for intelligent AI orchestration
+
+### **Quick Setup Reminder**
+
+```bash
+# 1. Get the code
+git submodule add git@github.com:phamhung075/4genthub-hooks.git .claude
+
+# 2. Run setup
+python3 .claude/hooks/setup_hooks.py
+
+# 3. Follow instructions & add API token
+# 4. Start Claude Code
+claude-code .
+```
+
+**4genthub-hooks** - Enterprise AI Orchestration Made Simple
+
 </div>

@@ -1,0 +1,37 @@
+# Sample: Allowed files in project root
+# One file name per line
+# Customize this list based on your project needs
+# Copy to __claude_hook__allowed_root_files (without .sample)
+
+# Core project files
+README.md
+CHANGELOG.md
+CLAUDE.md
+CLAUDE.local.md
+
+# Git configuration
+.gitignore
+.gitattributes
+
+# Environment configuration (root only)
+.env
+.env.sample
+.env.example
+.env.local
+
+# Package management (add what you use)
+package.json
+package-lock.json
+requirements.txt
+pyproject.toml
+
+# License
+LICENSE
+LICENSE.md
+
+# Your custom files (examples)
+# Makefile
+# docker-compose.yml
+# .dockerignore
+# netlify.toml
+# vercel.json

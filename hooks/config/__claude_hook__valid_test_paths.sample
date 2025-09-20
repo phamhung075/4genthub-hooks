@@ -1,0 +1,35 @@
+# Sample: Valid paths for test files
+# One path per line (relative to project root)
+# Test files can ONLY be created in these directories
+# Copy to __claude_hook__valid_test_paths (without .sample)
+
+# Backend tests (Python/Node.js examples)
+backend/tests
+backend/tests/unit
+backend/tests/integration
+backend/tests/e2e
+src/tests
+tests
+
+# Frontend tests (React/Vue/Angular examples)
+frontend/src/tests
+frontend/src/__tests__
+frontend/src/components/__tests__
+frontend/cypress
+frontend/e2e
+src/__tests__
+src/tests
+
+# Hook tests
+.claude/hooks/tests
+.claude/hooks/tests/unit
+.claude/hooks/tests/integration
+.claude/hooks/tests/fixtures
+
+# Your custom test paths (examples)
+# spec
+# __tests__
+# test
+# tests/unit
+# tests/integration
+# tests/e2e

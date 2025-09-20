@@ -15,3 +15,7 @@ agenthub-frontend/src/__tests__
 agenthub-frontend/src/components/__tests__
 agenthub-frontend/cypress
 agenthub-frontend/e2e
+
+
+# Hook tests
+.claude/hooks/tests
