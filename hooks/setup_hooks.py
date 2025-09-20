@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """
-Setup Hooks - Portable hooks configuration setup for Claude Code
+Setup Hooks - Enhanced Portable hooks configuration setup for Claude Code
 
 This script automatically detects the project root and creates a properly
 configured settings.json file from the settings.json.sample template.
 
-Features:
-- Auto-detects project root directory
+Enhanced Features:
+- Auto-detects project root directory with improved reliability
 - Replaces {{PROJECT_ROOT}} placeholder with actual absolute path
+- Cross-platform path handling (Windows, macOS, Linux)
+- Enhanced environment detection and validation
 - Validates that all hook files exist
+- Detects virtual environments and Python executables
 - Creates settings.json that's gitignored (local to each environment)
 - Provides clear success/error messages and troubleshooting guidance
+- Handles git submodule detection
+- Graceful dependency handling
 
 Usage:
     python3 .claude/hooks/setup_hooks.py
@@ -24,12 +29,30 @@ This enables portable .claude folder that works across different:
 - Operating systems (Windows, macOS, Linux)
 - User directories and project locations
 - Development environments and machines
+- Virtual environments (venv, conda, pipenv)
+- Git repository structures (regular and submodule)
 """
 
 import sys
 import os
 import json
+import platform
+import shutil
 from pathlib import Path
+
+# Try to import enhanced utilities if available
+try:
+    # Add utils to path
+    script_dir = Path(__file__).parent
+    utils_dir = script_dir / 'utils'
+    if utils_dir.exists():
+        sys.path.insert(0, str(utils_dir))
+
+    from environment_detector import EnvironmentDetector
+    from dependency_manager import DependencyManager, setup_default_fallbacks
+    ENHANCED_MODE = True
+except ImportError:
+    ENHANCED_MODE = False
 
 
 def find_project_root():
@@ -136,12 +159,13 @@ def validate_hook_files(hooks_dir, config_data):
     return len(missing_files) == 0, missing_files, found_files
 
 
-def create_settings_from_template(project_root):
+def create_settings_from_template(project_root, python_executable=None):
     """
     Create settings.json from settings.json.sample template.
 
     Args:
         project_root: Path to the project root directory
+        python_executable: Python executable to use (auto-detected if not provided)
 
     Returns:
         bool: True if successful, False otherwise
@@ -169,9 +193,19 @@ def create_settings_from_template(project_root):
         with open(template_path, 'r', encoding='utf-8') as f:
             template_content = f.read()
 
-        # Replace placeholder with actual project root path
-        project_root_str = str(project_root).replace('\\', '/')  # Normalize path separators
+        # Use provided or detect Python executable
+        if python_executable is None:
+            python_executable = get_recommended_python_executable()
+
+        # Cross-platform path handling
+        project_root_str = str(project_root)
+        if platform.system() == "Windows":
+            # On Windows, use forward slashes for consistency in JSON
+            project_root_str = project_root_str.replace('\\', '/')
+
+        # Replace placeholders
         settings_content = template_content.replace('{{PROJECT_ROOT}}', project_root_str)
+        settings_content = settings_content.replace('{{PYTHON_EXECUTABLE}}', python_executable)
 
         # Parse JSON to validate structure
         config_data = json.loads(settings_content)
@@ -480,6 +514,35 @@ def untrack_hook_configs_from_git(project_root):
         print(f"⚠️  Warning: Could not perform git operations: {e}")
 
 
+def get_recommended_python_executable():
+    """Get the recommended Python executable for this environment."""
+    current_platform = platform.system()
+
+    # Find available Python executables
+    executables = []
+    common_names = ['python', 'python3', 'python3.9', 'python3.10', 'python3.11', 'python3.12']
+
+    for name in common_names:
+        if shutil.which(name):
+            executables.append(name)
+
+    # On Windows, prefer python over python3
+    if current_platform == "Windows":
+        if 'python' in executables:
+            return 'python'
+        elif 'python3' in executables:
+            return 'python3'
+    else:
+        # On Unix-like systems, prefer python3 over python
+        if 'python3' in executables:
+            return 'python3'
+        elif 'python' in executables:
+            return 'python'
+
+    # Fallback to current executable
+    return sys.executable
+
+
 def test_hook_execution(project_root):
     """
     Test that hook execution works with the new settings.
@@ -498,8 +561,9 @@ def test_hook_execution(project_root):
     try:
         # Test with a simple hook that should exist
         import subprocess
+        python_exe = get_recommended_python_executable()
         result = subprocess.run([
-            sys.executable, str(execute_hook_path), '--help'
+            python_exe, str(execute_hook_path), '--help'
         ], capture_output=True, text=True, timeout=10)
 
         if result.returncode == 0:
@@ -516,12 +580,21 @@ def test_hook_execution(project_root):
 
 
 def main():
-    """Main setup function."""
-    print("🚀 Claude Code Hooks Setup")
+    """Enhanced main setup function with environment detection."""
+    print("🚀 Claude Code Hooks Setup (Enhanced)")
     print("=" * 50)
 
+    # Initialize enhanced components if available
+    env_detector = None
+    dep_manager = None
+
+    if ENHANCED_MODE:
+        print("✅ Enhanced mode enabled - using environment detection")
+    else:
+        print("⚠️  Basic mode - enhanced utilities not available")
+
     # Find project root
-    print("🔍 Finding project root...")
+    print("\n🔍 Finding project root...")
     project_root = find_project_root()
     if not project_root:
         print("❌ Error: Could not find project root")
@@ -534,9 +607,97 @@ def main():
 
     print(f"✅ Found project root: {project_root}")
 
+    # Enhanced environment detection
+    if ENHANCED_MODE:
+        try:
+            env_detector = EnvironmentDetector(project_root)
+            dep_manager = DependencyManager(project_root)
+            setup_default_fallbacks(dep_manager)
+
+            print("\n🌍 Environment Detection:")
+            env_info = env_detector.get_environment_info()
+
+            # Platform info
+            platform_info = env_info['platform']
+            print(f"   • Platform: {platform_info['system']} {platform_info['release']}")
+            print(f"   • Architecture: {platform_info['machine']} ({platform_info['architecture']})")
+
+            # Python info
+            python_info = env_info['python']
+            print(f"   • Python: {python_info['version_info']['major']}.{python_info['version_info']['minor']}.{python_info['version_info']['micro']}")
+
+            # Virtual environment
+            venv_info = env_info['virtual_env']
+            if venv_info['is_virtual_env']:
+                print(f"   • Virtual Environment: {venv_info['type']} ({venv_info['name']})")
+            else:
+                print(f"   • Virtual Environment: Not detected")
+
+            # Git info
+            git_info = env_info['git']
+            if git_info['is_git_repo']:
+                print(f"   • Git Repository: {git_info['current_branch']}")
+                if git_info['is_submodule']:
+                    print(f"   • .claude is a git submodule: Yes")
+            else:
+                print(f"   • Git Repository: Not detected")
+
+            # Validate environment
+            is_valid, issues = env_detector.validate_environment()
+            if is_valid:
+                print("   ✅ Environment validation passed")
+            else:
+                print("   ⚠️  Environment issues found:")
+                for issue in issues:
+                    print(f"      • {issue}")
+
+            # Check dependencies
+            print("\n📦 Dependency Check:")
+            dep_status = dep_manager.check_dependencies()
+            available_count = sum(1 for status in dep_status['available'].values() if status)
+            missing_count = len(dep_status['missing'])
+
+            print(f"   • Available packages: {available_count}")
+            if missing_count > 0:
+                print(f"   • Missing packages: {missing_count} (fallbacks available)")
+
+        except Exception as e:
+            print(f"   ⚠️  Error in enhanced detection: {e}")
+            print("   Continuing with basic setup...")
+
+    # Cross-platform compatibility check
+    print(f"\n🖥️  Platform Compatibility:")
+    current_platform = platform.system()
+    print(f"   • Detected platform: {current_platform}")
+
+    if current_platform == "Windows":
+        print("   • Windows compatibility: Enabled")
+        print("   • Path separator: Backslash (\\)")
+    elif current_platform == "Darwin":
+        print("   • macOS compatibility: Enabled")
+        print("   • Path separator: Forward slash (/)")
+    elif current_platform == "Linux":
+        print("   • Linux compatibility: Enabled")
+        print("   • Path separator: Forward slash (/)")
+        # Check for WSL
+        try:
+            with open('/proc/version', 'r') as f:
+                if 'microsoft' in f.read().lower():
+                    print("   • WSL detected: Yes")
+        except (FileNotFoundError, PermissionError):
+            pass
+    else:
+        print(f"   • {current_platform}: Basic support")
+
+    # Python executable detection
+    print(f"\n🐍 Python Environment:")
+    python_exe = get_recommended_python_executable()
+    print(f"   • Recommended executable: {python_exe}")
+    print(f"   • Current executable: {sys.executable}")
+
     # Create settings from template
     print("\n⚙️  Creating settings.json from template...")
-    if not create_settings_from_template(project_root):
+    if not create_settings_from_template(project_root, python_exe):
         print("\n❌ Setup failed!")
         print("\nTroubleshooting:")
         print("1. Ensure .claude/settings.json.sample exists and has valid JSON")
