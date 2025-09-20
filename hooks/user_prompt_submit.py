@@ -484,6 +484,22 @@ class UserPromptSubmitHook:
 def main():
     """Main entry point for the hook."""
     try:
+        # CRITICAL: Validate configuration files before any hook execution
+        try:
+            from utils.config_validator import validate_configuration
+            if not validate_configuration():
+                # Configuration validation failed, error already printed to stderr
+                sys.exit(1)
+        except ImportError:
+            # If validator module not found, print basic error
+            print("\n❌ ERROR: Configuration validator not found!", file=sys.stderr)
+            print("Please ensure .claude/hooks/utils/config_validator.py exists.", file=sys.stderr)
+            sys.exit(1)
+        except Exception as e:
+            # Any other validation error
+            print(f"\n❌ ERROR: Configuration validation failed: {e}", file=sys.stderr)
+            sys.exit(1)
+
         # Parse command line arguments
         parser = argparse.ArgumentParser(description='User prompt submit hook')
         parser.add_argument('--validate', action='store_true',

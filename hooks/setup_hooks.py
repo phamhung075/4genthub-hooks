@@ -461,7 +461,7 @@ def main():
     # Check if files exist in project root
     claude_md_exists = (project_root / 'CLAUDE.md').exists()
     claude_local_md_exists = (project_root / 'CLAUDE.local.md').exists()
-    mcp_json_exists = (project_root / '.claude' / '.mcp.json').exists()
+    mcp_json_exists = (project_root / '.mcp.json').exists()
 
     if not claude_md_exists:
         print("\n📄 **1.1 - Create CLAUDE.md (Team AI Instructions)**")
@@ -489,8 +489,8 @@ def main():
         print("\n📄 **2.1 - Create .mcp.json (API Configuration)**")
         print("   This connects Claude Code to the 4genthub service.")
         print("   ✅ Run these commands:")
-        print(f"   cp .claude/.mcp.json.sample .claude/.mcp.json")
-        print(f"   nano .claude/.mcp.json  # or use your favorite editor")
+        print(f"   cp .claude/.mcp.json.sample .mcp.json")
+        print(f"   nano .mcp.json  # or use your favorite editor")
         print("\n   🔐 **2.2 - Add Your API Token:**")
         print("   Replace 'YOUR_API_TOKEN_HERE' with your actual token from 4genthub.com")
         print("   Example:")
@@ -499,7 +499,7 @@ def main():
     else:
         print("\n✅ .mcp.json already exists")
         print("   ⚠️  Make sure your API token is configured:")
-        print(f"   nano .claude/.mcp.json")
+        print(f"   nano .mcp.json")
         print('   Check that "Authorization" has your actual token, not placeholder')
 
     print("\n" + "=" * 70)
@@ -522,7 +522,7 @@ def main():
     print("   • Connects to 4genthub hosted service")
     print("   • Contains your API authentication token")
     print("   • Required for AI agents to work")
-    print("   • Location: ./.claude/.mcp.json")
+    print("   • Location: ./.mcp.json (project root)")
 
     print("\n4️⃣  **__claude_hook__allowed_root_files.sample** (Root File Protection)")
     print("   • Template for controlling what files AI can create in project root")
@@ -546,8 +546,8 @@ def main():
     if not claude_local_md_exists:
         commands.append("cp .claude/copy-to-root-project-rename-to:CLAUDE.local.md ./CLAUDE.local.md")
     if not mcp_json_exists:
-        commands.append("cp .claude/.mcp.json.sample .claude/.mcp.json")
-        commands.append("# Edit .claude/.mcp.json to add your API token")
+        commands.append("cp .claude/.mcp.json.sample .mcp.json")
+        commands.append("# Edit .mcp.json to add your API token")
 
     if commands:
         print("\n# Copy these commands:")
@@ -619,7 +619,7 @@ def main():
     print("🚀 **Final Step: Start Claude Code**")
     print("=" * 70)
     print("Once you've completed the above steps:")
-    print("1. Make sure you added your API token to .claude/.mcp.json")
+    print("1. Make sure you added your API token to .mcp.json")
     print("2. Review hook protection files (if prompted above)")
     print("3. Run: claude-code .")
     print("4. The AI agents will automatically initialize!")
