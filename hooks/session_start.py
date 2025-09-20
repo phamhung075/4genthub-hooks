@@ -207,81 +207,453 @@ class GitContextProvider(ContextProvider):
 
 
 class MCPContextProvider(ContextProvider):
-    """Provides MCP task and project context."""
+    """Provides MCP task and project context with automatic project/branch retrieval."""
 
     def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
-        """Get MCP tasks and project context."""
+        """Get MCP tasks and project context with project/branch IDs."""
         try:
-            from utils.mcp_client import get_default_client
-            client = get_default_client()
-            if not client:
-                return None
+            from utils.mcp_client import MCPHTTPClient
+            client = MCPHTTPClient()
+
+            # Ensure client is authenticated
+            if not client.authenticate():
+                return {'error': 'MCP authentication failed'}
 
             context = {}
+
+            # Get project and branch information with IDs
+            project_info = self._get_project_info(client)
+            if project_info:
+                context['project_info'] = project_info
+
+            branch_info = self._get_branch_info(client, project_info)
+            if branch_info:
+                context['branch_info'] = branch_info
 
             # Get pending tasks
             pending_tasks = self._query_pending_tasks(client)
             if pending_tasks:
                 context['pending_tasks'] = pending_tasks[:5]  # First 5 tasks
 
-            # Get git branch context
-            git_context = self._get_git_branch_context(client)
-            if git_context:
-                context['git_branch_context'] = git_context
+            # Get active tasks (in_progress status)
+            if branch_info and branch_info.get('git_branch_id'):
+                active_tasks = self._query_active_tasks(client, branch_info['git_branch_id'])
+                if active_tasks:
+                    context['active_tasks'] = active_tasks
 
             # Get next recommended task
-            next_task = self._query_next_task(client, git_context)
-            if next_task:
-                context['next_task'] = next_task
+            if branch_info and branch_info.get('git_branch_id'):
+                next_task = self._query_next_task(client, branch_info['git_branch_id'])
+                if next_task:
+                    context['next_task'] = next_task
 
             return context if context else None
 
         except Exception as e:
             return {'error': str(e)}
 
+    def _get_project_info(self, client) -> Optional[Dict]:
+        """Get project information from MCP by matching git repository name."""
+        try:
+            # Get project name from git remote or folder name
+            project_name = self._get_project_name()
+            if not project_name:
+                return None
+
+            # Call MCP to list all projects
+            mcp_request = {
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {
+                    "name": "manage_project",
+                    "arguments": {
+                        "action": "list"
+                    }
+                },
+                "id": 1
+            }
+
+            response = client.session.post(
+                f"{client.base_url}/mcp",
+                json=mcp_request,
+                timeout=client.timeout
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                if "result" in result and not result["result"].get("isError"):
+                    # The actual data is in result.content[0].text as a JSON string
+                    content = result["result"].get("content", [])
+                    if content and len(content) > 0:
+                        content_text = content[0].get("text", "")
+                        try:
+                            # Parse the JSON string in the text field
+                            parsed_content = json.loads(content_text)
+                            projects = parsed_content.get("data", {}).get("projects", [])
+
+                            # Find matching project by name
+                            for project in projects:
+                                if project.get("name", "").lower() == project_name.lower():
+                                    return {
+                                        "project_name": project.get("name"),
+                                        "project_id": project.get("id"),
+                                        "found": True
+                                    }
+
+                            # Project not found
+                            return {
+                                "project_name": project_name,
+                                "project_id": None,
+                                "found": False
+                            }
+                        except json.JSONDecodeError:
+                            pass  # Fall through to error case
+
+        except Exception as e:
+            return {"error": str(e), "project_name": project_name if 'project_name' in locals() else "unknown"}
+
+        return None
+
+    def _get_branch_info(self, client, project_info: Optional[Dict]) -> Optional[Dict]:
+        """Get branch information from MCP by matching current git branch."""
+        try:
+            if not project_info or not project_info.get("project_id"):
+                return None
+
+            # Get current branch name from main repository, not submodule
+            # If we found the main repository during project detection, use it
+            current_dir = Path.cwd()
+            search_dir = current_dir
+            git_path = None
+
+            # Search for .git to determine repository location
+            for _ in range(3):
+                potential_git = search_dir / '.git'
+                if potential_git.exists():
+                    git_path = potential_git
+                    break
+                search_dir = search_dir.parent
+                if search_dir == search_dir.parent:
+                    break
+
+            # If in a submodule, get branch from main repository
+            if git_path and git_path.is_file():
+                # Look for main repository
+                project_root = current_dir
+                for _ in range(5):
+                    parent_dir = project_root.parent
+                    parent_git = parent_dir / '.git'
+                    if parent_git.is_dir():
+                        project_root = parent_dir
+                        break
+                    elif parent_dir == project_root:
+                        break
+                    else:
+                        project_root = parent_dir
+
+                # Get branch from main repository
+                branch_result = subprocess.run(
+                    ['git', '-C', str(project_root), 'rev-parse', '--abbrev-ref', 'HEAD'],
+                    capture_output=True, text=True, timeout=5
+                )
+            else:
+                # Normal git repository
+                branch_result = subprocess.run(
+                    ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                    capture_output=True, text=True, timeout=5
+                )
+
+            current_branch = branch_result.stdout.strip() if branch_result.returncode == 0 else None
+
+            if not current_branch or current_branch == "HEAD":
+                return None
+
+            # Call MCP to list branches for the project
+            mcp_request = {
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {
+                    "name": "manage_git_branch",
+                    "arguments": {
+                        "action": "list",
+                        "project_id": project_info["project_id"]
+                    }
+                },
+                "id": 2
+            }
+
+            response = client.session.post(
+                f"{client.base_url}/mcp",
+                json=mcp_request,
+                timeout=client.timeout
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                if "result" in result and not result["result"].get("isError"):
+                    # The actual data is in result.content[0].text as a JSON string
+                    content = result["result"].get("content", [])
+                    if content and len(content) > 0:
+                        content_text = content[0].get("text", "")
+                        try:
+                            # Parse the JSON string in the text field
+                            parsed_content = json.loads(content_text)
+                            # Note: API returns 'git_branchs' (typo) not 'git_branches'
+                            branches = parsed_content.get("data", {}).get("git_branchs", [])
+
+                            # Find matching branch by name (API uses 'name' not 'git_branch_name')
+                            for branch in branches:
+                                if branch.get("name", "") == current_branch:
+                                    return {
+                                        "branch_name": current_branch,
+                                        "git_branch_id": branch.get("id"),
+                                        "found": True
+                                    }
+
+                            # Branch not found
+                            return {
+                                "branch_name": current_branch,
+                                "git_branch_id": None,
+                                "found": False
+                            }
+                        except json.JSONDecodeError:
+                            pass  # Fall through to error case
+
+        except Exception as e:
+            current_branch = "unknown"
+            try:
+                branch_result = subprocess.run(
+                    ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                    capture_output=True, text=True, timeout=5
+                )
+                if branch_result.returncode == 0:
+                    current_branch = branch_result.stdout.strip()
+            except:
+                pass
+            return {"error": str(e), "branch_name": current_branch}
+
+        return None
+
+    def _get_project_name(self) -> Optional[str]:
+        """Get project name from git remote URL or folder name, checking parent repo if in submodule."""
+        try:
+            # First, check if we're in a git submodule by looking for .git file vs directory
+            # Start from current directory and check parent directories for .git
+            current_dir = Path.cwd()
+
+            # Look for .git in current directory or parent directories (submodule might be in parent)
+            search_dir = current_dir
+            git_path = None
+
+            # Search up to 3 levels to find .git
+            for _ in range(3):
+                potential_git = search_dir / '.git'
+                if potential_git.exists():
+                    git_path = potential_git
+                    break
+                search_dir = search_dir.parent
+                if search_dir == search_dir.parent:  # Reached root
+                    break
+
+            # If .git is a file (submodule), navigate to parent repository
+            if git_path and git_path.is_file():
+                # We're in a submodule, try to find the main repository
+                # Look for the project root by going up directories
+                project_root = current_dir
+                max_levels = 5  # Prevent infinite loop
+
+                for _ in range(max_levels):
+                    parent_dir = project_root.parent
+                    parent_git = parent_dir / '.git'
+
+                    # If parent has a .git directory (not file), it's the main repo
+                    if parent_git.is_dir():
+                        project_root = parent_dir
+                        break
+                    elif parent_dir == project_root:  # Reached filesystem root
+                        break
+                    else:
+                        project_root = parent_dir
+
+                # Try to get remote URL from the main repository
+                remote_result = subprocess.run(
+                    ['git', '-C', str(project_root), 'remote', 'get-url', 'origin'],
+                    capture_output=True, text=True, timeout=5
+                )
+
+                if remote_result.returncode == 0:
+                    remote_url = remote_result.stdout.strip()
+                    project_name = self._extract_project_name_from_url(remote_url)
+                    if project_name:
+                        return project_name
+
+                # Fallback to main repository directory name
+                return project_root.name
+
+            else:
+                # Normal git repository, use current approach
+                remote_result = subprocess.run(
+                    ['git', 'remote', 'get-url', 'origin'],
+                    capture_output=True, text=True, timeout=5
+                )
+
+                if remote_result.returncode == 0:
+                    remote_url = remote_result.stdout.strip()
+                    project_name = self._extract_project_name_from_url(remote_url)
+                    if project_name:
+                        return project_name
+
+                # Fallback to current directory name
+                return current_dir.name
+
+        except Exception:
+            # Final fallback to current directory name
+            try:
+                return Path.cwd().name
+            except:
+                return None
+
+    def _extract_project_name_from_url(self, remote_url: str) -> Optional[str]:
+        """Extract project name from git remote URL."""
+        if not remote_url:
+            return None
+
+        # Handle various URL formats
+        if remote_url.endswith('.git'):
+            remote_url = remote_url[:-4]
+
+        # Extract last part of path
+        if '/' in remote_url:
+            project_name = remote_url.split('/')[-1]
+        else:
+            project_name = remote_url
+
+        return project_name if project_name else None
+
     def _query_pending_tasks(self, client) -> Optional[List[Dict]]:
         """Query pending tasks from MCP."""
         try:
-            # Use the actual client interface method
-            return client.query_pending_tasks(limit=5)
-        except:
+            mcp_request = {
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {
+                    "name": "manage_task",
+                    "arguments": {
+                        "action": "list",
+                        "status": "todo,in_progress",
+                        "limit": 5
+                    }
+                },
+                "id": 3
+            }
+
+            response = client.session.post(
+                f"{client.base_url}/mcp",
+                json=mcp_request,
+                timeout=client.timeout
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                if "result" in result and not result["result"].get("isError"):
+                    # The actual data is in result.content[0].text as a JSON string
+                    content = result["result"].get("content", [])
+                    if content and len(content) > 0:
+                        content_text = content[0].get("text", "")
+                        try:
+                            # Parse the JSON string in the text field
+                            parsed_content = json.loads(content_text)
+                            return parsed_content.get("data", {}).get("tasks", [])
+                        except json.JSONDecodeError:
+                            pass  # Fall through to return None
+
+        except Exception:
             pass
         return None
 
-    def _get_git_branch_context(self, client) -> Optional[Dict]:
-        """Get git branch context from MCP."""
+    def _query_active_tasks(self, client, git_branch_id: str) -> Optional[List[Dict]]:
+        """Query active tasks (in_progress status) from MCP for the current branch."""
         try:
-            # Use the actual client interface methods
-            project_context = client.query_project_context()
-            git_branch_info = client.query_git_branch_info()
+            mcp_request = {
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {
+                    "name": "manage_task",
+                    "arguments": {
+                        "action": "list",
+                        "git_branch_id": git_branch_id,
+                        "status": "in_progress",
+                        "limit": 10
+                    }
+                },
+                "id": 5
+            }
 
-            if project_context or git_branch_info:
-                context = {}
-                if project_context:
-                    context['project'] = project_context
-                if git_branch_info:
-                    # Structure the git branch info to match expected format
-                    context['branches'] = [git_branch_info] if git_branch_info else []
-                return context
+            response = client.session.post(
+                f"{client.base_url}/mcp",
+                json=mcp_request,
+                timeout=client.timeout
+            )
 
-        except:
+            if response.status_code == 200:
+                result = response.json()
+                if "result" in result and not result["result"].get("isError"):
+                    # The actual data is in result.content[0].text as a JSON string
+                    content = result["result"].get("content", [])
+                    if content and len(content) > 0:
+                        content_text = content[0].get("text", "")
+                        try:
+                            # Parse the JSON string in the text field
+                            parsed_content = json.loads(content_text)
+                            tasks = parsed_content.get("data", {}).get("tasks", [])
+                            # Filter to only return tasks with in_progress status
+                            active_tasks = [task for task in tasks if task.get("status") == "in_progress"]
+                            return active_tasks if active_tasks else None
+                        except json.JSONDecodeError:
+                            pass  # Fall through to return None
+
+        except Exception:
             pass
         return None
 
-    def _query_next_task(self, client, git_context: Optional[Dict]) -> Optional[Dict]:
+    def _query_next_task(self, client, git_branch_id: str) -> Optional[Dict]:
         """Query next recommended task."""
         try:
-            if not git_context or not git_context.get('branches'):
-                return None
+            mcp_request = {
+                "jsonrpc": "2.0",
+                "method": "tools/call",
+                "params": {
+                    "name": "manage_task",
+                    "arguments": {
+                        "action": "next",
+                        "git_branch_id": git_branch_id,
+                        "include_context": True
+                    }
+                },
+                "id": 4
+            }
 
-            # Use first branch as default
-            branch = git_context['branches'][0]
-            git_branch_id = branch.get('id')
+            response = client.session.post(
+                f"{client.base_url}/mcp",
+                json=mcp_request,
+                timeout=client.timeout
+            )
 
-            # Use the actual client interface method
-            return client.get_next_recommended_task(git_branch_id)
+            if response.status_code == 200:
+                result = response.json()
+                if "result" in result and not result["result"].get("isError"):
+                    # The actual data is in result.content[0].text as a JSON string
+                    content = result["result"].get("content", [])
+                    if content and len(content) > 0:
+                        content_text = content[0].get("text", "")
+                        try:
+                            # Parse the JSON string in the text field
+                            parsed_content = json.loads(content_text)
+                            return parsed_content.get("data", {}).get("task")
+                        except json.JSONDecodeError:
+                            pass  # Fall through to return None
 
-        except:
+        except Exception:
             pass
         return None
 
@@ -583,21 +955,57 @@ class ContextFormatterProcessor(SessionProcessor):
 
             output_parts.append("\n".join(git_parts))
 
-        # MCP context
+        # MCP context with project/branch IDs
         if 'mcpcontext' in context_data:
             mcp = context_data['mcpcontext']
-            mcp_parts = ["📋 Project Context:"]
+            mcp_parts = []
 
+            # Project information with ID
+            if mcp.get('project_info'):
+                project = mcp['project_info']
+                if project.get('found'):
+                    mcp_parts.append(f"📁 Git project: Project '{project['project_name']}' : '{project['project_id']}'")
+                else:
+                    mcp_parts.append(f"⚠️ Project '{project['project_name']}' not found in MCP - Master Orchestrator should create it")
+
+            # Branch information with ID
+            if mcp.get('branch_info'):
+                branch = mcp['branch_info']
+                if branch.get('found'):
+                    mcp_parts.append(f"🌿 Git Status: Branch '{branch['branch_name']}' : '{branch['git_branch_id']}'")
+                else:
+                    mcp_parts.append(f"⚠️ Branch '{branch['branch_name']}' not found in MCP - Master Orchestrator should create it")
+
+            # Active task information
+            if mcp.get('active_tasks'):
+                active_tasks = mcp['active_tasks']
+                if len(active_tasks) == 0:
+                    mcp_parts.append("📋 No active tasks")
+                elif len(active_tasks) == 1:
+                    task = active_tasks[0]
+                    task_title = task.get('title', 'Unknown task')
+                    task_id = task.get('id', 'unknown-id')
+                    mcp_parts.append(f"📋 Active Task: '{task_title}' : '{task_id}'")
+                else:
+                    mcp_parts.append(f"📋 Active Tasks ({len(active_tasks)}):")
+                    for task in active_tasks:
+                        task_title = task.get('title', 'Unknown task')
+                        task_id = task.get('id', 'unknown-id')
+                        mcp_parts.append(f"   • '{task_title}' : '{task_id}'")
+            else:
+                mcp_parts.append("📋 No active tasks")
+
+            # Pending task information
             if mcp.get('pending_tasks'):
                 task_count = len(mcp['pending_tasks'])
-                mcp_parts.append(f"   • {task_count} active tasks")
+                mcp_parts.append(f"📝 {task_count} pending tasks")
 
             if mcp.get('next_task'):
                 next_task = mcp['next_task']
                 task_title = next_task.get('title', 'Unknown task')
                 mcp_parts.append(f"   • Next: {task_title}")
 
-            if len(mcp_parts) > 1:
+            if mcp_parts:
                 output_parts.append("\n".join(mcp_parts))
 
         # Development context
