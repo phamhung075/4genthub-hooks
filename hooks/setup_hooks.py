@@ -524,6 +524,18 @@ def main():
     print("   • Required for AI agents to work")
     print("   • Location: ./.claude/.mcp.json")
 
+    print("\n4️⃣  **__claude_hook__allowed_root_files.sample** (Root File Protection)")
+    print("   • Template for controlling what files AI can create in project root")
+    print("   • Lists allowed files like README.md, package.json, etc.")
+    print("   • Copy to __claude_hook__allowed_root_files (without .sample)")
+    print("   • Location: ./.claude/hooks/config/")
+
+    print("\n5️⃣  **__claude_hook__valid_test_paths.sample** (Test Directory Protection)")
+    print("   • Template defining where test files can be created")
+    print("   • Includes paths like src/tests, .claude/hooks/tests, etc.")
+    print("   • Copy to __claude_hook__valid_test_paths (without .sample)")
+    print("   • Location: ./.claude/hooks/config/")
+
     print("\n" + "=" * 70)
     print("✨ **Quick Setup Commands (Copy & Run):**")
     print("=" * 70)
