@@ -155,6 +155,8 @@ claude-code .
 
 ### 💻 **Option 2: Local Development Server**
 
+Git repos server: https://github.com/phamhung075/4genthub
+
 **For development and testing** - Run your own local instance:
 
 - **URL**: `http://localhost:8000/mcp`
