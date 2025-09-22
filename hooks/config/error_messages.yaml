@@ -8,7 +8,7 @@ claude_edit_disabled:
 
 env_file_subfolder:
   message: "BLOCKED: .env* files must be created in project root only"
-  hint: "Place environment files in the project root directory"
+  hint: "Place environment files in the project root directory (read .env.sample)"
 
 env_file_access:
   message: "BLOCKED: Access to .env* files containing sensitive data is prohibited"
@@ -16,7 +16,7 @@ env_file_access:
 
 env_file_blocked:
   message: "BLOCKED: Access to {filename} is prohibited for security reasons"
-  hint: "Environment files contain sensitive credentials and should not be accessed directly"
+  hint: "Environment files contain sensitive credentials and should not be accessed directly (use .env.sample)"
 
 root_file_creation:
   message: "BLOCKED: Creating files in project root is restricted"

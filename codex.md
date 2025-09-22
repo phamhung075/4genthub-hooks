@@ -23,10 +23,6 @@ args = ["@heilgar/shadcn-ui-mcp-server"]
 command = "npx"
 args = ["@browsermcp/mcp@latest"]
 
-[mcp_servers.ElevenLabs]
-command = "uvx"
-args = ["elevenlabs-mcp"]
-env = { ELEVENLABS_API_KEY = "sk_152e66d26b1eb6f1a1105474c07e962ee90b42ddf5532809" }
 
 ```
 

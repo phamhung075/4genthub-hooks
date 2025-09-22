@@ -502,8 +502,19 @@ class PreToolUseHook:
                 if filename.startswith('.env') and filename not in ['.env.sample', '.env.example', '.env.template', '.env.default', '.env.dist']:
                     with open('/tmp/test_hook.txt', 'a') as f:
                         f.write(f"BLOCKING {filename}!\n")
-                    # For Claude Code, we need to print to stderr but exit with 0
-                    error_msg = f"\n⚠️  BLOCKED: Access to {Path(file_path).name} is not allowed!\n✅ Environment files contain sensitive data and cannot be read.\n💡 Use environment variables in your code instead of reading .env files directly.\n"
+                    # Load error message from configuration
+                    from config.config_loader import ConfigLoader
+                    config_loader = ConfigLoader()
+                    error_messages = config_loader.load_config('error_messages')
+
+                    if error_messages and 'env_file_blocked' in error_messages:
+                        error_config = error_messages['env_file_blocked']
+                        error_msg = f"\n⚠️  {error_config['message'].format(filename=Path(file_path).name)}\n"
+                        error_msg += f"✅ {error_config['hint']}\n"
+                    else:
+                        # Fallback message if config loading fails
+                        error_msg = f"\n⚠️  BLOCKED: Access to {Path(file_path).name} is not allowed!\n✅ Environment files contain sensitive data and cannot be read.\n💡 Use environment variables in your code instead of reading .env files directly. (read .env.sample for more detail)\n"
+
                     print(error_msg, file=sys.stderr)
                     # Important: Claude Code only respects blocking when we exit with specific codes
                     # Exit with 2 to indicate blocking
@@ -527,6 +538,7 @@ class PreToolUseHook:
         if tool_name.startswith('mcp__agenthub_http'):
             try:
                 # Using unified hint system instead of matrix factory
+                from utils.unified_hint_system import get_hint_system
                 hint_system = get_hint_system()
                 hints = hint_system.generate_pre_action_hints(tool_name, tool_input)
                 if hints:
