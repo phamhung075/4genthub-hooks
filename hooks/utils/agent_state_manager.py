@@ -121,6 +121,7 @@ def get_agent_role_from_session(session_id: str) -> str:
         'test-orchestrator-agent': 'Testing',
         'documentation-agent': 'Documentation',
         'master-orchestrator-agent': 'Orchestrating',
+        'shadcn-ui-expert-agent': 'UI/UX',
         'ui-specialist-agent': 'UI/UX',
         'security-auditor-agent': 'Security',
         'devops-agent': 'DevOps',

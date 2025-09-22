@@ -248,28 +248,45 @@ class CommandValidator(Validator):
         if not command:
             return True, None
 
-        # Check for dangerous rm commands
-        if self._is_dangerous_rm(command):
+        # Check for various dangerous commands
+        if self._is_dangerous_command(command):
             from utils.config_factory import get_error_message
             return False, get_error_message('dangerous_rm_blocked', command=command)
 
         return True, None
 
-    def _is_dangerous_rm(self, command: str) -> bool:
-        """Check if command is a dangerous rm operation."""
-        dangerous_patterns = [
+    def _is_dangerous_command(self, command: str) -> bool:
+        """Check if command is a dangerous operation."""
+        # Check for dangerous rm commands
+        dangerous_rm_patterns = [
             r'rm\s+-[rf]*r[rf]*\s+/',
             r'rm\s+-[rf]*f[rf]*\s+/',
             r'rm\s+/\w+',
             r'rm\s+~',
-            r'rm\s+\*'
+            r'rm\s+\*',
+            r'sudo\s+rm',  # Any rm with sudo
         ]
 
-        for pattern in dangerous_patterns:
-            if re.search(pattern, command):
+        # Check for other dangerous commands
+        dangerous_system_patterns = [
+            r'mkfs',  # Format filesystem
+            r'dd\s+.*of=/dev',  # Direct disk writes
+            r'chmod\s+777\s+/etc',  # Dangerous permission changes
+            r'rm\s+-rf\s+/',  # Explicit check for rm -rf /
+        ]
+
+        # Combine all patterns
+        all_patterns = dangerous_rm_patterns + dangerous_system_patterns
+
+        for pattern in all_patterns:
+            if re.search(pattern, command, re.IGNORECASE):
                 return True
 
         return False
+
+    def _is_dangerous_rm(self, command: str) -> bool:
+        """Deprecated - kept for backward compatibility. Use _is_dangerous_command instead."""
+        return self._is_dangerous_command(command)
 
 
 class DocumentationValidator(Validator):
