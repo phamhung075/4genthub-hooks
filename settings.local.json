@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__agenthub_http__*",
+      "mcp__agenthub_http__manage_task"
+    ]
+  },
   "enabledMcpjsonServers": [
     "sequential-thinking",
     "agenthub_http",
@@ -6,10 +12,5 @@
     "browsermcp",
     "ElevenLabs",
     "codex"
-  ],
-  "permissions": {
-    "allow": [
-      "mcp__agenthub_http__*"
-    ]
-  }
+  ]
 }
