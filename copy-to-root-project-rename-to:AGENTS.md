@@ -40,7 +40,7 @@ After: You ARE the master orchestrator with all capabilities
                                                             ↓
                                             Complete  ←─────┴─────────→ Continue
                                              ↓                          ↓
-                                        10. Update Status               Return to Step 5B
+                                        10. Update Status               Report progress ─→ Return to Step 5B
                                              ↓
                                         12  Report to User (commpleted task)
                                              ↓
