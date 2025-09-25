@@ -29,8 +29,10 @@ import os
 import argparse
 import yaml
 import hashlib
+import time
+import psutil
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
 from abc import ABC, abstractmethod
 
@@ -209,9 +211,42 @@ class GitContextProvider(ContextProvider):
 class MCPContextProvider(ContextProvider):
     """Provides MCP task and project context with automatic project/branch retrieval."""
 
+    def _get_mcp_url_from_config(self) -> str:
+        """Get MCP server URL directly from .mcp.json configuration."""
+        try:
+            # Look for .mcp.json in project root
+            project_root = Path.cwd()
+            mcp_json_path = project_root / ".mcp.json"
+
+            # Try parent directories if not found
+            if not mcp_json_path.exists():
+                for _ in range(3):
+                    project_root = project_root.parent
+                    mcp_json_path = project_root / ".mcp.json"
+                    if mcp_json_path.exists():
+                        break
+
+            if mcp_json_path.exists():
+                with open(mcp_json_path, 'r') as f:
+                    mcp_config = json.load(f)
+
+                # Extract URL from agenthub_http configuration exactly as shown
+                agenthub_config = mcp_config.get("mcpServers", {}).get("agenthub_http", {})
+                configured_url = agenthub_config.get("url", "")
+                if configured_url:
+                    return configured_url
+        except Exception:
+            pass
+
+        # Fallback to default
+        return "https://api.4genthub.com"
+
     def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
         """Get MCP tasks and project context with project/branch IDs."""
         try:
+            # Get MCP server URL directly from .mcp.json
+            mcp_server_url = self._get_mcp_url_from_config()
+
             from utils.mcp_client import MCPHTTPClient
             client = MCPHTTPClient()
 
@@ -220,6 +255,9 @@ class MCPContextProvider(ContextProvider):
                 return {'error': 'MCP authentication failed'}
 
             context = {}
+
+            # Add MCP server URL to context (from .mcp.json)
+            context['mcp_server_url'] = mcp_server_url
 
             # Get project and branch information with IDs
             project_info = self._get_project_info(client)
@@ -960,6 +998,10 @@ class ContextFormatterProcessor(SessionProcessor):
             mcp = context_data['mcpcontext']
             mcp_parts = []
 
+            # Display MCP server URL first for verification
+            if mcp.get('mcp_server_url'):
+                mcp_parts.append(f"🌐 MCP Server: {mcp['mcp_server_url']}")
+
             # Project information with ID
             if mcp.get('project_info'):
                 project = mcp['project_info']
@@ -1071,6 +1113,142 @@ class ComponentFactory:
 
 
 # ============================================================================
+# Claude Session Cleanup
+# ============================================================================
+
+class ClaudeSessionCleanup:
+    """Manages cleanup of idle Claude sessions to prevent memory buildup."""
+
+    def __init__(self, logger=None):
+        """Initialize the cleanup manager."""
+        self.logger = logger
+        # Configuration from environment or defaults
+        self.idle_threshold_hours = float(os.getenv('CLAUDE_IDLE_THRESHOLD_HOURS', '2'))
+        self.cpu_threshold = float(os.getenv('CLAUDE_CPU_THRESHOLD', '0.5'))
+        self.cleanup_enabled = os.getenv('CLAUDE_AUTO_CLEANUP', 'true').lower() == 'true'
+
+    def find_claude_processes(self) -> List[Dict[str, Any]]:
+        """Find all Claude processes running on the system."""
+        claude_processes = []
+        current_pid = os.getpid()
+
+        try:
+            for proc in psutil.process_iter(['pid', 'name', 'cmdline', 'create_time', 'cpu_percent']):
+                try:
+                    # Check if this is a Claude process
+                    cmdline = proc.info.get('cmdline', [])
+                    if cmdline and any('claude' in str(cmd).lower() for cmd in cmdline):
+                        # Skip the current process
+                        if proc.info['pid'] != current_pid:
+                            claude_processes.append({
+                                'pid': proc.info['pid'],
+                                'cmdline': ' '.join(cmdline),
+                                'create_time': proc.info['create_time'],
+                                'cpu_percent': proc.cpu_percent(interval=0.1),
+                                'age_hours': (time.time() - proc.info['create_time']) / 3600
+                            })
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    continue
+
+        except Exception as e:
+            if self.logger:
+                self.logger.log('error', f'Error finding Claude processes: {e}')
+
+        return claude_processes
+
+    def is_process_idle(self, process: Dict[str, Any]) -> bool:
+        """Determine if a process is idle based on age and CPU usage."""
+        # Process is idle if it's older than threshold AND has low CPU usage
+        is_old = process['age_hours'] > self.idle_threshold_hours
+        is_low_cpu = process['cpu_percent'] < self.cpu_threshold
+        return is_old and is_low_cpu
+
+    def cleanup_idle_sessions(self) -> Dict[str, Any]:
+        """Find and kill idle Claude sessions."""
+        if not self.cleanup_enabled:
+            return {'enabled': False, 'message': 'Auto-cleanup is disabled'}
+
+        results = {
+            'found': 0,
+            'idle': 0,
+            'killed': 0,
+            'errors': [],
+            'details': []
+        }
+
+        try:
+            processes = self.find_claude_processes()
+            results['found'] = len(processes)
+
+            for proc_info in processes:
+                if self.is_process_idle(proc_info):
+                    results['idle'] += 1
+
+                    # Attempt to kill the idle process
+                    try:
+                        process = psutil.Process(proc_info['pid'])
+                        process.terminate()
+
+                        # Give it a moment to terminate gracefully
+                        time.sleep(0.5)
+
+                        # Force kill if still running
+                        if process.is_running():
+                            process.kill()
+
+                        results['killed'] += 1
+                        results['details'].append({
+                            'pid': proc_info['pid'],
+                            'age_hours': round(proc_info['age_hours'], 2),
+                            'cpu_percent': round(proc_info['cpu_percent'], 2),
+                            'status': 'killed'
+                        })
+
+                        if self.logger:
+                            self.logger.log('info',
+                                f"Killed idle Claude session (PID: {proc_info['pid']}, "
+                                f"Age: {proc_info['age_hours']:.1f}h, CPU: {proc_info['cpu_percent']:.1f}%)")
+
+                    except Exception as e:
+                        results['errors'].append(f"Failed to kill PID {proc_info['pid']}: {e}")
+                        if self.logger:
+                            self.logger.log('error', f"Failed to kill PID {proc_info['pid']}: {e}")
+                else:
+                    # Log active sessions
+                    results['details'].append({
+                        'pid': proc_info['pid'],
+                        'age_hours': round(proc_info['age_hours'], 2),
+                        'cpu_percent': round(proc_info['cpu_percent'], 2),
+                        'status': 'active'
+                    })
+
+        except Exception as e:
+            results['errors'].append(f"Cleanup error: {e}")
+            if self.logger:
+                self.logger.log('error', f"Session cleanup failed: {e}")
+
+        return results
+
+    def format_cleanup_message(self, results: Dict[str, Any]) -> str:
+        """Format cleanup results for display."""
+        if not results.get('enabled', True):
+            return ""
+
+        if results['killed'] > 0:
+            msg = f"🧹 Cleaned up {results['killed']} idle Claude session(s)\n"
+            for detail in results['details']:
+                if detail['status'] == 'killed':
+                    msg += f"   • Killed PID {detail['pid']} (idle for {detail['age_hours']:.1f}h)\n"
+            return msg.rstrip()
+        elif results['found'] > 0:
+            active_count = results['found'] - results['idle']
+            if active_count > 1:
+                return f"ℹ️  {active_count} active Claude session(s) running"
+
+        return ""
+
+
+# ============================================================================
 # Main Hook Class
 # ============================================================================
 
@@ -1100,6 +1278,17 @@ class SessionStartHook:
         """Execute the session start hook."""
         # Log the execution
         self.logger.log('info', 'Processing session start')
+
+        # Run Claude session cleanup first
+        try:
+            cleanup_manager = ClaudeSessionCleanup(self.logger)
+            cleanup_results = cleanup_manager.cleanup_idle_sessions()
+            cleanup_message = cleanup_manager.format_cleanup_message(cleanup_results)
+            if cleanup_message:
+                print(f"\n{cleanup_message}\n")
+                self.logger.log('info', f'Session cleanup: {cleanup_results}')
+        except Exception as e:
+            self.logger.log('error', f'Session cleanup failed: {e}')
 
         # Process through all processors
         output_parts = []
@@ -1291,11 +1480,9 @@ def load_development_context(trigger: str = "startup") -> str:
     """Backward compatibility wrapper for development context."""
     try:
         # Create a factory and get context
-        factory = SessionFactory()
-        providers = [
-            factory.create_git_context_provider(),
-            factory.create_mcp_context_provider()
-        ]
+        factory = ComponentFactory()
+        config_loader = factory.create_config_loader(Path(__file__).parent / 'config')
+        providers = factory.create_context_providers(config_loader)
 
         combined_context = {}
         for provider in providers:

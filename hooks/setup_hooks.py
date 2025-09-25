@@ -518,28 +518,36 @@ def get_recommended_python_executable():
     """Get the recommended Python executable for this environment."""
     current_platform = platform.system()
 
+    # Use absolute path to avoid shell spawning issues
+    # Check for Python in standard locations
+    standard_paths = [
+        '/usr/bin/python3',
+        '/usr/bin/python',
+        '/usr/local/bin/python3',
+        '/usr/local/bin/python',
+        'C:\\Python\\python.exe',
+        'C:\\Python39\\python.exe',
+        'C:\\Python310\\python.exe',
+        'C:\\Python311\\python.exe',
+        'C:\\Python312\\python.exe',
+    ]
+
+    # Check standard absolute paths first
+    for path in standard_paths:
+        if Path(path).exists():
+            return path
+
     # Find available Python executables
     executables = []
     common_names = ['python', 'python3', 'python3.9', 'python3.10', 'python3.11', 'python3.12']
 
     for name in common_names:
-        if shutil.which(name):
-            executables.append(name)
+        which_result = shutil.which(name)
+        if which_result:
+            # Return absolute path to avoid shell issues
+            return str(Path(which_result).resolve())
 
-    # On Windows, prefer python over python3
-    if current_platform == "Windows":
-        if 'python' in executables:
-            return 'python'
-        elif 'python3' in executables:
-            return 'python3'
-    else:
-        # On Unix-like systems, prefer python3 over python
-        if 'python3' in executables:
-            return 'python3'
-        elif 'python' in executables:
-            return 'python'
-
-    # Fallback to current executable
+    # Fallback to current executable (already absolute)
     return sys.executable
 
 

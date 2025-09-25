@@ -382,7 +382,10 @@ class HintProcessor(Processor):
             # Get pending hints from post_tool_use
             from utils.unified_hint_system import get_hint_system
 
-            hint_system = get_hint_system()
+            if not _is_recursive_call():
+                hint_system = get_hint_system()
+            else:
+                hint_system = None
             pending_hints = hint_system.hint_bridge.retrieve_hints()
             if pending_hints:
                     hint_output.append("📋 Previous Action Insights:")
@@ -395,7 +398,14 @@ class HintProcessor(Processor):
         try:
             # Generate new hints
             # Using unified hint system instead of separate analyzer
-            hint_system = get_hint_system()
+            if not _is_recursive_call():
+                _enter_recursion()
+                try:
+                    hint_system = get_hint_system()
+                finally:
+                    _exit_recursion()
+            else:
+                hint_system = None
             new_hints = hint_system.generate_pre_action_hints(tool_name, tool_input)
             if new_hints:
                     hint_output.append("💡 Workflow Guidance:")
@@ -539,7 +549,10 @@ class PreToolUseHook:
             try:
                 # Using unified hint system instead of matrix factory
                 from utils.unified_hint_system import get_hint_system
-                hint_system = get_hint_system()
+                if not _is_recursive_call():
+                    hint_system = get_hint_system()
+                else:
+                    hint_system = None
                 hints = hint_system.generate_pre_action_hints(tool_name, tool_input)
                 if hints:
                     output_parts.append(hints)

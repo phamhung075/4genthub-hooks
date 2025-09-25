@@ -184,9 +184,19 @@ class RateLimiter:
 
 class MCPHTTPClient:
     """HTTP client for communicating with MCP server."""
-    
+
     def __init__(self):
-        self.base_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000")
+        # Get URL from .mcp.json if available, otherwise use environment or default
+        mcp_url = self._get_mcp_url()
+        if mcp_url:
+            # Use the URL from .mcp.json as configured
+            self.base_url = mcp_url
+            logger.info(f"Using MCP URL from .mcp.json: {self.base_url}")
+        else:
+            # Fall back to environment variable or default
+            self.base_url = os.getenv("MCP_SERVER_URL", "https://api.4genthub.com")
+            logger.info(f"Using fallback MCP URL: {self.base_url}")
+
         self.token_manager = TokenManager()
         self.session = requests.Session()
         self.timeout = int(os.getenv("MCP_SERVER_TIMEOUT", "10"))
@@ -199,7 +209,46 @@ class MCPHTTPClient:
             "Accept": "application/json, text/event-stream",
             "User-Agent": "Claude-Hooks-MCP-Client/1.0"
         })
-    
+
+    def _get_mcp_url(self) -> Optional[str]:
+        """Extract MCP server URL from .mcp.json file if available."""
+        try:
+            # Look for .mcp.json in project root
+            from env_loader import get_project_root
+            project_root = get_project_root()
+            mcp_json_path = project_root / ".mcp.json"
+
+            logger.debug(f"Looking for .mcp.json at: {mcp_json_path}")
+
+            if not mcp_json_path.exists():
+                # Try parent directories up to 3 levels
+                for _ in range(3):
+                    project_root = project_root.parent
+                    mcp_json_path = project_root / ".mcp.json"
+                    if mcp_json_path.exists():
+                        break
+
+            if mcp_json_path.exists():
+                with open(mcp_json_path, 'r') as f:
+                    mcp_config = json.load(f)
+
+                # Extract URL from agenthub_http configuration
+                agenthub_config = mcp_config.get("mcpServers", {}).get("agenthub_http", {})
+                url = agenthub_config.get("url", "")
+
+                if url:
+                    # Remove /mcp suffix if present since we add it later
+                    if url.endswith("/mcp"):
+                        url = url[:-4]
+                    logger.info(f"Found MCP URL from .mcp.json: {url}")
+                    return url
+                else:
+                    logger.debug("No URL found in .mcp.json agenthub_http configuration")
+        except Exception as e:
+            logger.debug(f"Could not read .mcp.json URL: {e}")
+
+        return None
+
     def authenticate(self) -> bool:
         """Authenticate with .mcp.json token."""
         try:
