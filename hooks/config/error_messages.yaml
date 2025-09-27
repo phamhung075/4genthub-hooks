@@ -10,13 +10,49 @@ env_file_subfolder:
   message: "BLOCKED: .env* files must be created in project root only"
   hint: "Place environment files in the project root directory (read .env.sample)"
 
+env_file_invalid_path:
+  message: |
+    ============================================================
+    🔒 ENVIRONMENT FILE CREATION BLOCKED
+    ============================================================
+
+    ❌ ATTEMPTED: Creating '{filename}' in '{directory}'
+    🔐 SECURITY: .env files contain sensitive data
+  hint: |
+    ✅ VALID PATHS FOR .ENV FILES:
+    {valid_paths}
+
+    💡 SOLUTIONS:
+       1. Create the .env file in an allowed directory
+       2. Add '{directory}' to __claude_hook__valid_env_paths config
+       3. Use .env.sample or .env.example for templates
+
+    📝 CONFIG FILE:
+       .claude/hooks/config/__claude_hook__valid_env_paths
+
 env_file_access:
   message: "BLOCKED: Access to .env* files containing sensitive data is prohibited"
   hint: "Use .env.sample for template files instead"
 
 env_file_blocked:
-  message: "BLOCKED: Access to {filename} is prohibited for security reasons"
-  hint: "Environment files contain sensitive credentials and should not be accessed directly (use .env.sample)"
+  message: |
+    ============================================================
+    🔒 ENVIRONMENT FILE ACCESS BLOCKED
+    ============================================================
+
+    ❌ ATTEMPTED: Accessing '{filename}'
+    🔐 SECURITY: .env files contain sensitive credentials
+  hint: |
+    ✅ ALLOWED SAMPLE FILES:
+       • .env.sample
+       • .env.example
+       • .env.template
+       • .env.default
+       • .env.dist
+
+    💡 SOLUTION:
+       Use .env.sample or .env.example for reference
+       Access environment variables via os.environ in code
 
 root_file_creation:
   message: "BLOCKED: Creating files in project root is restricted"
@@ -27,8 +63,23 @@ root_folder_creation:
   hint: "All necessary project folders should already exist"
 
 root_file_blocked:
-  message: "BLOCKED: File '{filename}' is not allowed in project root"
-  hint: "Allowed root files: {allowed_files}"
+  message: |
+    ============================================================
+    ⛔ FILE CREATION BLOCKED IN ROOT DIRECTORY
+    ============================================================
+
+    ❌ ATTEMPTED: Creating '{filename}' in project root
+    📁 LOCATION: Project root directory
+  hint: |
+    ✅ ALLOWED FILES IN ROOT:
+    {allowed_files}
+
+    💡 SOLUTIONS:
+       1. Place this file in an appropriate subdirectory
+       2. Or request to add '{filename}' to allowed_root_files config
+
+    📝 CONFIG FILE:
+       .claude/hooks/config/__claude_hook__allowed_root_files
 
 unique_root_file:
   message: "BLOCKED: {file} can only exist in project root"

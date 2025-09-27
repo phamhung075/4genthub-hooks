@@ -56,6 +56,25 @@ PROJECT_ROOT = find_project_root()
 
 
 # ============================================================================
+# Recursion Helper Functions
+# ============================================================================
+
+def _is_recursive_call() -> bool:
+    """Check if we're in a recursive call to prevent infinite loops."""
+    return os.environ.get('CLAUDE_HINT_RECURSION_GUARD', '0') == '1'
+
+
+def _enter_recursion():
+    """Mark that we're entering a recursive section."""
+    os.environ['CLAUDE_HINT_RECURSION_GUARD'] = '1'
+
+
+def _exit_recursion():
+    """Mark that we're exiting a recursive section."""
+    os.environ['CLAUDE_HINT_RECURSION_GUARD'] = '0'
+
+
+# ============================================================================
 # Abstract Base Classes
 # ============================================================================
 
@@ -188,9 +207,15 @@ class RootFileValidator(Validator):
                 filename = relative_path.parts[0]
                 if filename not in self.allowed_files:
                     from utils.config_factory import get_error_message
+
+                    # Format allowed files list for the message
+                    allowed_files_formatted = ""
+                    for allowed_file in sorted(self.allowed_files):
+                        allowed_files_formatted += f"       • {allowed_file}\n"
+
                     return False, get_error_message('root_file_blocked',
                                                   filename=filename,
-                                                  allowed_files=', '.join(self.allowed_files))
+                                                  allowed_files=allowed_files_formatted.rstrip())
         except ValueError:
             # Path is outside project root
             pass
@@ -199,7 +224,7 @@ class RootFileValidator(Validator):
 
 
 class EnvFileValidator(Validator):
-    """Validates environment file access."""
+    """Validates environment file access and creation."""
 
     # List of allowed .env example file patterns (exact match only)
     ALLOWED_ENV_EXAMPLES = [
@@ -210,8 +235,35 @@ class EnvFileValidator(Validator):
         '.env.dist'
     ]
 
+    def __init__(self):
+        self.valid_env_paths = self._load_valid_env_paths()
+
+    def _load_valid_env_paths(self) -> List[str]:
+        """Load valid paths for .env file creation from configuration."""
+        project_root = PROJECT_ROOT
+        config_path = project_root / '.claude' / 'hooks' / 'config' / '__claude_hook__valid_env_paths'
+
+        # Default: empty list means only allow root when config is empty/missing
+        valid_paths = []
+
+        if config_path.exists():
+            try:
+                with open(config_path, 'r') as f:
+                    lines = [line.strip() for line in f.readlines()
+                            if line.strip() and not line.startswith('#')]
+                    # If file has content, use those paths
+                    if lines:
+                        valid_paths = lines
+                    # If file is empty, only allow root directory
+                    # (empty list means root-only)
+
+            except:
+                pass
+
+        return valid_paths
+
     def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
-        """Validate environment file access."""
+        """Validate environment file access and creation."""
         if tool_name not in ['Read', 'Write', 'Edit', 'MultiEdit']:
             return True, None
 
@@ -229,11 +281,70 @@ class EnvFileValidator(Validator):
             if filename in [e.lower() for e in self.ALLOWED_ENV_EXAMPLES]:
                 return True, None
 
-            # Block all other .env* files including .env.dev, .env.prod, .env.local, etc.
-            from utils.config_factory import get_error_message
-            return False, get_error_message('env_file_blocked', filename=path_obj.name)
+            # For Write operations, check if path is valid for .env creation
+            if tool_name in ['Write', 'Edit', 'MultiEdit']:
+                # Check if creation is allowed in this path
+                if not self._is_valid_env_path(path_obj):
+                    from utils.config_factory import get_error_message
+
+                    # Get relative path for error message
+                    try:
+                        rel_path = path_obj.resolve().relative_to(PROJECT_ROOT.resolve())
+                        rel_dir = str(rel_path.parent) if rel_path.parent != Path('.') else 'root'
+                    except:
+                        rel_dir = str(path_obj.parent)
+
+                    # Format valid paths list for the message
+                    if self.valid_env_paths:
+                        valid_paths_formatted = ""
+                        for valid_path in self.valid_env_paths:
+                            valid_paths_formatted += f"       • {valid_path or 'root'}\n"
+                    else:
+                        valid_paths_formatted = "       • root (project root directory ONLY)\n"
+
+                    return False, get_error_message('env_file_invalid_path',
+                                                  filename=path_obj.name,
+                                                  directory=rel_dir,
+                                                  valid_paths=valid_paths_formatted.rstrip())
+
+            # Block all read operations on .env files
+            if tool_name == 'Read':
+                from utils.config_factory import get_error_message
+                return False, get_error_message('env_file_blocked', filename=path_obj.name)
 
         return True, None
+
+    def _is_valid_env_path(self, file_path: Path) -> bool:
+        """Check if the path is valid for .env file creation."""
+        try:
+            # Get relative path from project root
+            abs_path = file_path.resolve()
+            project_root_abs = PROJECT_ROOT.resolve()
+            rel_path = abs_path.relative_to(project_root_abs)
+
+            # If valid_env_paths is empty, only allow root
+            if not self.valid_env_paths:
+                # Check if file is in root directory (no parent directories)
+                return len(rel_path.parts) == 1
+
+            # Check if the file's directory matches any valid path
+            file_dir = str(rel_path.parent) if rel_path.parent != Path('.') else '.'
+
+            for valid_path in self.valid_env_paths:
+                # Normalize paths for comparison
+                valid_path = valid_path.strip('/')
+                if valid_path == '.' or valid_path == '':
+                    # Root directory
+                    if file_dir == '.':
+                        return True
+                elif file_dir == valid_path or file_dir.startswith(valid_path + '/'):
+                    return True
+
+            return False
+
+        except ValueError:
+            # Path is outside project root
+            return False
 
 
 class CommandValidator(Validator):
@@ -361,7 +472,7 @@ class ContextProcessor(Processor):
                 if context and context.strip():
                     return context
 
-        except Exception as e:
+        except Exception:
             # Log but don't fail
             pass
 

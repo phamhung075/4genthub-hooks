@@ -1,0 +1,20 @@
+# Configuration file for valid .env file paths
+# This file controls where .env files can be created in the project
+#
+# Format: One path per line (relative to project root)
+# Comments start with #
+#
+# Examples:
+# . or empty line = root directory only
+# docker-system = allow in docker-system/ folder
+# agenthub-frontend = allow in agenthub-frontend/ folder
+# agenthub_main = allow in agenthub_main/ folder
+#
+# When this file is empty: Only allows .env files in project root
+# When paths are specified: Only allows .env files in those specific directories
+#
+# Sample configuration (uncomment to use):
+# .
+# docker-system
+# agenthub-frontend
+# agenthub_main

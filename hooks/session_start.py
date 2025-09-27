@@ -327,16 +327,26 @@ class MCPContextProvider(ContextProvider):
                         try:
                             # Parse the JSON string in the text field
                             parsed_content = json.loads(content_text)
-                            projects = parsed_content.get("data", {}).get("projects", [])
+                            projects_data = parsed_content.get("data", {}).get("projects", [])
 
-                            # Find matching project by name
-                            for project in projects:
-                                if project.get("name", "").lower() == project_name.lower():
+                            # Handle both single object and array
+                            if isinstance(projects_data, dict):
+                                # Single project returned as object
+                                if projects_data.get("name", "").lower() == project_name.lower():
                                     return {
-                                        "project_name": project.get("name"),
-                                        "project_id": project.get("id"),
+                                        "project_name": projects_data.get("name"),
+                                        "project_id": projects_data.get("id"),
                                         "found": True
                                     }
+                            elif isinstance(projects_data, list):
+                                # Multiple projects returned as array
+                                for project in projects_data:
+                                    if project.get("name", "").lower() == project_name.lower():
+                                        return {
+                                            "project_name": project.get("name"),
+                                            "project_id": project.get("id"),
+                                            "found": True
+                                        }
 
                             # Project not found
                             return {
@@ -1477,7 +1487,13 @@ def format_mcp_context(context_data: Dict) -> str:
 
 
 def load_development_context(trigger: str = "startup") -> str:
-    """Backward compatibility wrapper for development context."""
+    """Backward compatibility wrapper for development context.
+
+    Args:
+        trigger: Event trigger type (kept for backward compatibility)
+    """
+    # Note: trigger parameter is kept for backward compatibility but not used
+    _ = trigger  # Mark as intentionally unused
     try:
         # Create a factory and get context
         factory = ComponentFactory()
