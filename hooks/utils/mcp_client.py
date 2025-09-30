@@ -214,7 +214,7 @@ class MCPHTTPClient:
         """Extract MCP server URL from .mcp.json file if available."""
         try:
             # Look for .mcp.json in project root
-            from env_loader import get_project_root
+            from .env_loader import get_project_root
             project_root = get_project_root()
             mcp_json_path = project_root / ".mcp.json"
 

@@ -330,23 +330,31 @@ class MCPContextProvider(ContextProvider):
                             projects_data = parsed_content.get("data", {}).get("projects", [])
 
                             # Handle both single object and array
+                            matching_projects = []
+
                             if isinstance(projects_data, dict):
                                 # Single project returned as object
                                 if projects_data.get("name", "").lower() == project_name.lower():
-                                    return {
-                                        "project_name": projects_data.get("name"),
-                                        "project_id": projects_data.get("id"),
-                                        "found": True
-                                    }
+                                    matching_projects.append(projects_data)
                             elif isinstance(projects_data, list):
                                 # Multiple projects returned as array
                                 for project in projects_data:
                                     if project.get("name", "").lower() == project_name.lower():
-                                        return {
-                                            "project_name": project.get("name"),
-                                            "project_id": project.get("id"),
-                                            "found": True
-                                        }
+                                        matching_projects.append(project)
+
+                            # If multiple projects with same name, select the NEWEST one (highest created_at)
+                            if matching_projects:
+                                # Sort by created_at descending (newest first)
+                                matching_projects.sort(
+                                    key=lambda p: p.get("created_at", ""),
+                                    reverse=True
+                                )
+                                newest_project = matching_projects[0]
+                                return {
+                                    "project_name": newest_project.get("name"),
+                                    "project_id": newest_project.get("id"),
+                                    "found": True
+                                }
 
                             # Project not found
                             return {
@@ -1023,7 +1031,10 @@ class ContextFormatterProcessor(SessionProcessor):
             # Branch information with ID
             if mcp.get('branch_info'):
                 branch = mcp['branch_info']
-                if branch.get('error'):
+                # Defensive type check: ensure branch is a dict before accessing with .get()
+                if not isinstance(branch, dict):
+                    mcp_parts.append(f"⚠️ Error fetching branch info: Invalid data type returned")
+                elif branch.get('error'):
                     # Error occurred while fetching branch info
                     mcp_parts.append(f"⚠️ Error fetching branch info: {branch['error']}")
                 elif branch.get('found'):
