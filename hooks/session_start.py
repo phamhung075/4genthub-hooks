@@ -32,7 +32,7 @@ import hashlib
 import time
 import psutil
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Any, Optional, List
 from abc import ABC, abstractmethod
 
@@ -1023,10 +1023,15 @@ class ContextFormatterProcessor(SessionProcessor):
             # Branch information with ID
             if mcp.get('branch_info'):
                 branch = mcp['branch_info']
-                if branch.get('found'):
-                    mcp_parts.append(f"🌿 Git Status: Branch '{branch['branch_name']}' : '{branch['git_branch_id']}'")
+                if branch.get('error'):
+                    # Error occurred while fetching branch info
+                    mcp_parts.append(f"⚠️ Error fetching branch info: {branch['error']}")
+                elif branch.get('found'):
+                    # Branch found in MCP
+                    mcp_parts.append(f"🌿 Git Branch: '{branch['branch_name']}' : '{branch['git_branch_id']}'")
                 else:
-                    mcp_parts.append(f"⚠️ Branch '{branch['branch_name']}' not found in MCP - Master Orchestrator should create it")
+                    # Branch exists in git but not in MCP (normal for new branches)
+                    mcp_parts.append(f"📝 Git Branch: '{branch['branch_name']}' (not yet registered in MCP)")
 
             # Active task information
             if mcp.get('active_tasks'):

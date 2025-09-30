@@ -12,5 +12,6 @@
     "agenthub_http",
     "shadcn-ui-server",
     "codex"
-  ]
+  ],
+  "outputStyle": "Explanatory"
 }
