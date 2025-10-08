@@ -11,7 +11,9 @@
     "sequential-thinking",
     "agenthub_http",
     "shadcn-ui-server",
+    "browsermcp",
     "codex"
   ],
-  "outputStyle": "Explanatory"
+  "outputStyle": "Explanatory",
+  "enableAllProjectMcpServers": true
 }

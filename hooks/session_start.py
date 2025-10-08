@@ -715,40 +715,252 @@ class MCPContextProvider(ContextProvider):
 
 
 class DevelopmentContextProvider(ContextProvider):
-    """Provides development environment context."""
+    """Provides development environment context with multi-project architecture detection."""
 
     def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
-        """Get development environment context."""
+        """Get comprehensive development environment context."""
         try:
             context = {}
+            project_root = Path.cwd()
 
-            # Get working directory
-            context['working_directory'] = str(Path.cwd())
+            # Detect frontend project
+            frontend_info = self._detect_frontend(project_root)
+            if frontend_info:
+                context['frontend'] = frontend_info
 
-            # Check for key files
-            key_files = [
-                'package.json', 'requirements.txt', 'pyproject.toml',
-                'Dockerfile', 'docker-compose.yml', 'CLAUDE.md'
-            ]
+            # Detect backend project
+            backend_info = self._detect_backend(project_root)
+            if backend_info:
+                context['backend'] = backend_info
 
-            existing_files = []
-            for file in key_files:
-                if Path(file).exists():
-                    existing_files.append(file)
+            # Detect hook system
+            hook_info = self._detect_hook_system(project_root)
+            if hook_info:
+                context['hooks'] = hook_info
 
-            context['key_files'] = existing_files
+            # Detect infrastructure
+            infra_info = self._detect_infrastructure(project_root)
+            if infra_info:
+                context['infrastructure'] = infra_info
 
-            # Get environment info
+            # Legacy fields for backward compatibility
+            context['working_directory'] = str(project_root)
             context['python_version'] = sys.version.split()[0]
             context['platform'] = sys.platform
-
-            # Check for virtual environment
             context['virtual_env'] = os.environ.get('VIRTUAL_ENV') is not None
 
-            return context
+            return context if context else None
 
         except Exception as e:
             return {'error': str(e)}
+
+    def _detect_frontend(self, project_root: Path) -> Optional[Dict[str, Any]]:
+        """Detect frontend project (React/TypeScript/Vite)."""
+        try:
+            frontend_dir = project_root / 'agenthub-frontend'
+            if not frontend_dir.exists():
+                return None
+
+            info = {'detected': True, 'path': 'agenthub-frontend/'}
+
+            # Parse package.json for versions
+            package_json = frontend_dir / 'package.json'
+            if package_json.exists():
+                with open(package_json, 'r') as f:
+                    data = json.load(f)
+                    deps = data.get('dependencies', {})
+                    dev_deps = data.get('devDependencies', {})
+
+                    # Extract framework versions
+                    if 'react' in deps:
+                        react_version = deps['react'].replace('^', '').replace('~', '')
+                        info['react_version'] = react_version.split('.')[0] + '.x'
+
+                    if 'typescript' in deps or 'typescript' in dev_deps:
+                        ts_version = (deps.get('typescript') or dev_deps.get('typescript', '')).replace('^', '').replace('~', '')
+                        info['typescript_version'] = ts_version.split('.')[0] + '.x' if ts_version else 'detected'
+
+                    if 'vite' in dev_deps:
+                        vite_version = dev_deps['vite'].replace('^', '').replace('~', '')
+                        info['vite_version'] = vite_version.split('.')[0] + '.x'
+
+                    # Check for UI frameworks
+                    ui_frameworks = []
+                    if 'tailwindcss' in deps or 'tailwindcss' in dev_deps:
+                        ui_frameworks.append('Tailwind CSS')
+                    if any('radix' in dep for dep in deps.keys()):
+                        ui_frameworks.append('shadcn/ui')
+                    if ui_frameworks:
+                        info['ui_frameworks'] = ui_frameworks
+
+            # Check for key files
+            key_files = []
+            for file in ['package.json', 'vite.config.ts', 'tsconfig.json']:
+                if (frontend_dir / file).exists():
+                    key_files.append(file)
+            if key_files:
+                info['key_files'] = key_files
+
+            info['port'] = 3800
+
+            return info
+
+        except Exception:
+            return None
+
+    def _detect_backend(self, project_root: Path) -> Optional[Dict[str, Any]]:
+        """Detect backend project (Python/FastMCP/DDD)."""
+        try:
+            backend_dir = project_root / 'agenthub_main'
+            if not backend_dir.exists():
+                return None
+
+            info = {'detected': True, 'path': 'agenthub_main/'}
+
+            # Parse pyproject.toml for dependencies
+            pyproject = backend_dir / 'pyproject.toml'
+            if pyproject.exists():
+                try:
+                    import toml
+                    data = toml.load(str(pyproject))
+                    deps = data.get('project', {}).get('dependencies', [])
+
+                    # Extract framework versions
+                    frameworks = []
+                    for dep in deps:
+                        if 'mcp' in dep.lower() and 'mcp>=' in dep:
+                            frameworks.append('FastMCP')
+                        elif 'fastapi' in dep.lower():
+                            frameworks.append('FastAPI')
+
+                    if frameworks:
+                        info['frameworks'] = frameworks
+
+                    # Check for SQLAlchemy
+                    if any('sqlalchemy' in dep.lower() for dep in deps):
+                        info['orm'] = 'SQLAlchemy'
+
+                except ImportError:
+                    # Fallback if toml not available - parse manually
+                    with open(pyproject, 'r') as f:
+                        content = f.read()
+                        if 'mcp>=' in content:
+                            info['frameworks'] = ['FastMCP', 'FastAPI']
+                        if 'sqlalchemy>=' in content:
+                            info['orm'] = 'SQLAlchemy'
+
+            info['architecture'] = 'DDD (Domain-Driven Design)'
+            info['language'] = f"Python {sys.version.split()[0]}"
+
+            # Check for key files
+            key_files = []
+            for file in ['pyproject.toml', 'requirements.txt']:
+                if (backend_dir / file).exists():
+                    key_files.append(file)
+            if key_files:
+                info['key_files'] = key_files
+
+            info['port'] = 8000
+
+            return info
+
+        except Exception:
+            return None
+
+    def _detect_hook_system(self, project_root: Path) -> Optional[Dict[str, Any]]:
+        """Detect Claude Code hook system."""
+        try:
+            hooks_dir = project_root / '.claude' / 'hooks'
+            if not hooks_dir.exists():
+                return None
+
+            info = {'detected': True, 'path': '.claude/hooks/'}
+
+            info['type'] = 'Python-based enforcement'
+
+            # Check for key hook files
+            features = []
+            key_files = []
+
+            if (hooks_dir / 'pre_tool_use.py').exists():
+                features.append('File system protection')
+                key_files.append('pre_tool_use.py')
+
+            if (hooks_dir / 'post_tool_use.py').exists():
+                features.append('Documentation indexing')
+                key_files.append('post_tool_use.py')
+
+            if (hooks_dir / 'utils' / 'session_tracker.py').exists():
+                features.append('2-hour tracking')
+
+            if features:
+                info['features'] = features
+            if key_files:
+                info['key_files'] = key_files
+
+            return info
+
+        except Exception:
+            return None
+
+    def _detect_infrastructure(self, project_root: Path) -> Optional[Dict[str, Any]]:
+        """Detect infrastructure components."""
+        try:
+            info = {}
+
+            # Check for Docker (multiple possible locations)
+            docker_compose_files = [
+                project_root / 'docker-compose.yml',
+                project_root / 'docker-system' / 'docker' / 'docker-compose.yml',
+                project_root / 'docker-system' / 'docker' / 'docker-compose.dev.yml'
+            ]
+
+            docker_found = False
+            docker_compose_content = ''
+
+            for compose_file in docker_compose_files:
+                if compose_file.exists():
+                    docker_found = True
+                    try:
+                        with open(compose_file, 'r') as f:
+                            docker_compose_content += f.read()
+                    except:
+                        pass
+
+            if docker_found or (project_root / 'docker-system').exists():
+                info['container'] = 'Docker + docker-compose'
+
+            # Check for database configuration
+            databases = []
+            if docker_compose_content:
+                if 'postgres' in docker_compose_content.lower():
+                    databases.append('PostgreSQL (Docker)')
+
+            # Check for SQLite database
+            if (project_root / 'data').exists() or (project_root / 'agenthub_main' / 'data').exists():
+                databases.append('SQLite (dev)')
+
+            if databases:
+                info['database'] = ' / '.join(databases)
+
+            # Check for authentication (in docker-compose or env files)
+            if docker_compose_content and 'keycloak' in docker_compose_content.lower():
+                info['auth'] = 'Keycloak'
+
+            # Check for configuration files
+            config_files = []
+            if (project_root / '.env').exists():
+                config_files.append('.env')
+            if (project_root / 'docker-system' / 'docker-menu.sh').exists():
+                config_files.append('docker-system/docker-menu.sh')
+
+            if config_files:
+                info['config'] = ', '.join(config_files)
+
+            return info if info else None
+
+        except Exception:
+            return None
 
 
 class IssueContextProvider(ContextProvider):
@@ -1076,20 +1288,132 @@ class ContextFormatterProcessor(SessionProcessor):
             if mcp_parts:
                 output_parts.append("\n".join(mcp_parts))
 
-        # Development context
+        # Development context - Multi-project architecture
         if 'developmentcontext' in context_data:
             dev = context_data['developmentcontext']
-            dev_parts = ["🔧 Development Environment:"]
+            dev_parts = []
 
-            if dev.get('key_files'):
-                key_files = ', '.join(dev['key_files'][:3])
-                dev_parts.append(f"   • Key files: {key_files}")
+            # Frontend section
+            if dev.get('frontend'):
+                frontend = dev['frontend']
+                frontend_parts = [f"📦 Frontend ({frontend['path']})"]
 
-            if dev.get('python_version'):
-                dev_parts.append(f"   • Python {dev['python_version']}")
+                # Build framework line
+                framework_line = "   • Framework: "
+                framework_parts = []
+                if frontend.get('react_version'):
+                    framework_parts.append(f"React {frontend['react_version']}")
+                if frontend.get('typescript_version'):
+                    framework_parts.append(f"TypeScript {frontend['typescript_version']}")
+                if framework_parts:
+                    framework_line += " + ".join(framework_parts)
+                    frontend_parts.append(framework_line)
 
-            if len(dev_parts) > 1:
-                output_parts.append("\n".join(dev_parts))
+                # Build tool
+                if frontend.get('vite_version'):
+                    frontend_parts.append(f"   • Build: Vite {frontend['vite_version']}")
+
+                # UI frameworks
+                if frontend.get('ui_frameworks'):
+                    ui = ', '.join(frontend['ui_frameworks'])
+                    frontend_parts.append(f"   • UI: {ui}")
+
+                # Key files
+                if frontend.get('key_files'):
+                    files = ', '.join(frontend['key_files'])
+                    frontend_parts.append(f"   • Key files: {files}")
+
+                # Port
+                if frontend.get('port'):
+                    frontend_parts.append(f"   • Port: {frontend['port']}")
+
+                dev_parts.append("\n".join(frontend_parts))
+
+            # Backend section
+            if dev.get('backend'):
+                backend = dev['backend']
+                backend_parts = [f"🐍 Backend ({backend['path']})"]
+
+                # Frameworks
+                if backend.get('frameworks'):
+                    frameworks = ' + '.join(backend['frameworks'])
+                    backend_parts.append(f"   • Framework: {frameworks}")
+
+                # Architecture
+                if backend.get('architecture'):
+                    backend_parts.append(f"   • Architecture: {backend['architecture']}")
+
+                # Language
+                if backend.get('language'):
+                    backend_parts.append(f"   • Language: {backend['language']}")
+
+                # ORM
+                if backend.get('orm'):
+                    backend_parts.append(f"   • ORM: {backend['orm']}")
+
+                # Key files
+                if backend.get('key_files'):
+                    files = ', '.join(backend['key_files'])
+                    backend_parts.append(f"   • Key files: {files}")
+
+                # Port
+                if backend.get('port'):
+                    backend_parts.append(f"   • Port: {backend['port']}")
+
+                dev_parts.append("\n".join(backend_parts))
+
+            # Hook system section
+            if dev.get('hooks'):
+                hooks = dev['hooks']
+                hook_parts = [f"🪝 Hook System ({hooks['path']})"]
+
+                # Type
+                if hooks.get('type'):
+                    hook_parts.append(f"   • Type: {hooks['type']}")
+
+                # Features
+                if hooks.get('features'):
+                    for feature in hooks['features']:
+                        if 'File system' in feature:
+                            hook_parts.append(f"   • Pre-tool: {feature}")
+                        elif 'Documentation' in feature:
+                            hook_parts.append(f"   • Post-tool: {feature}")
+                        elif 'tracking' in feature:
+                            hook_parts.append(f"   • Session: {feature}")
+
+                # Key files
+                if hooks.get('key_files'):
+                    files = ', '.join(hooks['key_files'])
+                    hook_parts.append(f"   • Key files: {files}")
+
+                dev_parts.append("\n".join(hook_parts))
+
+            # Infrastructure section
+            if dev.get('infrastructure'):
+                infra = dev['infrastructure']
+                infra_parts = ["🐳 Infrastructure:"]
+
+                # Container
+                if infra.get('container'):
+                    infra_parts.append(f"   • Container: {infra['container']}")
+
+                # Database
+                if infra.get('database'):
+                    infra_parts.append(f"   • Database: {infra['database']}")
+
+                # Authentication
+                if infra.get('auth'):
+                    infra_parts.append(f"   • Auth: {infra['auth']}")
+
+                # Config
+                if infra.get('config'):
+                    infra_parts.append(f"   • Config: {infra['config']}")
+
+                dev_parts.append("\n".join(infra_parts))
+
+            # Output all development sections
+            if dev_parts:
+                output_parts.append("🔧 Development Environment:\n\n" + "\n\n".join(dev_parts))
 
         # Issues context
         if 'issuecontext' in context_data:
