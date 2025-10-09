@@ -15,8 +15,8 @@ import random
 from pathlib import Path
 
 try:
+    # Note: Do NOT call load_dotenv() here - env_loader handles loading .env.claude
     from dotenv import load_dotenv
-    load_dotenv()
 except ImportError:
     pass  # dotenv is optional
 

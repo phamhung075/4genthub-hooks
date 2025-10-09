@@ -16,18 +16,21 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 try:
-    from dotenv import load_dotenv
+    # Note: Do NOT call load_dotenv() here - env_loader handles loading .env.claude
     import requests
     from requests.adapters import HTTPAdapter
     from urllib3.util.retry import Retry
-
-    load_dotenv()
 except ImportError:
     pass  # dependencies are optional
 
-# Import the agent state manager utilities
-sys.path.insert(0, str(Path(__file__).parent.parent / "hooks"))
+# Import the agent state manager utilities and env_loader
+# Get absolute path to hooks directory for reliable imports
+_hooks_dir = Path(__file__).resolve().parent.parent / "hooks"
+if str(_hooks_dir) not in sys.path:
+    sys.path.insert(0, str(_hooks_dir))
+
 from utils.agent_state_manager import get_current_agent, get_agent_role_from_session
+from utils.env_loader import get_ai_data_path
 
 
 def check_mcp_authentication():
@@ -100,11 +103,6 @@ def get_mcp_connection_status():
     server_url = os.getenv("MCP_SERVER_URL", server_url)
 
     # Cache file location using centralized env_loader
-    # Import from hooks directory
-    hooks_dir = Path(__file__).parent.parent / "hooks"
-    sys.path.insert(0, str(hooks_dir))
-    from utils.env_loader import get_ai_data_path
-
     cache_file = get_ai_data_path() / "mcp_connection_cache.json"
 
     try:
@@ -328,10 +326,6 @@ def get_git_status():
 def log_status_line(input_data, status_line_output, error_message=None):
     """Log status line event to logs directory."""
     # Get log directory from centralized env_loader
-    hooks_dir = Path(__file__).parent.parent / "hooks"
-    sys.path.insert(0, str(hooks_dir))
-    from utils.env_loader import get_ai_data_path
-
     log_dir = get_ai_data_path()
     log_file = log_dir / "status_line.json"
 
@@ -525,6 +519,44 @@ def generate_status_line(input_data):
     if agent_role and agent_role != 'Assistant':
         # Show dynamic agent role format: [Agent] [Role]
         parts.append(f"\033[94m[Agent] [{agent_role}]\033[0m")  # Blue text for agent role
+
+    # Cost information display - compact format with icons
+    cost_data = input_data.get('cost', {})
+    if cost_data:
+        cost_parts = []
+
+        # Total cost in USD
+        total_cost = cost_data.get('total_cost_usd', 0)
+        if total_cost > 0:
+            cost_parts.append(f"💰${total_cost:.2f}")
+
+        # Total duration (convert ms to minutes/seconds)
+        total_duration_ms = cost_data.get('total_duration_ms', 0)
+        if total_duration_ms > 0:
+            if total_duration_ms >= 60000:  # >= 1 minute
+                minutes = total_duration_ms // 60000
+                seconds = (total_duration_ms % 60000) // 1000
+                cost_parts.append(f"⏱️{minutes}m{seconds}s")
+            else:  # < 1 minute
+                seconds = total_duration_ms // 1000
+                cost_parts.append(f"⏱️{seconds}s")
+
+        # API duration (convert ms to seconds)
+        api_duration_ms = cost_data.get('total_api_duration_ms', 0)
+        if api_duration_ms > 0:
+            api_seconds = api_duration_ms // 1000
+            cost_parts.append(f"🔄{api_seconds}s")
+
+        # Lines added/removed
+        lines_added = cost_data.get('total_lines_added', 0)
+        lines_removed = cost_data.get('total_lines_removed', 0)
+        if lines_added > 0 or lines_removed > 0:
+            cost_parts.append(f"➕{lines_added} ➖{lines_removed}")
+
+        # Add cost section if we have any data
+        if cost_parts:
+            cost_display = " • ".join(cost_parts)
+            parts.append(f"\033[93m{cost_display}\033[0m")  # Yellow for cost metrics
 
         # Last prompt display - should be at the end
     if session_data:
