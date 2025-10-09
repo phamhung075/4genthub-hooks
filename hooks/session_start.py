@@ -39,6 +39,15 @@ from abc import ABC, abstractmethod
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Load .env file to make environment variables available throughout the module
+from dotenv import load_dotenv
+
+# Find and load .env from project root (go up from .claude/hooks/)
+project_root = Path(__file__).parent.parent.parent
+env_file = project_root / '.env'
+if env_file.exists():
+    load_dotenv(env_file)
+
 
 # ============================================================================
 # Abstract Base Classes
@@ -243,7 +252,28 @@ class MCPContextProvider(ContextProvider):
 
     def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
         """Get MCP tasks and project context with project/branch IDs."""
+        # Load .env for debug logging
+        DEBUG_ENABLED = os.getenv('APP_LOG_LEVEL', '').upper() == 'DEBUG'
+        logger = None
+        if DEBUG_ENABLED:
+            import logging
+            from utils.env_loader import get_ai_data_path
+            log_dir = get_ai_data_path()
+            debug_log = log_dir / 'session_start_mcp_context_debug.log'
+            logger = logging.getLogger('session_start.mcp_context')
+            logger.setLevel(logging.DEBUG)
+            if not logger.handlers:
+                handler = logging.FileHandler(debug_log)
+                handler.setLevel(logging.DEBUG)
+                formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+                handler.setFormatter(formatter)
+                logger.addHandler(handler)
+
         try:
+            if logger:
+                logger.debug("=" * 80)
+                logger.debug("MCPContextProvider.get_context() CALLED")
+
             # Get MCP server URL directly from .mcp.json
             mcp_server_url = self._get_mcp_url_from_config()
 
@@ -252,6 +282,8 @@ class MCPContextProvider(ContextProvider):
 
             # Ensure client is authenticated
             if not client.authenticate():
+                if logger:
+                    logger.debug("MCP authentication failed")
                 return {'error': 'MCP authentication failed'}
 
             context = {}
@@ -268,6 +300,11 @@ class MCPContextProvider(ContextProvider):
             if branch_info:
                 context['branch_info'] = branch_info
 
+            # DEBUG: After branch_info
+            if logger:
+                logger.debug(f"branch_info result: {branch_info}")
+                logger.debug(f"Has git_branch_id: {branch_info.get('git_branch_id') if branch_info else 'branch_info is None'}")
+
             # Get pending tasks
             pending_tasks = self._query_pending_tasks(client)
             if pending_tasks:
@@ -275,9 +312,25 @@ class MCPContextProvider(ContextProvider):
 
             # Get active tasks (in_progress status)
             if branch_info and branch_info.get('git_branch_id'):
+                if logger:
+                    logger.debug(f"Calling _query_active_tasks with git_branch_id: {branch_info['git_branch_id']}")
+
                 active_tasks = self._query_active_tasks(client, branch_info['git_branch_id'])
+
+                if logger:
+                    logger.debug(f"_query_active_tasks returned: {type(active_tasks)}")
+                    logger.debug(f"active_tasks value: {active_tasks}")
+
                 if active_tasks:
                     context['active_tasks'] = active_tasks
+                    if logger:
+                        logger.debug(f"✅ Added {len(active_tasks)} active tasks to context")
+                else:
+                    if logger:
+                        logger.debug("❌ No active tasks returned (None or empty list)")
+            else:
+                if logger:
+                    logger.debug(f"❌ NOT calling _query_active_tasks - branch_info={branch_info}")
 
             # Get next recommended task
             if branch_info and branch_info.get('git_branch_id'):
@@ -285,9 +338,16 @@ class MCPContextProvider(ContextProvider):
                 if next_task:
                     context['next_task'] = next_task
 
+            if logger:
+                logger.debug(f"Final context keys: {list(context.keys())}")
+                logger.debug("=" * 80)
+
             return context if context else None
 
         except Exception as e:
+            if logger:
+                logger.debug(f"Exception in get_context: {e}")
+                logger.exception("Full traceback:")
             return {'error': str(e)}
 
     def _get_project_info(self, client) -> Optional[Dict]:
@@ -629,7 +689,36 @@ class MCPContextProvider(ContextProvider):
 
     def _query_active_tasks(self, client, git_branch_id: str) -> Optional[List[Dict]]:
         """Query active tasks (in_progress status) from MCP for the current branch."""
+        # Only enable debug logging if APP_LOG_LEVEL=DEBUG in environment
+        DEBUG_ENABLED = os.getenv('APP_LOG_LEVEL', '').upper() == 'DEBUG'
+
+        # Define debug log path FIRST (before conditional) so it's always in scope
+        from utils.env_loader import get_ai_data_path
+        log_dir = get_ai_data_path()
+        debug_log = log_dir / 'session_start_active_tasks_debug.log'
+
+        # Set up debug logger only if debug is enabled
+        logger = None
+        if DEBUG_ENABLED:
+            import logging
+            logger = logging.getLogger('session_start.active_tasks')
+            logger.setLevel(logging.DEBUG)
+
+            # Create file handler if not exists (debug_log already defined above)
+            if not logger.handlers:
+                handler = logging.FileHandler(debug_log)
+                handler.setLevel(logging.DEBUG)
+                formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+                handler.setFormatter(formatter)
+                logger.addHandler(handler)
+
         try:
+            # DEBUG POINT 1: Method Entry
+            if logger:
+                logger.debug(f"_query_active_tasks called with git_branch_id: {git_branch_id}")
+                logger.debug(f"Starting active tasks query")
+                logger.debug(f"Debug log location: {debug_log}")
+
             mcp_request = {
                 "jsonrpc": "2.0",
                 "method": "tools/call",
@@ -651,25 +740,98 @@ class MCPContextProvider(ContextProvider):
                 timeout=client.timeout
             )
 
+            # DEBUG POINT 2: After API Request
+            if logger:
+                logger.debug(f"Response status code: {response.status_code}")
+                logger.debug(f"Response headers: {dict(response.headers)}")
+                logger.debug(f"Raw response body: {response.text}")
+
             if response.status_code == 200:
                 result = response.json()
+
+                # DEBUG POINT 3: After JSON Parse
+                if logger:
+                    logger.debug(f"Parsed result structure: {type(result)}")
+                    logger.debug(f"Has 'result' key: {'result' in result}")
+                if "result" in result and logger:
+                    logger.debug(f"Has error in result: {result['result'].get('isError', False)}")
+                    logger.debug(f"Full result object: {json.dumps(result, indent=2)}")
+
                 if "result" in result and not result["result"].get("isError"):
                     # The actual data is in result.content[0].text as a JSON string
                     content = result["result"].get("content", [])
+
+                    # DEBUG POINT 4: After Content Extraction
+                    if logger:
+                        logger.debug(f"Content array length: {len(content)}")
                     if content and len(content) > 0:
+                        if logger:
+                            logger.debug(f"First content item type: {type(content[0])}")
                         content_text = content[0].get("text", "")
+                        if logger:
+                            logger.debug(f"Raw content text (before JSON parse): {content_text}")
+
                         try:
                             # Parse the JSON string in the text field
                             parsed_content = json.loads(content_text)
-                            tasks = parsed_content.get("data", {}).get("tasks", [])
-                            # Filter to only return tasks with in_progress status
-                            active_tasks = [task for task in tasks if task.get("status") == "in_progress"]
-                            return active_tasks if active_tasks else None
-                        except json.JSONDecodeError:
-                            pass  # Fall through to return None
 
-        except Exception:
-            pass
+                            # DEBUG POINT 5: After Task Parsing
+                            if logger:
+                                logger.debug(f"parsed_content structure: {type(parsed_content)}")
+                                logger.debug(f"data object keys: {parsed_content.get('data', {}).keys() if isinstance(parsed_content.get('data'), dict) else 'N/A'}")
+                            tasks = parsed_content.get("data", {}).get("tasks", [])
+                            if logger:
+                                logger.debug(f"tasks value type: {type(tasks)}")
+                                logger.debug(f"tasks value content: {json.dumps(tasks, indent=2) if tasks else 'Empty or None'}")
+
+                            # Handle both single task (dict) and multiple tasks (list)
+                            if isinstance(tasks, dict):
+                                tasks = [tasks]  # Wrap single task in list
+                            elif not isinstance(tasks, list):
+                                tasks = []  # Fallback to empty list for invalid types
+
+                            # DEBUG POINT 6: After Type Normalization
+                            if logger:
+                                logger.debug(f"Final tasks list length: {len(tasks)}")
+                                logger.debug(f"Final tasks list content: {json.dumps(tasks, indent=2)}")
+                                if tasks:
+                                    for idx, task in enumerate(tasks):
+                                        logger.debug(f"Task {idx} structure: {json.dumps(task, indent=2)}")
+
+                            # API already filtered by status="in_progress", so just return the tasks
+                            result_to_return = tasks if tasks else None
+
+                            # DEBUG POINT 7: Method Exit
+                            if logger:
+                                logger.debug(f"What is being returned: {result_to_return}")
+                                logger.debug(f"Return value type: {type(result_to_return)}")
+                                if result_to_return:
+                                    logger.debug(f"Return value length: {len(result_to_return)}")
+
+                            return result_to_return
+                        except json.JSONDecodeError as json_err:
+                            if logger:
+                                logger.debug(f"JSON decode error: {json_err}")
+                                logger.debug(f"Failed to parse content_text: {content_text}")
+                            pass  # Fall through to return None
+                    else:
+                        if logger:
+                            logger.debug("Content array is empty or None")
+                else:
+                    if logger:
+                        logger.debug("Result check failed - no 'result' key or has error")
+            else:
+                if logger:
+                    logger.debug(f"Response status code is not 200: {response.status_code}")
+
+        except Exception as e:
+            if logger:
+                logger.debug(f"Exception in _query_active_tasks: {e}")
+                logger.exception("Full traceback:")
+
+        # DEBUG: Final return None
+        if logger:
+            logger.debug("Returning None from _query_active_tasks")
         return None
 
     def _query_next_task(self, client, git_branch_id: str) -> Optional[Dict]:

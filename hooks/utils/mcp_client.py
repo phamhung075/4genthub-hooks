@@ -113,34 +113,134 @@ class TokenManager:
         return False
     
     def _get_mcp_json_token(self) -> Optional[str]:
-        """Extract Bearer token from .mcp.json file if available."""
+        """Extract Bearer token from .mcp.json file if available with comprehensive debug logging."""
+        # Set up debug logging (conditional on APP_LOG_LEVEL=DEBUG)
+        DEBUG_ENABLED = os.getenv('APP_LOG_LEVEL', '').upper() == 'DEBUG'
+        debug_logger = None
+
+        if DEBUG_ENABLED:
+            # Get log directory from environment
+            log_dir = Path(os.getenv('AI_DATA', 'logs'))
+            log_dir.mkdir(exist_ok=True)
+            debug_log = log_dir / 'mcp_client_auth_debug.log'
+
+            debug_logger = logging.getLogger('mcp_client.token_extraction')
+            debug_logger.setLevel(logging.DEBUG)
+
+            # Only add handler if not already added
+            if not debug_logger.handlers:
+                handler = logging.FileHandler(debug_log)
+                handler.setLevel(logging.DEBUG)
+                formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+                handler.setFormatter(formatter)
+                debug_logger.addHandler(handler)
+
         try:
+            if debug_logger:
+                debug_logger.debug("=" * 80)
+                debug_logger.debug("TokenManager._get_mcp_json_token() CALLED")
+
             # Look for .mcp.json in project root
-            from env_loader import get_project_root
+            from .env_loader import get_project_root
             project_root = get_project_root()
+
+            if debug_logger:
+                debug_logger.debug(f"Starting directory: {project_root}")
+
             mcp_json_path = project_root / ".mcp.json"
-            
+
+            if debug_logger:
+                debug_logger.debug(f"Looking for .mcp.json at: {mcp_json_path}")
+                debug_logger.debug(f"File exists: {mcp_json_path.exists()}")
+
+            # Try parent directories if not found
+            search_attempts = 0
             if not mcp_json_path.exists():
-                # Try parent directories up to 3 levels
-                for _ in range(3):
+                if debug_logger:
+                    debug_logger.debug("File not found in current directory, searching parent directories...")
+
+                for i in range(3):
+                    search_attempts += 1
                     project_root = project_root.parent
                     mcp_json_path = project_root / ".mcp.json"
+
+                    if debug_logger:
+                        debug_logger.debug(f"Search attempt {search_attempts}: {mcp_json_path}")
+                        debug_logger.debug(f"  Exists: {mcp_json_path.exists()}")
+
                     if mcp_json_path.exists():
+                        if debug_logger:
+                            debug_logger.debug(f"✅ Found .mcp.json at: {mcp_json_path}")
                         break
-            
+
+            if not mcp_json_path.exists():
+                if debug_logger:
+                    debug_logger.debug(f"❌ .mcp.json NOT FOUND after {search_attempts + 1} attempts")
+                    debug_logger.debug(f"Final search path: {mcp_json_path}")
+                return None
+
+            if debug_logger:
+                debug_logger.debug(f"Reading .mcp.json from: {mcp_json_path}")
+
             if mcp_json_path.exists():
                 with open(mcp_json_path, 'r') as f:
                     mcp_config = json.load(f)
-                    
+
+                if debug_logger:
+                    debug_logger.debug("JSON loaded successfully")
+                    debug_logger.debug(f"Top-level keys: {list(mcp_config.keys())}")
+
+                    if 'mcpServers' in mcp_config:
+                        debug_logger.debug(f"mcpServers keys: {list(mcp_config['mcpServers'].keys())}")
+
+                        if 'agenthub_http' in mcp_config['mcpServers']:
+                            debug_logger.debug(f"agenthub_http keys: {list(mcp_config['mcpServers']['agenthub_http'].keys())}")
+
+                            if 'headers' in mcp_config['mcpServers']['agenthub_http']:
+                                headers = mcp_config['mcpServers']['agenthub_http']['headers']
+                                debug_logger.debug(f"headers keys: {list(headers.keys())}")
+
+                                if 'Authorization' in headers:
+                                    auth_value = headers['Authorization']
+                                    # Log first 20 chars only for security
+                                    debug_logger.debug(f"Authorization header found: {auth_value[:20]}...")
+                                else:
+                                    debug_logger.debug("❌ Authorization key NOT found in headers")
+                            else:
+                                debug_logger.debug("❌ headers key NOT found in agenthub_http")
+                        else:
+                            debug_logger.debug("❌ agenthub_http key NOT found in mcpServers")
+                    else:
+                        debug_logger.debug("❌ mcpServers key NOT found in JSON")
+
                 # Extract token from agenthub_http configuration
                 agenthub_config = mcp_config.get("mcpServers", {}).get("agenthub_http", {})
                 auth_header = agenthub_config.get("headers", {}).get("Authorization", "")
-                
+
+                if debug_logger:
+                    if auth_header:
+                        debug_logger.debug(f"✅ Extracted auth_header: {auth_header[:20]}...")
+                    else:
+                        debug_logger.debug("❌ auth_header is None or empty")
+
                 if auth_header.startswith("Bearer "):
-                    return auth_header.replace("Bearer ", "")
+                    token = auth_header.replace("Bearer ", "")
+                    if debug_logger:
+                        debug_logger.debug(f"✅ Token extracted successfully: {token[:20]}...")
+                        debug_logger.debug("=" * 80)
+                    return token
+                else:
+                    if debug_logger:
+                        debug_logger.debug("❌ Authorization header does not start with 'Bearer '")
+                        debug_logger.debug("=" * 80)
+
         except Exception as e:
-            logger.debug(f"Could not read .mcp.json token: {e}")
-        
+            if debug_logger:
+                debug_logger.debug(f"❌ EXCEPTION in _get_mcp_json_token(): {e}")
+                debug_logger.exception("Full traceback:")
+            else:
+                logger.debug(f"Could not read .mcp.json token: {e}")
+
         return None
     
     def _cache_token(self):
