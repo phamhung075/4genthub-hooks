@@ -119,9 +119,9 @@ class TokenManager:
         debug_logger = None
 
         if DEBUG_ENABLED:
-            # Get log directory from environment
-            log_dir = Path(os.getenv('AI_DATA', 'logs'))
-            log_dir.mkdir(exist_ok=True)
+            # Get log directory from centralized env_loader
+            from .env_loader import get_ai_data_path
+            log_dir = get_ai_data_path()
             debug_log = log_dir / 'mcp_client_auth_debug.log'
 
             debug_logger = logging.getLogger('mcp_client.token_extraction')

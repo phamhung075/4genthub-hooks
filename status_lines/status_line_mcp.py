@@ -99,8 +99,13 @@ def get_mcp_connection_status():
     # Override with environment variable if set
     server_url = os.getenv("MCP_SERVER_URL", server_url)
 
-    # Cache file location
-    cache_file = Path("logs") / "mcp_connection_cache.json"
+    # Cache file location using centralized env_loader
+    # Import from hooks directory
+    hooks_dir = Path(__file__).parent.parent / "hooks"
+    sys.path.insert(0, str(hooks_dir))
+    from utils.env_loader import get_ai_data_path
+
+    cache_file = get_ai_data_path() / "mcp_connection_cache.json"
 
     try:
         # Check cache first
@@ -322,9 +327,12 @@ def get_git_status():
 
 def log_status_line(input_data, status_line_output, error_message=None):
     """Log status line event to logs directory."""
-    # Ensure logs directory exists
-    log_dir = Path("logs")
-    log_dir.mkdir(parents=True, exist_ok=True)
+    # Get log directory from centralized env_loader
+    hooks_dir = Path(__file__).parent.parent / "hooks"
+    sys.path.insert(0, str(hooks_dir))
+    from utils.env_loader import get_ai_data_path
+
+    log_dir = get_ai_data_path()
     log_file = log_dir / "status_line.json"
 
     # Read existing log data or initialize empty list

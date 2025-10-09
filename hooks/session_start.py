@@ -259,7 +259,9 @@ class MCPContextProvider(ContextProvider):
             import logging
             from utils.env_loader import get_ai_data_path
             log_dir = get_ai_data_path()
-            debug_log = log_dir / 'session_start_mcp_context_debug.log'
+            debug_log = log_dir / 'claude-hooks' / 'session_start_mcp_context_debug.log'
+            # Ensure subdirectory exists
+            debug_log.parent.mkdir(parents=True, exist_ok=True)
             logger = logging.getLogger('session_start.mcp_context')
             logger.setLevel(logging.DEBUG)
             if not logger.handlers:
@@ -695,12 +697,14 @@ class MCPContextProvider(ContextProvider):
         # Define debug log path FIRST (before conditional) so it's always in scope
         from utils.env_loader import get_ai_data_path
         log_dir = get_ai_data_path()
-        debug_log = log_dir / 'session_start_active_tasks_debug.log'
+        debug_log = log_dir / 'claude-hooks' / 'session_start_active_tasks_debug.log'
 
         # Set up debug logger only if debug is enabled
         logger = None
         if DEBUG_ENABLED:
             import logging
+            # Ensure subdirectory exists
+            debug_log.parent.mkdir(parents=True, exist_ok=True)
             logger = logging.getLogger('session_start.active_tasks')
             logger.setLevel(logging.DEBUG)
 
@@ -1772,7 +1776,7 @@ class SessionStartHook:
         # Get paths
         from utils.env_loader import get_ai_data_path
 
-        self.log_dir = get_ai_data_path()
+        self.log_dir = get_ai_data_path() / 'claude-hooks'
         self.config_dir = Path(__file__).parent / 'config'
 
         # Create components using factory
