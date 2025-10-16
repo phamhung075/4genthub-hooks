@@ -4,9 +4,11 @@
       "mcp__agenthub_http__*",
       "mcp__agenthub_http__call_agent",
       "mcp__agenthub_http__manage_task",
-      "mcp__agenthub_http__manage_project"
+      "mcp__agenthub_http__manage_project",
+      "Bash(git rev-parse:*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "sequential-thinking",
     "agenthub_http",
@@ -14,6 +16,5 @@
     "browsermcp",
     "codex"
   ],
-  "outputStyle": "Explanatory",
-  "enableAllProjectMcpServers": true
+  "outputStyle": "Explanatory"
 }
