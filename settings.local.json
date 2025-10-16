@@ -5,7 +5,9 @@
       "mcp__agenthub_http__call_agent",
       "mcp__agenthub_http__manage_task",
       "mcp__agenthub_http__manage_project",
-      "Bash(git rev-parse:*)"
+      "Bash(git rev-parse:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(tree:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
