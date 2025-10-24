@@ -73,17 +73,31 @@ class ConfigurationValidator:
 
     def _find_project_root(self) -> Path:
         """Find the project root directory."""
-        # Start from hooks directory
-        current = Path(__file__).parent.parent  # hooks directory
+        # Start from utils directory and traverse up to find project root
+        current = Path(__file__).resolve().parent  # Start from utils/
 
-        # Look for .claude directory
-        while current != current.parent:
-            if (current / '.claude').exists():
-                return current
+        # Traverse up until we find the project root
+        # The project root is the directory that contains .claude as a direct child
+        # AND is not itself inside the .claude directory tree
+        while current.parent != current:
+            # Skip if we're currently inside a .claude directory
+            if '.claude' in current.parts:
+                # Continue going up until we exit the .claude directory
+                current = current.parent
+                continue
+
+            # Now check if this directory contains a .claude subdirectory
+            claude_dir = current / '.claude'
+            if claude_dir.exists() and claude_dir.is_dir():
+                # Verify it's actually a .claude directory by checking for hooks subdirectory
+                if (claude_dir / 'hooks').exists():
+                    # current is the project root
+                    return current
+
             current = current.parent
 
-        # Fallback to parent of .claude
-        return Path(__file__).parent.parent.parent
+        # Fallback if not found (should rarely happen)
+        return current
 
     def validate(self) -> Tuple[bool, List[Dict]]:
         """
