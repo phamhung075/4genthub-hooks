@@ -517,10 +517,31 @@ class MCPContextProvider(ContextProvider):
                             # Parse the JSON string in the text field
                             parsed_content = json.loads(content_text)
                             # Note: API returns 'git_branchs' (typo) not 'git_branches'
-                            branches = parsed_content.get("data", {}).get("git_branchs", [])
+                            branches_data = parsed_content.get("data", {}).get("git_branchs", [])
+
+                            # Handle both single branch (dict) and multiple branches (list)
+                            # API sometimes returns single branch as dict instead of list
+                            if isinstance(branches_data, dict):
+                                # Single branch returned as dict - wrap in list
+                                branches = [branches_data]
+                            elif isinstance(branches_data, list):
+                                # Multiple branches returned as list
+                                branches = branches_data
+                            else:
+                                # Invalid type - neither dict nor list
+                                return {
+                                    "branch_name": current_branch,
+                                    "git_branch_id": None,
+                                    "found": False,
+                                    "error": f"Invalid branches data type from API: {type(branches_data).__name__}"
+                                }
 
                             # Find matching branch by name (API uses 'name' not 'git_branch_name')
                             for branch in branches:
+                                # Defensive type check: ensure branch is a dict before calling .get()
+                                if not isinstance(branch, dict):
+                                    continue  # Skip invalid entries
+
                                 if branch.get("name", "") == current_branch:
                                     return {
                                         "branch_name": current_branch,
@@ -690,7 +711,7 @@ class MCPContextProvider(ContextProvider):
         return None
 
     def _query_active_tasks(self, client, git_branch_id: str) -> Optional[List[Dict]]:
-        """Query active tasks (in_progress status) from MCP for the current branch."""
+        """Query active tasks (todo and in_progress status) from MCP for the current branch."""
         # Only enable debug logging if APP_LOG_LEVEL=DEBUG in environment
         DEBUG_ENABLED = os.getenv('APP_LOG_LEVEL', '').upper() == 'DEBUG'
 
@@ -720,9 +741,11 @@ class MCPContextProvider(ContextProvider):
             # DEBUG POINT 1: Method Entry
             if logger:
                 logger.debug(f"_query_active_tasks called with git_branch_id: {git_branch_id}")
-                logger.debug(f"Starting active tasks query")
+                logger.debug(f"Starting active tasks query for todo and in_progress statuses")
                 logger.debug(f"Debug log location: {debug_log}")
 
+            # Query all tasks for the branch (without status filter)
+            # Then filter on the client side for todo and in_progress
             mcp_request = {
                 "jsonrpc": "2.0",
                 "method": "tools/call",
@@ -731,8 +754,7 @@ class MCPContextProvider(ContextProvider):
                     "arguments": {
                         "action": "list",
                         "git_branch_id": git_branch_id,
-                        "status": "in_progress",
-                        "limit": 10
+                        "limit": 50  # Increased to ensure we get all active tasks
                     }
                 },
                 "id": 5
@@ -802,11 +824,21 @@ class MCPContextProvider(ContextProvider):
                                     for idx, task in enumerate(tasks):
                                         logger.debug(f"Task {idx} structure: {json.dumps(task, indent=2)}")
 
-                            # API already filtered by status="in_progress", so just return the tasks
-                            result_to_return = tasks if tasks else None
+                            # Filter tasks to only show "todo" and "in_progress" statuses
+                            # Exclude completed, cancelled, and other statuses
+                            active_statuses = ['todo', 'in_progress']
+                            filtered_tasks = []
+                            for task in tasks:
+                                task_status = task.get('status', '').lower()
+                                if task_status in active_statuses:
+                                    filtered_tasks.append(task)
+
+                            result_to_return = filtered_tasks if filtered_tasks else None
 
                             # DEBUG POINT 7: Method Exit
                             if logger:
+                                logger.debug(f"Total tasks before filter: {len(tasks)}")
+                                logger.debug(f"Tasks after filtering for todo/in_progress: {len(filtered_tasks) if filtered_tasks else 0}")
                                 logger.debug(f"What is being returned: {result_to_return}")
                                 logger.debug(f"Return value type: {type(result_to_return)}")
                                 if result_to_return:
@@ -1820,6 +1852,7 @@ class SessionStartHook:
         if output_parts:
             combined_output = "\n\n".join(output_parts)
             print(combined_output)
+            sys.stdout.flush()
 
         self.logger.log('info', 'Session start processing completed')
         return 0
@@ -2055,6 +2088,10 @@ def get_default_client():
 
 def main():
     """Main entry point for the hook."""
+    # CRITICAL: Print output IMMEDIATELY before any processing
+    # This is required for Claude Code v2.0.29+ to display SessionStart output
+    print("SessionStart:resume hook success: 🚀 Hook Loaded", flush=True)
+
     parser = argparse.ArgumentParser(description='Session start hook')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     parser.add_argument('--log-only', action='store_true', help='Only log, no output')
