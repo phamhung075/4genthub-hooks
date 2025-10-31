@@ -524,6 +524,11 @@ def main():
         )
 
         exit_code = hook.execute(input_data)
+
+        # Print success message for tracking
+        if exit_code == 0:
+            print("UserPromptSubmit hook success: ✅ Prompt logged", flush=True)
+
         sys.exit(exit_code)
 
     except json.JSONDecodeError:

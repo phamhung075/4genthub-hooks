@@ -721,6 +721,11 @@ def main():
         hook = PreToolUseHook()
         exit_code = hook.execute(input_data)
 
+        # Print success message for tracking
+        if exit_code == 0:
+            tool_name = input_data.get('tool_name', 'unknown')
+            print(f"PreToolUse:{tool_name} hook success: ✅ Validated", flush=True)
+
         # Clear recursion guard before exiting
         os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '0'
         sys.exit(exit_code)
