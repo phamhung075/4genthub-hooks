@@ -30,14 +30,14 @@ if str(_hooks_dir) not in sys.path:
     sys.path.insert(0, str(_hooks_dir))
 
 from utils.agent_state_manager import get_current_agent, get_agent_role_from_session
-from utils.env_loader import get_ai_data_path
+from utils.env_loader import get_ai_data_path, get_project_root
 
 
 def check_mcp_authentication():
     """Check if .mcp.json token is available for MCP authentication."""
     try:
-        # Look for .mcp.json in project root
-        project_root = Path.cwd()
+        # Look for .mcp.json in project root (works with submodules)
+        project_root = get_project_root()
         mcp_json_path = project_root / ".mcp.json"
 
         if not mcp_json_path.exists():
@@ -76,7 +76,7 @@ def get_mcp_connection_status():
     # Try to get server URL from .mcp.json first
     server_url = "http://localhost:8000"  # default fallback
     try:
-        project_root = Path.cwd()
+        project_root = get_project_root()
         mcp_json_path = project_root / ".mcp.json"
 
         if not mcp_json_path.exists():
@@ -220,8 +220,8 @@ def _test_mcp_connection(server_url, timeout):
 def _get_mcp_token():
     """Get MCP token from .mcp.json file."""
     try:
-        # Look for .mcp.json in project root
-        project_root = Path.cwd()
+        # Look for .mcp.json in project root (works with submodules)
+        project_root = get_project_root()
         mcp_json_path = project_root / ".mcp.json"
 
         if not mcp_json_path.exists():
@@ -268,11 +268,11 @@ def get_project_name():
                 if project_name and project_name != 'origin':
                     return project_name
 
-        # Fallback to current directory name
-        return Path.cwd().name
+        # Fallback to project root directory name
+        return get_project_root().name
     except Exception:
-        # Final fallback to current directory name
-        return Path.cwd().name
+        # Final fallback to project root directory name
+        return get_project_root().name
 
 
 def get_git_branch():

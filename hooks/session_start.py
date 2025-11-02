@@ -42,8 +42,11 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Load .env file to make environment variables available throughout the module
 from dotenv import load_dotenv
 
-# Find and load .env from project root (go up from .claude/hooks/)
-project_root = Path(__file__).parent.parent.parent
+# Import robust project root finder that works with submodules
+from utils.env_loader import get_project_root
+
+# Find and load .env from project root (works with submodules)
+project_root = get_project_root()
 env_file = project_root / '.env'
 if env_file.exists():
     load_dotenv(env_file)
@@ -223,8 +226,8 @@ class MCPContextProvider(ContextProvider):
     def _get_mcp_url_from_config(self) -> str:
         """Get MCP server URL directly from .mcp.json configuration."""
         try:
-            # Look for .mcp.json in project root
-            project_root = Path.cwd()
+            # Look for .mcp.json in project root (works with submodules)
+            project_root = get_project_root()
             mcp_json_path = project_root / ".mcp.json"
 
             # Try parent directories if not found
@@ -537,7 +540,7 @@ class MCPContextProvider(ContextProvider):
 
             # Get current branch name from main repository, not submodule
             # If we found the main repository during project detection, use it
-            current_dir = Path.cwd()
+            current_dir = get_project_root()
             search_dir = current_dir
             git_path = None
 
@@ -747,8 +750,8 @@ class MCPContextProvider(ContextProvider):
         """Get project name from git remote URL or folder name, checking parent repo if in submodule."""
         try:
             # First, check if we're in a git submodule by looking for .git file vs directory
-            # Start from current directory and check parent directories for .git
-            current_dir = Path.cwd()
+            # Start from project root and check parent directories for .git
+            current_dir = get_project_root()
 
             # Look for .git in current directory or parent directories (submodule might be in parent)
             search_dir = current_dir
@@ -1089,7 +1092,7 @@ class DevelopmentContextProvider(ContextProvider):
         """Get comprehensive development environment context."""
         try:
             context = {}
-            project_root = Path.cwd()
+            project_root = get_project_root()
 
             # Detect frontend project
             frontend_info = self._detect_frontend(project_root)

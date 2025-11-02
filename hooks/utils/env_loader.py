@@ -7,25 +7,31 @@ from dotenv import load_dotenv
 
 # Import our robust project root finder
 try:
-    from find_project_root import ProjectRootFinder
+    from utils.find_project_root import ProjectRootFinder
     root_finder = ProjectRootFinder()
     PROJECT_ROOT = root_finder.find_project_root()
 except ImportError:
-    # Fallback to using file location to find project root
-    def find_project_root():
-        """Find the project root by looking for .env.claude or .git directory."""
-        # Start from this file's location (4 levels up: utils -> hooks -> .claude -> project root)
-        current = Path(__file__).parent.parent.parent.parent
+    # Try without utils prefix (for different import contexts)
+    try:
+        from find_project_root import ProjectRootFinder
+        root_finder = ProjectRootFinder()
+        PROJECT_ROOT = root_finder.find_project_root()
+    except ImportError:
+        # Fallback to using file location to find project root
+        def find_project_root():
+            """Find the project root by looking for .env.claude or .git directory."""
+            # Start from this file's location (4 levels up: utils -> hooks -> .claude -> project root)
+            current = Path(__file__).parent.parent.parent.parent
 
-        # Walk up the directory tree looking for .env.claude or .git
-        for parent in [current] + list(current.parents):
-            if (parent / '.env.claude').exists() or (parent / '.git').exists():
-                return parent
+            # Walk up the directory tree looking for .env.claude or .git
+            for parent in [current] + list(current.parents):
+                if (parent / '.env.claude').exists() or (parent / '.git').exists():
+                    return parent
 
-        # Use the calculated path if no markers found
-        return current
+            # Use the calculated path if no markers found
+            return current
 
-    PROJECT_ROOT = find_project_root()
+        PROJECT_ROOT = find_project_root()
 
 # Ensure PROJECT_ROOT is not None
 if PROJECT_ROOT is None:
