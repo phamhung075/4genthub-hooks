@@ -119,6 +119,30 @@ test_wrong_location:
     - "agenthub_main/src/tests"
     - "agenthub-frontend/src/tests"
 
+test_file_invalid_path:
+  message: |
+    ============================================================
+    ⛔ TEST FILE CREATION BLOCKED
+    ============================================================
+
+    ❌ ATTEMPTED: Creating test file '{filename}' in '{directory}'
+    📋 RULE: Test files can only be created in designated test directories
+  hint: |
+    ✅ VALID TEST DIRECTORIES:
+    {valid_paths}
+
+    💡 SOLUTIONS:
+       1. Move test file to one of the valid test directories above
+       2. Or request to add '{directory}' to valid_test_paths config
+
+    📝 CONFIG FILE:
+       .claude/hooks/config/__claude_hook__valid_test_paths
+
+    🧪 TEST FILE PATTERNS DETECTED:
+       • Files containing 'test' in name
+       • Files ending with .test.js, .test.ts, .spec.js, .spec.ts
+       • Files starting with test_ or ending with _test
+
 venv_wrong_location:
   message: "BLOCKED: Virtual environment must be in agenthub_main/.venv"
   hint: "Create .venv only at: agenthub_main/.venv"

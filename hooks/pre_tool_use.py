@@ -223,6 +223,107 @@ class RootFileValidator(Validator):
         return True, None
 
 
+class TestPathValidator(Validator):
+    """Validates test file creation in designated directories only."""
+
+    def __init__(self):
+        self.valid_test_paths = self._load_valid_test_paths()
+
+    def _load_valid_test_paths(self) -> List[str]:
+        """Load valid test paths from configuration."""
+        project_root = PROJECT_ROOT
+        config_path = project_root / '.claude' / 'hooks' / 'config' / '__claude_hook__valid_test_paths'
+
+        # Default valid test paths for this project
+        default_test_paths = [
+            'agenthub_main/src/tests',
+            'agenthub-frontend/src/tests',
+            'agenthub-frontend/src/__tests__',
+            '.claude/hooks/tests'
+        ]
+
+        if config_path.exists():
+            try:
+                with open(config_path, 'r') as f:
+                    lines = [line.strip() for line in f.readlines()
+                            if line.strip() and not line.startswith('#')]
+                return lines if lines else default_test_paths
+            except:
+                return default_test_paths
+
+        return default_test_paths
+
+    def _is_test_file(self, file_path: Path) -> bool:
+        """Check if file is a test file based on naming patterns."""
+        filename = file_path.name.lower()
+        stem = file_path.stem.lower()
+
+        # Common test file patterns
+        test_patterns = [
+            'test' in filename,  # Covers test_*.py, *_test.py, *test*.py
+            filename.endswith('.test.js'),
+            filename.endswith('.test.ts'),
+            filename.endswith('.test.jsx'),
+            filename.endswith('.test.tsx'),
+            filename.endswith('.spec.js'),
+            filename.endswith('.spec.ts'),
+            filename.endswith('.spec.jsx'),
+            filename.endswith('.spec.tsx'),
+            stem.startswith('test_'),
+            stem.endswith('_test'),
+        ]
+
+        return any(test_patterns)
+
+    def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
+        """Validate test file creation in designated directories."""
+        if tool_name not in ['Write', 'Edit', 'MultiEdit', 'NotebookEdit']:
+            return True, None
+
+        file_path = tool_input.get('file_path') or tool_input.get('notebook_path', '')
+        if not file_path:
+            return True, None
+
+        path_obj = Path(file_path)
+
+        # Check if this is a test file
+        if not self._is_test_file(path_obj):
+            return True, None
+
+        # It's a test file - validate it's in a valid test path
+        project_root = PROJECT_ROOT
+
+        try:
+            relative_path = path_obj.resolve().relative_to(project_root.resolve())
+            file_dir = str(relative_path.parent)
+
+            # Check if file is in any valid test path
+            is_valid = False
+            for valid_path in self.valid_test_paths:
+                valid_path = valid_path.strip('/')
+                if file_dir == valid_path or file_dir.startswith(valid_path + '/'):
+                    is_valid = True
+                    break
+
+            if not is_valid:
+                from utils.config_factory import get_error_message
+
+                # Format valid paths list for the message
+                valid_paths_formatted = ""
+                for valid_path in sorted(self.valid_test_paths):
+                    valid_paths_formatted += f"       • {valid_path}\n"
+
+                return False, get_error_message('test_file_invalid_path',
+                                              filename=path_obj.name,
+                                              directory=file_dir,
+                                              valid_paths=valid_paths_formatted.rstrip())
+        except ValueError:
+            # Path is outside project root
+            pass
+
+        return True, None
+
+
 class EnvFileValidator(Validator):
     """Validates environment file access and creation."""
 
@@ -570,6 +671,7 @@ class ComponentFactory:
         """Create all validators."""
         return [
             RootFileValidator(),
+            TestPathValidator(),
             EnvFileValidator(),
             CommandValidator(),
             DocumentationValidator(),
