@@ -36,81 +36,23 @@ logger = logging.getLogger(__name__)
 
 
 class TokenManager:
-    """Manages JWT tokens for hook-to-MCP communication with automatic refresh."""
-    
+    """Manages JWT tokens for hook-to-MCP communication by reading from .mcp.json."""
+
     def __init__(self):
-        self.token_cache_file = Path.home() / ".claude" / ".mcp_token_cache"
-        self.token = None
-        self.token_expiry = None
-        self.refresh_before = int(os.getenv("TOKEN_REFRESH_BEFORE_EXPIRY", "60"))
-    
+        # No cache needed - always read fresh from .mcp.json
+        pass
+
     def get_valid_token(self) -> str:
-        """Get a valid JWT token from .mcp.json file."""
+        """Get JWT token directly from .mcp.json file (no caching)."""
+        # Always read fresh token from .mcp.json - no cache complexity
+        token = self._get_mcp_json_token()
 
-        # Check if token needs refresh
-        if self._should_refresh():
-            self._refresh_token()
-
-        if not self.token:
+        if not token:
             raise MCPAuthenticationError(
                 "No .mcp.json token found. Ensure Claude Code is properly configured with MCP server authentication."
             )
 
-        return self.token
-    
-    def _should_refresh(self) -> bool:
-        """Check if token should be refreshed."""
-        if not self.token or not self.token_expiry:
-            return True
-        
-        time_until_expiry = self.token_expiry.timestamp() - time.time()
-        return time_until_expiry < self.refresh_before
-    
-    def _refresh_token(self):
-        """Refresh token using client credentials."""
-        
-        # Try to load from cache file first
-        if self._load_cached_token():
-            return
-        
-        # Get new token from .mcp.json
-        self._request_new_token()
-    
-    def _load_cached_token(self) -> bool:
-        """Load token from cache if valid."""
-        if not self.token_cache_file.exists():
-            return False
-        
-        try:
-            with open(self.token_cache_file, 'r') as f:
-                cache_data = json.load(f)
-                expiry = datetime.fromisoformat(cache_data["expiry"])
-                
-                if datetime.now() < expiry - timedelta(seconds=self.refresh_before):
-                    self.token = cache_data["token"]
-                    self.token_expiry = expiry
-                    return True
-        except Exception as e:
-            logger.warning(f"Failed to load cached token: {e}")
-        
-        return False
-    
-    def _request_new_token(self) -> bool:
-        """Get token from .mcp.json file only."""
-
-        # Try to use token from .mcp.json file
-        mcp_token = self._get_mcp_json_token()
-        if mcp_token:
-            logger.info("Using token from .mcp.json file")
-            self.token = mcp_token
-            # Set a long expiry for .mcp.json tokens (30 days)
-            self.token_expiry = datetime.now() + timedelta(days=30)
-            self._cache_token()
-            return True
-
-        # No token found
-        logger.error("No .mcp.json token found")
-        return False
+        return token
     
     def _get_mcp_json_token(self) -> Optional[str]:
         """Extract Bearer token from .mcp.json file if available with comprehensive debug logging."""
@@ -243,21 +185,6 @@ class TokenManager:
 
         return None
     
-    def _cache_token(self):
-        """Cache token to file for reuse."""
-        try:
-            self.token_cache_file.parent.mkdir(exist_ok=True)
-            with open(self.token_cache_file, 'w') as f:
-                json.dump({
-                    "token": self.token,
-                    "expiry": self.token_expiry.isoformat()
-                }, f)
-            # Secure the file
-            os.chmod(self.token_cache_file, 0o600)
-        except Exception as e:
-            logger.warning(f"Failed to cache token: {e}")
-
-
 class RateLimiter:
     """Simple rate limiter for HTTP requests."""
     

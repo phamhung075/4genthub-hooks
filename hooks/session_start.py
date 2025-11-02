@@ -272,18 +272,47 @@ class MCPContextProvider(ContextProvider):
                 logger.addHandler(handler)
 
         try:
+            # ALWAYS log to file
+            import logging
+            from utils.env_loader import get_ai_data_path
+            debug_log = get_ai_data_path() / 'session_start_main.log'
+            debug_log.parent.mkdir(parents=True, exist_ok=True)
+
+            main_logger = logging.getLogger('session_start_main')
+            main_logger.setLevel(logging.DEBUG)
+            if not main_logger.handlers:
+                handler = logging.FileHandler(debug_log)
+                handler.setLevel(logging.DEBUG)
+                formatter = logging.Formatter('%(asctime)s - %(message)s')
+                handler.setFormatter(formatter)
+                main_logger.addHandler(handler)
+
+            main_logger.debug("=" * 80)
+            main_logger.debug("MCPContextProvider.get_context() CALLED")
+
             if logger:
                 logger.debug("=" * 80)
                 logger.debug("MCPContextProvider.get_context() CALLED")
 
             # Get MCP server URL directly from .mcp.json
             mcp_server_url = self._get_mcp_url_from_config()
+            main_logger.debug(f"MCP URL from config: {mcp_server_url}")
 
+            # TokenManager always reads fresh token from .mcp.json (no cache)
             from utils.mcp_client import MCPHTTPClient
             client = MCPHTTPClient()
 
             # Ensure client is authenticated
-            if not client.authenticate():
+            main_logger.debug("Attempting authentication...")
+            auth_result = client.authenticate()
+            main_logger.debug(f"Authentication result: {auth_result}")
+
+            # DEBUG: Check if Authorization header is actually set
+            auth_header = client.session.headers.get('Authorization', 'NOT SET')
+            main_logger.debug(f"Authorization header: {auth_header[:50] if auth_header != 'NOT SET' else 'NOT SET'}")
+
+            if not auth_result:
+                main_logger.debug("✗ MCP authentication FAILED - returning error")
                 if logger:
                     logger.debug("MCP authentication failed")
                 return {'error': 'MCP authentication failed'}
@@ -292,15 +321,28 @@ class MCPContextProvider(ContextProvider):
 
             # Add MCP server URL to context (from .mcp.json)
             context['mcp_server_url'] = mcp_server_url
+            main_logger.debug(f"✓ Added MCP URL to context")
 
             # Get project and branch information with IDs
+            main_logger.debug("Calling _get_project_info...")
             project_info = self._get_project_info(client)
+            main_logger.debug(f"_get_project_info returned: {project_info}")
+
             if project_info:
                 context['project_info'] = project_info
+                main_logger.debug(f"✓ Added project_info to context")
+            else:
+                main_logger.debug(f"✗ NO project_info returned - skipping branch_info")
 
+            main_logger.debug("Calling _get_branch_info...")
             branch_info = self._get_branch_info(client, project_info)
+            main_logger.debug(f"_get_branch_info returned: {branch_info}")
+
             if branch_info:
                 context['branch_info'] = branch_info
+                main_logger.debug(f"✓ Added branch_info to context")
+            else:
+                main_logger.debug(f"✗ NO branch_info returned")
 
             # DEBUG: After branch_info
             if logger:
@@ -354,10 +396,32 @@ class MCPContextProvider(ContextProvider):
 
     def _get_project_info(self, client) -> Optional[Dict]:
         """Get project information from MCP by matching git repository name."""
+        # DEBUG: Log at method entry
+        import logging
+        from utils.env_loader import get_ai_data_path
+        debug_log = get_ai_data_path() / 'session_start_project_info.log'
+        debug_log.parent.mkdir(parents=True, exist_ok=True)
+
+        logger = logging.getLogger('project_info_method')
+        logger.setLevel(logging.DEBUG)
+        if not logger.handlers:
+            handler = logging.FileHandler(debug_log)
+            handler.setLevel(logging.DEBUG)
+            formatter = logging.Formatter('%(asctime)s - %(message)s')
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+
+        logger.debug("=" * 80)
+        logger.debug("_get_project_info() CALLED")
+
         try:
             # Get project name from git remote or folder name
+            logger.debug("Calling _get_project_name()...")
             project_name = self._get_project_name()
+            logger.debug(f"_get_project_name() returned: '{project_name}'")
+
             if not project_name:
+                logger.debug("✗ NO PROJECT NAME - returning None")
                 return None
 
             # Call MCP to list all projects
@@ -373,11 +437,17 @@ class MCPContextProvider(ContextProvider):
                 "id": 1
             }
 
+            logger.debug(f"Sending API request to: {client.base_url}/mcp")
+
             response = client.session.post(
                 f"{client.base_url}/mcp",
                 json=mcp_request,
                 timeout=client.timeout
             )
+
+            logger.debug(f"Response status: {response.status_code}")
+            if response.status_code != 200:
+                logger.debug(f"✗ API ERROR: {response.text[:200]}")
 
             if response.status_code == 200:
                 result = response.json()
@@ -387,9 +457,33 @@ class MCPContextProvider(ContextProvider):
                     if content and len(content) > 0:
                         content_text = content[0].get("text", "")
                         try:
+                            # DEBUG: Log project API response
+                            import logging
+                            from utils.env_loader import get_ai_data_path
+                            debug_log = get_ai_data_path() / 'session_start_project_info.log'
+                            debug_log.parent.mkdir(parents=True, exist_ok=True)
+
+                            logger = logging.getLogger('project_info')
+                            logger.setLevel(logging.DEBUG)
+                            if not logger.handlers:
+                                handler = logging.FileHandler(debug_log)
+                                handler.setLevel(logging.DEBUG)
+                                formatter = logging.Formatter('%(asctime)s - %(message)s')
+                                handler.setFormatter(formatter)
+                                logger.addHandler(handler)
+
                             # Parse the JSON string in the text field
                             parsed_content = json.loads(content_text)
+
+                            logger.debug("=" * 80)
+                            logger.debug("PROJECT INFO PARSING")
+                            logger.debug(f"parsed_content type: {type(parsed_content)}")
+                            logger.debug(f"parsed_content keys: {parsed_content.keys() if isinstance(parsed_content, dict) else 'N/A'}")
+
                             projects_data = parsed_content.get("data", {}).get("projects", [])
+                            logger.debug(f"projects_data type: {type(projects_data)}")
+                            logger.debug(f"projects_data value: {projects_data}")
+                            logger.debug(f"project_name looking for: '{project_name}'")
 
                             # Handle both single object and array
                             matching_projects = []
@@ -412,6 +506,7 @@ class MCPContextProvider(ContextProvider):
                                     reverse=True
                                 )
                                 newest_project = matching_projects[0]
+                                logger.debug(f"✓ FOUND PROJECT: {newest_project.get('name')} ({newest_project.get('id')})")
                                 return {
                                     "project_name": newest_project.get("name"),
                                     "project_id": newest_project.get("id"),
@@ -419,6 +514,8 @@ class MCPContextProvider(ContextProvider):
                                 }
 
                             # Project not found
+                            logger.debug(f"✗ NO PROJECT FOUND matching '{project_name}'")
+                            logger.debug(f"  Checked {len(matching_projects)} projects")
                             return {
                                 "project_name": project_name,
                                 "project_id": None,
@@ -500,11 +597,36 @@ class MCPContextProvider(ContextProvider):
                 "id": 2
             }
 
+            # DEBUG: Log API call
+            import logging
+            from utils.env_loader import get_ai_data_path
+            debug_log = get_ai_data_path() / 'session_start_branch_match.log'
+            debug_log.parent.mkdir(parents=True, exist_ok=True)
+
+            logger = logging.getLogger('branch_match')
+            logger.setLevel(logging.DEBUG)
+            if not logger.handlers:
+                handler = logging.FileHandler(debug_log)
+                handler.setLevel(logging.DEBUG)
+                formatter = logging.Formatter('%(asctime)s - %(message)s')
+                handler.setFormatter(formatter)
+                logger.addHandler(handler)
+
+            logger.debug("=" * 80)
+            logger.debug("API CALL TO GET BRANCHES")
+            logger.debug(f"URL: {client.base_url}/mcp")
+            logger.debug(f"Project ID: {project_info['project_id']}")
+
             response = client.session.post(
                 f"{client.base_url}/mcp",
                 json=mcp_request,
                 timeout=client.timeout
             )
+
+            logger.debug(f"Response status: {response.status_code}")
+            if response.status_code != 200:
+                logger.debug(f"✗ API ERROR - Status {response.status_code}")
+                logger.debug(f"Response: {response.text}")
 
             if response.status_code == 200:
                 result = response.json()
@@ -536,13 +658,60 @@ class MCPContextProvider(ContextProvider):
                                     "error": f"Invalid branches data type from API: {type(branches_data).__name__}"
                                 }
 
-                            # Find matching branch by name (API uses 'name' not 'git_branch_name')
+                            # Find matching branch by git_branch_name first, then name
+                            # Handle version branches where dots are normalized to hyphens (e.g., 0.0.6-agents-base → 0-0-6-agents-base)
+
+                            # DEBUG: Log branch matching attempt
+                            import logging
+                            from utils.env_loader import get_ai_data_path
+                            debug_log = get_ai_data_path() / 'session_start_branch_match.log'
+                            debug_log.parent.mkdir(parents=True, exist_ok=True)
+
+                            logger = logging.getLogger('branch_match')
+                            logger.setLevel(logging.DEBUG)
+                            if not logger.handlers:
+                                handler = logging.FileHandler(debug_log)
+                                handler.setLevel(logging.DEBUG)
+                                formatter = logging.Formatter('%(asctime)s - %(message)s')
+                                handler.setFormatter(formatter)
+                                logger.addHandler(handler)
+
+                            logger.debug("=" * 80)
+                            logger.debug(f"BRANCH MATCHING START")
+                            logger.debug(f"Current git branch: '{current_branch}'")
+                            logger.debug(f"Normalized: '{current_branch.replace('.', '-')}'")
+                            logger.debug(f"Total branches from API: {len(branches)}")
+
                             for branch in branches:
                                 # Defensive type check: ensure branch is a dict before calling .get()
                                 if not isinstance(branch, dict):
+                                    logger.debug(f"Skipping invalid branch (not dict): {type(branch)}")
                                     continue  # Skip invalid entries
 
-                                if branch.get("name", "") == current_branch:
+                                branch_git_name = branch.get("git_branch_name", "")
+                                branch_name = branch.get("name", "")
+
+                                logger.debug(f"Checking branch: git_branch_name='{branch_git_name}', name='{branch_name}'")
+
+                                # Normalize git branch name for comparison (dots → hyphens)
+                                normalized_current = current_branch.replace(".", "-")
+
+                                # Try multiple matching strategies:
+                                # 1. Exact match on git_branch_name
+                                # 2. Exact match on name
+                                # 3. Normalized match (for version branches)
+                                match1 = branch_git_name == current_branch
+                                match2 = branch_name == current_branch
+                                match3 = branch_git_name == normalized_current
+                                match4 = branch_name == normalized_current
+
+                                logger.debug(f"  Match git_branch_name==current: {match1}")
+                                logger.debug(f"  Match name==current: {match2}")
+                                logger.debug(f"  Match git_branch_name==normalized: {match3}")
+                                logger.debug(f"  Match name==normalized: {match4}")
+
+                                if match1 or match2 or match3 or match4:
+                                    logger.debug(f"✓ MATCH FOUND! Returning git_branch_id={branch.get('id')}")
                                     return {
                                         "branch_name": current_branch,
                                         "git_branch_id": branch.get("id"),
@@ -550,6 +719,7 @@ class MCPContextProvider(ContextProvider):
                                     }
 
                             # Branch not found
+                            logger.debug(f"✗ NO MATCH FOUND after checking {len(branches)} branches")
                             return {
                                 "branch_name": current_branch,
                                 "git_branch_id": None,
@@ -1204,8 +1374,12 @@ class AgentMessageProvider(ContextProvider):
             # Determine which agent to use
             agent_name = None
 
-            if session_type == 'principal':
-                # Principal session always uses master-orchestrator-agent
+            # CHECK FOR CCLAUDE_AGENT ENVIRONMENT VARIABLE FIRST (highest priority)
+            cclaude_agent = os.getenv('CCLAUDE_AGENT')
+            if cclaude_agent:
+                agent_name = cclaude_agent
+            elif session_type == 'principal':
+                # Principal session defaults to master-orchestrator-agent (unless CCLAUDE_AGENT is set)
                 agent_name = 'master-orchestrator-agent'
             else:
                 # Try to detect agent from context

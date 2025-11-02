@@ -7,6 +7,7 @@ Provides session-aware agent state management with persistent storage.
 """
 
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -26,9 +27,20 @@ class AgentStateManager:
         self.state_file = get_ai_data_path() / 'agent_state.json'
     
     def get_current_agent(self, session_id: str) -> str:
-        """Get the current agent for a session, defaulting to master-orchestrator-agent."""
+        """Get the current agent for a session, defaulting to master-orchestrator-agent.
+
+        Priority order:
+        1. CCLAUDE_AGENT environment variable (highest - set by cclaude CLI)
+        2. Session state from persistent storage
+        3. Default to master-orchestrator-agent
+        """
+        # CHECK CCLAUDE_AGENT ENVIRONMENT VARIABLE FIRST (highest priority)
+        cclaude_agent = os.getenv('CCLAUDE_AGENT')
+        if cclaude_agent:
+            return cclaude_agent
+
+        # Fall back to session state
         state_data = self._load_state()
-        
         session_state = state_data.get(session_id, {})
         return session_state.get('current_agent', 'master-orchestrator-agent')
     
