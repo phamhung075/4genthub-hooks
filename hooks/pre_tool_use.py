@@ -47,7 +47,7 @@ os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '1'
 def find_project_root():
     """Find project root by looking for marker files."""
     # Start from the hook file's directory and go up to find actual project root
-    # The hook is in scripts/claude-hooks/pre_tool_use.py, so project root is 2 levels up
+    # The hook is in .claude/hooks/pre_tool_use.py, so project root is 2 levels up
     hook_file = Path(__file__).resolve()
     project_root = hook_file.parent.parent.parent
     return project_root
@@ -243,7 +243,7 @@ class TestPathValidator(Validator):
             'agenthub_main/src/tests',
             'agenthub-frontend/src/tests',
             'agenthub-frontend/src/__tests__',
-            'scripts/claude-hooks/tests'
+            '.claude/hooks/tests'
         ]
 
         if config_path.exists():

@@ -17,7 +17,7 @@ class ConfigurationValidator:
         # Find project root and hook directory
         self.project_root = self._find_project_root()
         self.claude_dir = self.project_root / '.claude'
-        self.hook_dir = self.project_root / 'scripts' / 'claude-hooks'
+        self.hook_dir = self.claude_dir / 'hooks'
         self.config_dir = self.hook_dir / 'config'
 
         # Define required files with their descriptions and fix instructions
@@ -75,12 +75,12 @@ class ConfigurationValidator:
 
     def _find_project_root(self) -> Path:
         """Find the project root directory."""
-        # Start from utils directory (scripts/claude-hooks/utils) and go up 3 levels
-        # scripts/claude-hooks/utils/__file__ -> scripts/claude-hooks/utils -> scripts/claude-hooks -> scripts -> project_root
+        # Start from utils directory (.claude/hooks/utils) and go up 3 levels
+        # .claude/hooks/utils/__file__ -> .claude/hooks/utils -> .claude/hooks -> .claude -> project_root
         current = Path(__file__).resolve().parent  # utils/
-        hook_dir = current.parent  # scripts/claude-hooks/
-        scripts_dir = hook_dir.parent  # scripts/
-        project_root = scripts_dir.parent  # project root
+        hook_dir = current.parent  # .claude/hooks/
+        claude_dir = hook_dir.parent  # .claude/
+        project_root = claude_dir.parent  # project root
 
         # Verify by checking for .claude directory
         if (project_root / '.claude').exists():

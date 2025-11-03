@@ -83,7 +83,7 @@ class SimpleFormatter:
         # Agent role (always show if present)
         if context.get('agent_role'):
             role = context['agent_role']
-            parts.append(f"🤖 Agent: {role.get('name', 'unknown')}")
+            parts.append(f"🤖 Agent: {role.get('agent_name', 'unknown')}")
 
         # Session info (always show)
         if context.get('session'):
