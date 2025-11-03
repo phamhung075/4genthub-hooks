@@ -527,7 +527,7 @@ def main():
 
         # Print success message for tracking
         if exit_code == 0:
-            print("UserPromptSubmit hook success: ✅ Prompt logged", flush=True)
+            print("✅ Logged", flush=True)
 
         sys.exit(exit_code)
 

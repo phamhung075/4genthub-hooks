@@ -14,28 +14,30 @@ class ConfigurationValidator:
 
     def __init__(self):
         """Initialize validator with project root and required files."""
-        # Find project root
+        # Find project root and hook directory
         self.project_root = self._find_project_root()
         self.claude_dir = self.project_root / '.claude'
+        self.hook_dir = self.project_root / 'scripts' / 'claude-hooks'
+        self.config_dir = self.hook_dir / 'config'
 
         # Define required files with their descriptions and fix instructions
         self.required_files = {
-            self.claude_dir / 'hooks' / 'config' / '__claude_hook__allowed_root_files': {
+            self.config_dir / '__claude_hook__allowed_root_files': {
                 'description': 'Root file protection configuration',
                 'fix': (
                     "1. Copy the sample file:\n"
-                    f"   cp {self.claude_dir}/hooks/config/__claude_hook__allowed_root_files.sample \\\n"
-                    f"      {self.claude_dir}/hooks/config/__claude_hook__allowed_root_files\n"
+                    f"   cp {self.config_dir}/__claude_hook__allowed_root_files.sample \\\n"
+                    f"      {self.config_dir}/__claude_hook__allowed_root_files\n"
                     "2. Edit the file to match your project's allowed root files"
                 ),
                 'purpose': 'Controls which files AI can create in project root'
             },
-            self.claude_dir / 'hooks' / 'config' / '__claude_hook__valid_test_paths': {
+            self.config_dir / '__claude_hook__valid_test_paths': {
                 'description': 'Test directory protection configuration',
                 'fix': (
                     "1. Copy the sample file:\n"
-                    f"   cp {self.claude_dir}/hooks/config/__claude_hook__valid_test_paths.sample \\\n"
-                    f"      {self.claude_dir}/hooks/config/__claude_hook__valid_test_paths\n"
+                    f"   cp {self.config_dir}/__claude_hook__valid_test_paths.sample \\\n"
+                    f"      {self.config_dir}/__claude_hook__valid_test_paths\n"
                     "2. Edit the file to match your project's test directory structure"
                 ),
                 'purpose': 'Defines where test files can be created'
@@ -44,7 +46,7 @@ class ConfigurationValidator:
                 'description': 'Claude Code hook settings',
                 'fix': (
                     "1. Run the setup script:\n"
-                    f"   python3 {self.claude_dir}/hooks/setup_hooks.py\n"
+                    f"   python3 {self.hook_dir}/setup_hooks.py\n"
                     "2. This will create settings.json from the template"
                 ),
                 'purpose': 'Configures Claude Code hooks and permissions'
@@ -73,31 +75,26 @@ class ConfigurationValidator:
 
     def _find_project_root(self) -> Path:
         """Find the project root directory."""
-        # Start from utils directory and traverse up to find project root
-        current = Path(__file__).resolve().parent  # Start from utils/
+        # Start from utils directory (scripts/claude-hooks/utils) and go up 3 levels
+        # scripts/claude-hooks/utils/__file__ -> scripts/claude-hooks/utils -> scripts/claude-hooks -> scripts -> project_root
+        current = Path(__file__).resolve().parent  # utils/
+        hook_dir = current.parent  # scripts/claude-hooks/
+        scripts_dir = hook_dir.parent  # scripts/
+        project_root = scripts_dir.parent  # project root
 
-        # Traverse up until we find the project root
-        # The project root is the directory that contains .claude as a direct child
-        # AND is not itself inside the .claude directory tree
+        # Verify by checking for .claude directory
+        if (project_root / '.claude').exists():
+            return project_root
+
+        # Fallback: traverse up to find .claude directory
+        current = project_root
         while current.parent != current:
-            # Skip if we're currently inside a .claude directory
-            if '.claude' in current.parts:
-                # Continue going up until we exit the .claude directory
-                current = current.parent
-                continue
-
-            # Now check if this directory contains a .claude subdirectory
-            claude_dir = current / '.claude'
-            if claude_dir.exists() and claude_dir.is_dir():
-                # Verify it's actually a .claude directory by checking for hooks subdirectory
-                if (claude_dir / 'hooks').exists():
-                    # current is the project root
-                    return current
-
+            if (current / '.claude').exists() and (current / '.claude').is_dir():
+                return current
             current = current.parent
 
-        # Fallback if not found (should rarely happen)
-        return current
+        # Last fallback
+        return project_root
 
     def validate(self) -> Tuple[bool, List[Dict]]:
         """

@@ -43,16 +43,22 @@ if _RECURSION_GUARD == '1':
 # Mark that we're entering hook execution
 os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '1'
 
-# Find project root dynamically - simplified approach
+# Find project root and hook directory dynamically
 def find_project_root():
     """Find project root by looking for marker files."""
     # Start from the hook file's directory and go up to find actual project root
-    # The hook is in .claude/hooks/pre_tool_use.py, so project root is 2 levels up
+    # The hook is in scripts/claude-hooks/pre_tool_use.py, so project root is 2 levels up
     hook_file = Path(__file__).resolve()
     project_root = hook_file.parent.parent.parent
     return project_root
 
+def get_hook_dir():
+    """Get the directory where this hook script is located."""
+    return Path(__file__).resolve().parent
+
 PROJECT_ROOT = find_project_root()
+HOOK_DIR = get_hook_dir()
+CONFIG_DIR = HOOK_DIR / 'config'
 
 
 # ============================================================================
@@ -165,8 +171,7 @@ class RootFileValidator(Validator):
 
     def _load_allowed_files(self) -> List[str]:
         """Load allowed root files from configuration."""
-        project_root = PROJECT_ROOT
-        config_path = project_root / '.claude' / 'hooks' / 'config' / '__claude_hook__allowed_root_files'
+        config_path = CONFIG_DIR / '__claude_hook__allowed_root_files'
 
         default_allowed = [
             'README.md', 'CHANGELOG.md', 'TEST-CHANGELOG.md',
@@ -231,15 +236,14 @@ class TestPathValidator(Validator):
 
     def _load_valid_test_paths(self) -> List[str]:
         """Load valid test paths from configuration."""
-        project_root = PROJECT_ROOT
-        config_path = project_root / '.claude' / 'hooks' / 'config' / '__claude_hook__valid_test_paths'
+        config_path = CONFIG_DIR / '__claude_hook__valid_test_paths'
 
         # Default valid test paths for this project
         default_test_paths = [
             'agenthub_main/src/tests',
             'agenthub-frontend/src/tests',
             'agenthub-frontend/src/__tests__',
-            '.claude/hooks/tests'
+            'scripts/claude-hooks/tests'
         ]
 
         if config_path.exists():
@@ -341,8 +345,7 @@ class EnvFileValidator(Validator):
 
     def _load_valid_env_paths(self) -> List[str]:
         """Load valid paths for .env file creation from configuration."""
-        project_root = PROJECT_ROOT
-        config_path = project_root / '.claude' / 'hooks' / 'config' / '__claude_hook__valid_env_paths'
+        config_path = CONFIG_DIR / '__claude_hook__valid_env_paths'
 
         # Default: empty list means only allow root when config is empty/missing
         valid_paths = []
@@ -825,8 +828,7 @@ def main():
 
         # Print success message for tracking
         if exit_code == 0:
-            tool_name = input_data.get('tool_name', 'unknown')
-            print(f"PreToolUse:{tool_name} hook success: ✅ Validated", flush=True)
+            print("✅ Validated", flush=True)
 
         # Clear recursion guard before exiting
         os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '0'

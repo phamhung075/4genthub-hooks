@@ -53,6 +53,17 @@ if env_file.exists():
 
 
 # ============================================================================
+# Mode Detection for Token Optimization
+# ============================================================================
+
+# Check for CLAUDE_CONTEXT_MODE environment variable
+# - 'compact' (default): Loads minimal context, saves ~9,000 tokens (60%)
+# - 'full': Loads complete verbose context (original behavior)
+CONTEXT_MODE = os.getenv('CLAUDE_CONTEXT_MODE', 'compact').lower()
+USE_COMPACT_MODE = CONTEXT_MODE == 'compact'
+
+
+# ============================================================================
 # Abstract Base Classes
 # ============================================================================
 
@@ -1574,7 +1585,63 @@ class ContextFormatterProcessor(SessionProcessor):
             return None
 
     def _format_context(self, context_data: Dict) -> str:
-        """Format context data into readable output."""
+        """Format context data into readable output based on mode."""
+        # Use compact or full formatter based on mode
+        if USE_COMPACT_MODE:
+            from providers.simple_formatter import SimpleFormatter
+            return SimpleFormatter.format(self._normalize_context_data(context_data))
+        else:
+            # Original verbose formatting
+            return self._format_context_verbose(context_data)
+
+    def _normalize_context_data(self, context_data: Dict) -> Dict:
+        """Normalize context data keys for formatter compatibility."""
+        normalized = {}
+
+        # Agent messages (always include)
+        if 'agentmessage' in context_data:
+            normalized['agent_role'] = context_data['agentmessage']
+
+        # Git context (lazy or full)
+        if 'lazygitcontext' in context_data:
+            normalized['git'] = context_data['lazygitcontext']
+        elif 'gitcontext' in context_data:
+            git_data = context_data['gitcontext']
+            normalized['git'] = {
+                'branch': git_data.get('current_branch'),
+                'changes': git_data.get('changes', []),
+                'recent_commits': git_data.get('recent_commits', []),
+                'mode': 'full'
+            }
+
+        # MCP context (conditional or full)
+        if 'conditionalmcp' in context_data:
+            normalized['mcp'] = context_data['conditionalmcp']
+        elif 'mcpcontext' in context_data:
+            normalized['mcp'] = {
+                **context_data['mcpcontext'],
+                'mode': 'full'
+            }
+
+        # Environment context (compact or full)
+        if 'compactenvironment' in context_data:
+            normalized['environment'] = context_data['compactenvironment']
+        elif 'developmentcontext' in context_data:
+            normalized['environment'] = context_data['developmentcontext']
+
+        # Issues context (always include if present)
+        if 'issuecontext' in context_data:
+            normalized['issues'] = context_data['issuecontext']
+
+        # Session info (construct from available data)
+        normalized['session'] = {
+            'id': 'current'  # Will be populated by hook system
+        }
+
+        return normalized
+
+    def _format_context_verbose(self, context_data: Dict) -> str:
+        """Original verbose formatting logic."""
         output_parts = []
 
         # PRIORITY: Agent initialization messages (most important)
@@ -1819,14 +1886,32 @@ class ComponentFactory:
 
     @staticmethod
     def create_context_providers(config_loader: ConfigurationLoader) -> List[ContextProvider]:
-        """Create all context providers."""
-        return [
-            AgentMessageProvider(config_loader),  # FIRST - most important
-            GitContextProvider(),
-            MCPContextProvider(),
-            DevelopmentContextProvider(),
-            IssueContextProvider()
-        ]
+        """Create all context providers based on CONTEXT_MODE."""
+        # Always include agent message provider (critical for agent roles)
+        providers = [AgentMessageProvider(config_loader)]
+
+        if USE_COMPACT_MODE:
+            # Import compact providers
+            from providers.lazy_git import LazyGitContextProvider
+            from providers.conditional_mcp import ConditionalMCPProvider
+            from providers.compact_env import CompactEnvironmentProvider
+
+            providers.extend([
+                LazyGitContextProvider(),      # Saves ~2,850 tokens
+                ConditionalMCPProvider(),      # Saves ~2,400 tokens
+                CompactEnvironmentProvider(),  # Saves ~1,900 tokens
+                IssueContextProvider()         # Keep issues (low token cost)
+            ])
+        else:
+            # Use original verbose providers
+            providers.extend([
+                GitContextProvider(),
+                MCPContextProvider(),
+                DevelopmentContextProvider(),
+                IssueContextProvider()
+            ])
+
+        return providers
 
     @staticmethod
     def create_processors(context_providers: List[ContextProvider], logger: Logger) -> List[SessionProcessor]:
@@ -2267,7 +2352,7 @@ def main():
     """Main entry point for the hook."""
     # CRITICAL: Print output IMMEDIATELY before any processing
     # This is required for Claude Code v2.0.29+ to display SessionStart output
-    print("SessionStart:resume hook success: 🚀 Hook Loaded", flush=True)
+    print("🚀 Session loaded", flush=True)
 
     parser = argparse.ArgumentParser(description='Session start hook')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')

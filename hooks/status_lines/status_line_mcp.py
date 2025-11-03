@@ -24,8 +24,8 @@ except ImportError:
     pass  # dependencies are optional
 
 # Import the agent state manager utilities and env_loader
-# Get absolute path to hooks directory for reliable imports
-_hooks_dir = Path(__file__).resolve().parent.parent / "hooks"
+# Get absolute path to claude-hooks directory for reliable imports
+_hooks_dir = Path(__file__).resolve().parent.parent
 if str(_hooks_dir) not in sys.path:
     sys.path.insert(0, str(_hooks_dir))
 

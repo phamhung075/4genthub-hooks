@@ -21,10 +21,10 @@ src/__tests__
 src/tests
 
 # Hook tests
-.claude/hooks/tests
-.claude/hooks/tests/unit
-.claude/hooks/tests/integration
-.claude/hooks/tests/fixtures
+scripts/claude-hooks/tests
+scripts/claude-hooks/tests/unit
+scripts/claude-hooks/tests/integration
+scripts/claude-hooks/tests/fixtures
 
 # Your custom test paths (examples)
 # spec

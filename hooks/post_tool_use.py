@@ -352,8 +352,7 @@ def main():
 
         # Print success message for tracking
         if exit_code == 0:
-            tool_name = input_data.get('tool_name', 'unknown')
-            print(f"PostToolUse:{tool_name} hook success: ✅ Processed", flush=True)
+            print("✅ Processed", flush=True)
 
         sys.exit(exit_code)
 
