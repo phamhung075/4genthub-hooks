@@ -236,6 +236,7 @@ def monitor_parallel_subtasks(
 
         console.print(f"[green]✅ Subscribed to {len(subtask_ids)} subtasks[/green]")
         console.print("")
+        console.print("[yellow]⏳ Starting WebSocket monitoring loop...[/yellow]")
 
         # Start monitoring with live display
         start_time = time.time()
@@ -257,22 +258,64 @@ def monitor_parallel_subtasks(
                 # Receive WebSocket message (with timeout)
                 ws.settimeout(1.0)
                 try:
-                    message = ws.recv()
-                    data = json.loads(message)
+                    message_str = ws.recv()
+                    message = json.loads(message_str)
 
-                    # Update tracker if this is a subtask event
-                    event_subtask_id = data.get("subtask_id")
-                    if event_subtask_id and event_subtask_id in tracker_map:
-                        tracker = tracker_map[event_subtask_id]
-                        old_status = tracker.is_complete
-                        tracker.update(data)
+                    # Parse message based on v2.0 format (same as cclaude-wait)
+                    if message.get("version") == "2.0":
+                        payload = message.get("payload", {})
+                        entity = payload.get("entity")
+                        action = payload.get("action")
+                        # primary can be None for progress events, fallback to empty dict
+                        data = payload.get("data", {}).get("primary") or {}
+                        metadata = message.get("metadata", {})
 
-                        # Track completion
-                        if not old_status and tracker.is_complete:
-                            completed_count += 1
+                        # Check if this is a subtask event
+                        if entity == "subtask":
+                            event_subtask_id = metadata.get("entity_id")
 
-                        # Update live display
-                        live.update(create_progress_table(trackers))
+                            # DEBUG: Log received message
+                            console.print(f"[dim]📨 Message: entity={entity}, action={action}, id={event_subtask_id[:8] if event_subtask_id else 'none'}..., status={metadata.get('status', 'unknown')}[/dim]")
+
+                            if event_subtask_id and event_subtask_id in tracker_map:
+                                tracker = tracker_map[event_subtask_id]
+                                old_status = tracker.is_complete
+
+                                # Update tracker with data and metadata
+                                update_data = {
+                                    "status": data.get("status", metadata.get("status", tracker.status)),
+                                    "progress_percentage": data.get("progress_percentage", metadata.get("progress_percentage", tracker.progress_percentage)),
+                                    "title": metadata.get("title", data.get("title", tracker.title))
+                                }
+                                tracker.update(update_data)
+
+                                # Store full completion data when subtask completes
+                                if action == "completed" or update_data["status"] in ["done", "completed"]:
+                                    # Extract comprehensive completion data from metadata (same as cclaude-wait)
+                                    tracker.completion_data = {
+                                        "status": metadata.get("status", update_data["status"]),
+                                        "progress_percentage": metadata.get("progress_percentage", update_data["progress_percentage"]),
+                                        "title": metadata.get("title", update_data["title"]),
+                                        "completion_summary": metadata.get("completion_summary", ""),
+                                        "testing_notes": metadata.get("testing_notes", ""),
+                                        "assignees": metadata.get("assignees", []),
+                                        "progress_history": metadata.get("progress_history", {}),
+                                        "progress_count": metadata.get("progress_count", 0),
+                                        "insights_found": metadata.get("insights_found", []),
+                                        "blockers": metadata.get("blockers", []),
+                                        "description": metadata.get("description", ""),
+                                        "impact_on_parent": metadata.get("impact_on_parent", ""),
+                                        "challenges_overcome": metadata.get("challenges_overcome", []),
+                                        "deliverables": metadata.get("deliverables", [])
+                                    }
+
+                                # Track completion
+                                if not old_status and tracker.is_complete:
+                                    completed_count += 1
+                                    console.print(f"[green]✅ Subtask {event_subtask_id[:8]}... completed! ({completed_count}/{len(trackers)})[/green]")
+
+                                # Update live display
+                                live.update(create_progress_table(trackers))
 
                 except websocket.WebSocketTimeoutException:
                     # Timeout is expected, just refresh display

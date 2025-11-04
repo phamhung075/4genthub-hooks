@@ -57,7 +57,7 @@ for i in "${!SUBTASK_IDS[@]}"; do
     SUBTASK_ID="${SUBTASK_IDS[$i]}"
 
     # Build enhanced task description for autonomous mode
-    ENHANCED_TASK_DESC="subtask_id: $SUBTASK_ID, task_id: $TASK_ID -- AUTONOMOUS MODE: 1) DO NOT ask user for choices 2) USE sequential-thinking tool for decisions 3) Work independently 4) UPDATE progress at 25/50/75% with progress_notes 5) COMPLETE with detailed completion_summary, testing_notes, insights_found -- The user monitors via MCP but will NOT respond to questions - deliver complete results autonomously."
+    ENHANCED_TASK_DESC="subtask_id: $SUBTASK_ID, task_id: $TASK_ID -- AUTONOMOUS MODE: 1) DO NOT ask user for choices 2) USE sequential-thinking tool for decisions 3) Work independently 4) UPDATE progress at 25/50/75% with progress_notes 5) COMPLETE with detailed completion_summary, testing_notes, insights_found -- The user monitors via MCP but will NOT respond to questions - deliver complete results autonomously (agenthub_http - manage_subtask action: "complete" with completion_summary)."
 
     echo "  [$((i+1))/$SUBTASK_COUNT] Launching subtask $SUBTASK_ID..." >&2
 

@@ -1,0 +1,112 @@
+#!/bin/bash
+# cclaude - Create new Claude terminal session
+#
+# Usage:
+#   cclaude <agent-name> <description or task_id>
+#   cclaude "Call <agent-name> to do task_id: XXX"  (backward compatibility)
+#   cclaude "task description"  (defaults to master-orchestrator-agent)
+
+if [ $# -eq 0 ]; then
+    echo "Usage: cclaude <agent-name> <description or task_id>"
+    echo "   or: cclaude 'task description'  (defaults to master-orchestrator-agent)"
+    echo ""
+    echo "Examples:"
+    echo "  # New simplified syntax:"
+    echo "  cclaude documentation-agent 'Update CHANGELOG.md'"
+    echo "  cclaude documentation-agent 'task_id: 381291d6-fa7f-4e60-80c5-0d1b86664722'"
+    echo "  cclaude coding-agent 'Fix authentication bug in src/auth/login.js:45-52'"
+    echo ""
+    echo "  # Subtask delegation:"
+    echo "  cclaude coding-agent 'subtask_id: xyz-456-ghi, task_id: abc-123-def'"
+    echo "  cclaude test-orchestrator-agent 'subtask_id: test-789-jkl, task_id: parent-uuid'"
+    echo ""
+    echo "  # Old syntax (still supported):"
+    echo "  cclaude 'Call documentation-agent to do task_id: XXX'"
+    echo "  cclaude 'Implement user dashboard'"
+    exit 1
+fi
+
+# Detect format and parse agent name + task description
+AGENT_NAME=""
+TASK_DESC=""
+
+# Check if first argument looks like an agent name (contains hyphen and ends with -agent)
+if [[ "$1" =~ ^[a-z]+-[a-z-]+-agent$ ]] || [[ "$1" =~ ^[a-z]+-agent$ ]]; then
+    # New format: cclaude <agent-name> <description>
+    AGENT_NAME="$1"
+    shift  # Remove first argument
+    TASK_DESC="$*"
+
+    # Construct the proper command format for Claude
+    CLAUDE_COMMAND="Call $AGENT_NAME to do $TASK_DESC"
+    echo "🤖 Agent: $AGENT_NAME"
+    echo "📝 Task: $TASK_DESC"
+
+elif [[ "$*" =~ ^[Cc]all[[:space:]]+([a-z-]+)[[:space:]]+to[[:space:]]+do[[:space:]]+ ]]; then
+    # Old format: "Call <agent-name> to do <description>"
+    AGENT_NAME="${BASH_REMATCH[1]}"
+    TASK_DESC="$*"
+    CLAUDE_COMMAND="$TASK_DESC"
+    echo "🤖 Agent: $AGENT_NAME (detected from command)"
+    echo "📝 Task: $TASK_DESC"
+
+else
+    # No agent specified - default to master-orchestrator-agent
+    AGENT_NAME="master-orchestrator-agent"
+    TASK_DESC="$*"
+    CLAUDE_COMMAND="$TASK_DESC"
+    echo "🤖 Agent: $AGENT_NAME (default)"
+    echo "📝 Task: $TASK_DESC"
+fi
+
+# Get the project root (where .claude folder is)
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+echo "🚀 Creating new Claude terminal session..."
+
+# WSL2 with Windows Terminal (best option for WSL2)
+if command -v wt.exe &> /dev/null; then
+    # Build command directly without temp script to avoid path issues
+    # Escape special characters for proper shell execution
+    SAFE_TASK_DESC="${TASK_DESC//\'/\'\\\'\'}"  # Escape single quotes
+    SAFE_CLAUDE_CMD="${CLAUDE_COMMAND//\'/\'\\\'\'}"  # Escape single quotes
+
+    # Launch Windows Terminal with inline bash command (no -w parameter to avoid window focus issues)
+    wt.exe new-tab --title "Claude [$AGENT_NAME]" bash -c "cd '$PROJECT_ROOT' && export CCLAUDE_AGENT='$AGENT_NAME' && echo '🤖 Agent: $AGENT_NAME' && echo '📝 Task: $SAFE_TASK_DESC' && echo '' && /home/daihu/.npm-global/bin/claude --dangerously-skip-permissions '$SAFE_CLAUDE_CMD' && exec bash -l"
+    echo "✅ Windows Terminal tab opened (WSL)"
+
+# Linux with gnome-terminal
+elif command -v gnome-terminal &> /dev/null; then
+    export CCLAUDE_AGENT="$AGENT_NAME"
+    gnome-terminal --working-directory="$PROJECT_ROOT" \
+                   --title="Claude [$AGENT_NAME]: ${TASK_DESC:0:25}" \
+                   -- bash -c "export CCLAUDE_AGENT='$AGENT_NAME'; echo '🤖 Agent: $AGENT_NAME'; echo '📝 Task: $TASK_DESC'; echo ''; claude --dangerously-skip-permissions '$CLAUDE_COMMAND'; exec bash"
+    echo "✅ Terminal opened"
+
+# macOS
+elif command -v osascript &> /dev/null; then
+    osascript <<EOF
+tell application "Terminal"
+    activate
+    do script "cd '$PROJECT_ROOT' && export CCLAUDE_AGENT='$AGENT_NAME' && echo '🤖 Agent: $AGENT_NAME' && echo '📝 Task: $TASK_DESC' && echo '' && claude --dangerously-skip-permissions '$CLAUDE_COMMAND'"
+end tell
+EOF
+    echo "✅ Terminal opened"
+
+# VSCode integrated terminal
+elif command -v code &> /dev/null; then
+    export CCLAUDE_AGENT="$AGENT_NAME"
+    echo "⚠️  Opening in current terminal (VSCode terminal API not available via CLI)"
+    echo "🤖 Agent: $AGENT_NAME"
+    echo "📝 Task: $TASK_DESC"
+    claude --dangerously-skip-permissions "$CLAUDE_COMMAND"
+
+# Fallback
+else
+    export CCLAUDE_AGENT="$AGENT_NAME"
+    echo "⚠️  No supported terminal emulator found"
+    echo "Running in current terminal..."
+    echo "🤖 Agent: $AGENT_NAME"
+    echo "📝 Task: $TASK_DESC"
+    claude --dangerously-skip-permissions "$CLAUDE_COMMAND"
+fi
