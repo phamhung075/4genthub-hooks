@@ -1,0 +1,328 @@
+#!/usr/bin/env python3
+"""
+MCP WebSocket Multiplexer - Parallel Subtask Monitoring
+
+Connects to MCP WebSocket server and monitors multiple subtasks simultaneously.
+Displays aggregated live progress updates and waits for all completions.
+
+Usage:
+    python poll_mcp_websocket_parallel.py <task_id> --subtask-ids="uuid1 uuid2 uuid3" [--timeout=3600]
+
+Architecture:
+    - Single WebSocket connection to ws://localhost:8000/ws/task-polling
+    - Subscribes to multiple subtask events simultaneously
+    - Displays live progress updates as they arrive
+    - Tracks completion status for each subtask
+    - Waits until all subtasks complete
+    - Returns aggregated JSON results
+
+This approach replicates Task tool's parallel execution with live output visibility.
+"""
+
+import sys
+import json
+import argparse
+import os
+import time
+from typing import Optional, Dict, Any, List, Set
+from datetime import datetime
+
+# Import rich for console (output to stderr)
+try:
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.live import Live
+    from rich.layout import Layout
+except ImportError:
+    print("Installing rich library...", file=sys.stderr)
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "rich", "-q"])
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.live import Live
+    from rich.layout import Layout
+
+# CRITICAL: All rich UI to stderr, stdout for JSON only
+console = Console(stderr=True)
+
+try:
+    import websocket
+except ImportError:
+    console.print("[red]ERROR: websocket-client library not installed[/red]")
+    console.print("Install with: pip install websocket-client")
+    sys.exit(1)
+
+
+class SubtaskTracker:
+    """Tracks status and progress of individual subtasks"""
+
+    def __init__(self, subtask_id: str, task_id: str):
+        self.subtask_id = subtask_id
+        self.task_id = task_id
+        self.status = "pending"
+        self.progress_percentage = 0
+        self.title = "Loading..."
+        self.last_update = datetime.now()
+        self.completion_data = None
+        self.is_complete = False
+
+    def update(self, data: Dict[str, Any]):
+        """Update tracker with new WebSocket data"""
+        self.last_update = datetime.now()
+
+        # Extract status and progress
+        self.status = data.get("status", self.status)
+        self.progress_percentage = data.get("progress_percentage", self.progress_percentage)
+        self.title = data.get("title", self.title)
+
+        # Check if completed
+        if self.status in ["done", "completed", "cancelled"]:
+            self.is_complete = True
+            self.completion_data = data
+
+    def get_status_emoji(self) -> str:
+        """Get emoji representation of status"""
+        if self.is_complete:
+            return "✅" if self.status == "done" else "❌"
+        elif self.status == "in_progress":
+            return "⏳"
+        else:
+            return "⏸️"
+
+    def get_progress_bar(self, width: int = 20) -> str:
+        """Generate progress bar visualization"""
+        filled = int(width * (self.progress_percentage / 100))
+        bar = "█" * filled + "░" * (width - filled)
+        return f"{bar} {self.progress_percentage}%"
+
+
+def get_mcp_token() -> str:
+    """Get MCP API token from environment"""
+    token = os.getenv("MCP_API_TOKEN")
+    if not token:
+        console.print("[red]ERROR: MCP_API_TOKEN environment variable not set[/red]")
+        console.print("Please set MCP_API_TOKEN in your environment")
+        sys.exit(1)
+    return token
+
+
+def create_progress_table(trackers: List[SubtaskTracker]) -> Table:
+    """Create rich table showing all subtask progress"""
+    table = Table(title="📊 Parallel Subtask Progress", show_header=True, header_style="bold cyan")
+
+    table.add_column("#", style="dim", width=3)
+    table.add_column("Status", width=4)
+    table.add_column("Subtask ID", style="cyan", width=12)
+    table.add_column("Progress", width=25)
+    table.add_column("Title", style="white")
+
+    for i, tracker in enumerate(trackers, 1):
+        # Truncate subtask ID for display
+        short_id = tracker.subtask_id[:8] + "..."
+
+        table.add_row(
+            str(i),
+            tracker.get_status_emoji(),
+            short_id,
+            tracker.get_progress_bar(),
+            tracker.title
+        )
+
+    return table
+
+
+def monitor_parallel_subtasks(
+    task_id: str,
+    subtask_ids: List[str],
+    timeout: int = 3600,
+    server_url: str = "http://localhost:8000"
+) -> Dict[str, Any]:
+    """
+    Monitor multiple subtasks in parallel via WebSocket.
+
+    Returns aggregated results when all subtasks complete.
+    """
+    # Initialize trackers
+    trackers = [SubtaskTracker(sid, task_id) for sid in subtask_ids]
+    tracker_map = {t.subtask_id: t for t in trackers}
+
+    # Get MCP token
+    mcp_token = get_mcp_token()
+
+    # Build WebSocket endpoint
+    ws_endpoint = server_url.replace("http://", "ws://").replace("https://", "wss://")
+    ws_endpoint = f"{ws_endpoint}/ws/task-polling"
+
+    console.print(f"[cyan]🔌 Connecting to WebSocket: {ws_endpoint}[/cyan]")
+
+    try:
+        # Connect to WebSocket
+        ws = websocket.create_connection(
+            ws_endpoint,
+            timeout=10,
+            header={"Authorization": f"Bearer {mcp_token}"}
+        )
+
+        console.print("[green]✅ Connected[/green]")
+
+        # Subscribe to all subtask events
+        for subtask_id in subtask_ids:
+            subscribe_message = {
+                "type": "subscribe",
+                "scope": "subtask",
+                "entity_id": subtask_id
+            }
+            ws.send(json.dumps(subscribe_message))
+
+        console.print(f"[green]✅ Subscribed to {len(subtask_ids)} subtasks[/green]")
+        console.print("")
+
+        # Start monitoring with live display
+        start_time = time.time()
+        completed_count = 0
+
+        with Live(create_progress_table(trackers), refresh_per_second=4, console=console) as live:
+            while True:
+                # Check timeout
+                elapsed = time.time() - start_time
+                if elapsed > timeout:
+                    console.print(f"[red]⏰ Timeout after {timeout}s[/red]")
+                    break
+
+                # Check if all complete
+                if all(t.is_complete for t in trackers):
+                    console.print("[green]🎉 All subtasks completed![/green]")
+                    break
+
+                # Receive WebSocket message (with timeout)
+                ws.settimeout(1.0)
+                try:
+                    message = ws.recv()
+                    data = json.loads(message)
+
+                    # Update tracker if this is a subtask event
+                    event_subtask_id = data.get("subtask_id")
+                    if event_subtask_id and event_subtask_id in tracker_map:
+                        tracker = tracker_map[event_subtask_id]
+                        old_status = tracker.is_complete
+                        tracker.update(data)
+
+                        # Track completion
+                        if not old_status and tracker.is_complete:
+                            completed_count += 1
+
+                        # Update live display
+                        live.update(create_progress_table(trackers))
+
+                except websocket.WebSocketTimeoutException:
+                    # Timeout is expected, just refresh display
+                    live.update(create_progress_table(trackers))
+                    continue
+
+        # Close WebSocket
+        ws.close()
+
+        # Build aggregated results
+        results = {
+            "success": all(t.is_complete and t.status == "done" for t in trackers),
+            "task_id": task_id,
+            "subtask_count": len(trackers),
+            "completed_count": completed_count,
+            "subtasks": []
+        }
+
+        for tracker in trackers:
+            subtask_result = {
+                "subtask_id": tracker.subtask_id,
+                "status": tracker.status,
+                "progress_percentage": tracker.progress_percentage,
+                "title": tracker.title,
+                "is_complete": tracker.is_complete
+            }
+
+            if tracker.completion_data:
+                subtask_result["completion_data"] = tracker.completion_data
+
+            results["subtasks"].append(subtask_result)
+
+        # Output JSON to stdout for cclaude-wait-parallel parsing
+        print(json.dumps(results, indent=2))
+
+        return results
+
+    except websocket.WebSocketException as e:
+        console.print(f"[red]❌ WebSocket error: {e}[/red]")
+        error_result = {
+            "success": False,
+            "error": str(e),
+            "task_id": task_id
+        }
+        print(json.dumps(error_result, indent=2))
+        sys.exit(1)
+
+    except Exception as e:
+        console.print(f"[red]❌ Unexpected error: {e}[/red]")
+        error_result = {
+            "success": False,
+            "error": str(e),
+            "task_id": task_id
+        }
+        print(json.dumps(error_result, indent=2))
+        sys.exit(1)
+
+
+def main():
+    """Main entry point"""
+    parser = argparse.ArgumentParser(
+        description="Monitor multiple MCP subtasks in parallel via WebSocket"
+    )
+    parser.add_argument("task_id", help="Parent task UUID")
+    parser.add_argument(
+        "--subtask-ids",
+        required=True,
+        help="Space-separated subtask UUIDs (e.g., 'uuid1 uuid2 uuid3')"
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=3600,
+        help="Maximum wait time in seconds (default: 3600)"
+    )
+    parser.add_argument(
+        "--server-url",
+        default="http://localhost:8000",
+        help="MCP server URL (default: http://localhost:8000)"
+    )
+
+    args = parser.parse_args()
+
+    # Parse subtask IDs
+    subtask_ids = args.subtask_ids.strip().split()
+
+    if not subtask_ids:
+        console.print("[red]ERROR: No subtask IDs provided[/red]")
+        sys.exit(1)
+
+    # Show header
+    console.print(Panel.fit(
+        f"[bold cyan]MCP WebSocket Multiplexer[/bold cyan]\n\n"
+        f"📋 Task ID: {args.task_id}\n"
+        f"📝 Monitoring {len(subtask_ids)} subtasks\n"
+        f"⏱️  Timeout: {args.timeout}s",
+        border_style="cyan"
+    ))
+    console.print("")
+
+    # Monitor subtasks
+    monitor_parallel_subtasks(
+        task_id=args.task_id,
+        subtask_ids=subtask_ids,
+        timeout=args.timeout,
+        server_url=args.server_url
+    )
+
+
+if __name__ == "__main__":
+    main()
