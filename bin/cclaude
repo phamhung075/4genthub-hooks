@@ -7,7 +7,7 @@
 #   cclaude "task description"  (defaults to master-orchestrator-agent)
 
 if [ $# -eq 0 ]; then
-    echo "Usage: cclaude <agent-name> <description or task_id>"
+    echo "Usage: cclaude <agent-name> <description or task_id> [--custom \"instructions\"]"
     echo "   or: cclaude 'task description'  (defaults to master-orchestrator-agent)"
     echo ""
     echo "Examples:"
@@ -15,6 +15,9 @@ if [ $# -eq 0 ]; then
     echo "  cclaude documentation-agent 'Update CHANGELOG.md'"
     echo "  cclaude documentation-agent 'task_id: 381291d6-fa7f-4e60-80c5-0d1b86664722'"
     echo "  cclaude coding-agent 'Fix authentication bug in src/auth/login.js:45-52'"
+    echo ""
+    echo "  # With custom instructions:"
+    echo "  cclaude coding-agent 'task_id: abc-123' --custom 'Use strict types and add tests'"
     echo ""
     echo "  # Subtask delegation:"
     echo "  cclaude coding-agent 'subtask_id: xyz-456-ghi, task_id: abc-123-def'"
@@ -24,6 +27,20 @@ if [ $# -eq 0 ]; then
     echo "  cclaude 'Call documentation-agent to do task_id: XXX'"
     echo "  cclaude 'Implement user dashboard'"
     exit 1
+fi
+
+# Parse optional --custom parameter first
+CUSTOM_INSTRUCTIONS=""
+if [ $# -ge 2 ]; then
+    # Check if last two arguments are --custom and its value
+    LAST_ARG="${@: -1}"
+    SECOND_LAST="${@: -2:1}"
+
+    if [ "$SECOND_LAST" = "--custom" ]; then
+        CUSTOM_INSTRUCTIONS="$LAST_ARG"
+        # Remove last two arguments
+        set -- "${@:1:$(($# - 2))}"
+    fi
 fi
 
 # Detect format and parse agent name + task description
@@ -36,6 +53,11 @@ if [[ "$1" =~ ^[a-z]+-[a-z-]+-agent$ ]] || [[ "$1" =~ ^[a-z]+-agent$ ]]; then
     AGENT_NAME="$1"
     shift  # Remove first argument
     TASK_DESC="$*"
+
+    # Append custom instructions if provided
+    if [ -n "$CUSTOM_INSTRUCTIONS" ]; then
+        TASK_DESC="$TASK_DESC -- Additional instructions: $CUSTOM_INSTRUCTIONS"
+    fi
 
     # Construct the proper command format for Claude
     CLAUDE_COMMAND="Call $AGENT_NAME to do $TASK_DESC"
