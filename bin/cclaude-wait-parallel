@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 ###############################################################################
-# cclaude-wait-parallel - Parallel Subtask Delegation with Live Progress
+# cclaude-wait-parallel - Simple Parallel Subtask Delegation
 #
 # Purpose:
-#   Delegates multiple subtasks to agents in parallel with live progress updates,
-#   mimicking the Task tool's parallel execution capabilities.
+#   Delegates multiple subtasks to agents in parallel, waits for all to complete.
+#   NO WebSocket monitoring - just simple PID waiting like cclaude.
 #
 # Usage:
 #   cclaude-wait-parallel <agent_name> <task_id> <subtask_id1> <subtask_id2> <subtask_id3> [...]
@@ -14,24 +14,17 @@
 #
 # Features:
 #   - Launches multiple cclaude sessions in parallel (separate terminals)
-#   - Single WebSocket connection monitors all subtasks simultaneously
-#   - Displays aggregated live progress in orchestrator session
-#   - Waits for all completions before continuing
-#   - Returns combined JSON results
+#   - Waits for all to complete before continuing
+#   - Simple and reliable - no tokens needed!
 #
 # Architecture:
-#   1. Launch all cclaude commands in parallel (background processes)
-#   2. Start WebSocket multiplexer that subscribes to all subtask events
-#   3. Display live progress updates as they arrive
-#   4. Wait for all to complete
-#   5. Return aggregated results
+#   1. Launch all cclaude commands in parallel with &
+#   2. Track all PIDs
+#   3. Wait for each PID to complete
+#   4. Report success when all done
 ###############################################################################
 
 set -euo pipefail
-
-# Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MAX_WAIT="${CCLAUDE_WAIT_TIMEOUT:-3600}"  # Default 1 hour
 
 # Parse arguments
 if [ $# -lt 3 ]; then
@@ -59,70 +52,63 @@ echo "" >&2
 
 # Launch all cclaude commands in parallel
 declare -a CCLAUDE_PIDS=()
-declare -a TEMP_FILES=()
 
 for i in "${!SUBTASK_IDS[@]}"; do
     SUBTASK_ID="${SUBTASK_IDS[$i]}"
-    TEMP_FILE=$(mktemp /tmp/cclaude_result_XXXXXX.json)
-    TEMP_FILES+=("$TEMP_FILE")
 
     # Build enhanced task description for autonomous mode
     ENHANCED_TASK_DESC="subtask_id: $SUBTASK_ID, task_id: $TASK_ID -- AUTONOMOUS MODE: 1) DO NOT ask user for choices 2) USE sequential-thinking tool for decisions 3) Work independently 4) UPDATE progress at 25/50/75% with progress_notes 5) COMPLETE with detailed completion_summary, testing_notes, insights_found -- The user monitors via MCP but will NOT respond to questions - deliver complete results autonomously."
 
     echo "  [$((i+1))/$SUBTASK_COUNT] Launching subtask $SUBTASK_ID..." >&2
 
-    # Launch cclaude in background, redirecting to temp file
-    cclaude "$AGENT_NAME" "$ENHANCED_TASK_DESC" > "$TEMP_FILE" 2>&1 &
+    # Launch cclaude in background (opens separate terminal)
+    cclaude "$AGENT_NAME" "$ENHANCED_TASK_DESC" &
     CCLAUDE_PIDS+=($!)
 done
 
 echo "" >&2
 echo "✅ All cclaude sessions launched" >&2
-echo "👀 Starting live progress monitoring..." >&2
+echo "📊 PIDs: ${CCLAUDE_PIDS[*]}" >&2
+echo "" >&2
+echo "⏳ Waiting for all subtasks to complete..." >&2
+echo "   (You can monitor progress in the separate terminal windows)" >&2
+# Wait a moment for terminals to spawn
+sleep 2
+
+# Get directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Monitor all subtasks via WebSocket multiplexer
+# This provides live progress updates while waiting for completion
+MAX_WAIT=3600  # max 1 hour timeout
+
+echo "" >&2
+echo "⏳ Monitoring progress via WebSocket..." >&2
 echo "" >&2
 
-# Now launch the WebSocket multiplexer to monitor all subtasks
-python3 "$SCRIPT_DIR/poll_mcp_websocket_parallel.py" \
+# Call WebSocket multiplexer with all subtask IDs
+TASK_RESULT=$(python3 "$SCRIPT_DIR/poll_mcp_websocket_parallel.py" \
     "$TASK_ID" \
     --subtask-ids="${SUBTASK_IDS[*]}" \
-    --timeout="$MAX_WAIT"
-
-# Store result from WebSocket multiplexer
-MULTIPLEXER_EXIT_CODE=$?
+    --timeout="$MAX_WAIT")
+POLL_EXIT_CODE=$?
 
 echo "" >&2
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
 echo "" >&2
 
-# Wait for all cclaude processes to finish
-for i in "${!CCLAUDE_PIDS[@]}"; do
-    PID="${CCLAUDE_PIDS[$i]}"
-    wait "$PID" 2>/dev/null || true
-done
-
-# Check if multiplexer succeeded
-if [ $MULTIPLEXER_EXIT_CODE -ne 0 ]; then
-    echo "❌ WebSocket monitoring failed with exit code: $MULTIPLEXER_EXIT_CODE" >&2
-
-    # Output partial results if available
-    echo "{"
-    echo "  \"success\": false,"
-    echo "  \"error\": \"WebSocket monitoring failed\","
-    echo "  \"exit_code\": $MULTIPLEXER_EXIT_CODE"
-    echo "}"
-
-    # Cleanup temp files
-    for TEMP_FILE in "${TEMP_FILES[@]}"; do
-        rm -f "$TEMP_FILE"
-    done
-
+if [ $POLL_EXIT_CODE -eq 0 ]; then
+    # All subtasks completed successfully - output JSON result
+    echo "$TASK_RESULT" | python3 -m json.tool
+    exit 0
+else
+    # Some subtasks failed or timed out
+    echo "❌ Not all subtasks completed successfully" >&2
+    echo "" >&2
+    echo "📊 Status:" >&2
+    echo "$TASK_RESULT" | python3 -m json.tool >&2
+    echo "" >&2
+    echo "💡 Check the terminal windows for agent output" >&2
+    echo "💡 Use manage_subtask to check individual subtask status" >&2
     exit 1
 fi
-
-# Cleanup temp files
-for TEMP_FILE in "${TEMP_FILES[@]}"; do
-    rm -f "$TEMP_FILE"
-done
-
-echo "✅ All subtasks completed successfully!" >&2
-exit 0

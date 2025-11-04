@@ -98,14 +98,63 @@ class SubtaskTracker:
         return f"{bar} {self.progress_percentage}%"
 
 
-def get_mcp_token() -> str:
-    """Get MCP API token from environment"""
-    token = os.getenv("MCP_API_TOKEN")
-    if not token:
-        console.print("[red]ERROR: MCP_API_TOKEN environment variable not set[/red]")
-        console.print("Please set MCP_API_TOKEN in your environment")
-        sys.exit(1)
-    return token
+def get_mcp_token_from_config() -> Optional[str]:
+    """
+    Get MCP API token from .mcp.json configuration file.
+    This uses the same authentication mechanism as MCP tools and cclaude-wait.
+
+    Tries in order:
+    1. ./.mcp.json (current directory)
+    2. ~/.config/claude/mcp.json
+    3. MCP_JWT_TOKEN environment variable (fallback)
+
+    Returns:
+        JWT token string or None if not found
+    """
+    # Try local .mcp.json first
+    local_mcp_path = './.mcp.json'
+    if os.path.exists(local_mcp_path):
+        try:
+            with open(local_mcp_path, 'r') as f:
+                mcp_config = json.load(f)
+                # Look for agenthub_http server configuration
+                if 'mcpServers' in mcp_config:
+                    agenthub_config = mcp_config['mcpServers'].get('agenthub_http', {})
+                    headers = agenthub_config.get('headers', {})
+                    auth_header = headers.get('Authorization', '')
+
+                    # Parse "Bearer <token>" format
+                    if auth_header.startswith('Bearer '):
+                        token = auth_header[7:].strip()  # Remove "Bearer " prefix
+                        return token
+        except Exception as e:
+            pass  # Silent fail, try next location
+
+    # Try user config directory
+    config_mcp_path = os.path.expanduser('~/.config/claude/mcp.json')
+    if os.path.exists(config_mcp_path):
+        try:
+            with open(config_mcp_path, 'r') as f:
+                mcp_config = json.load(f)
+                if 'mcpServers' in mcp_config:
+                    agenthub_config = mcp_config['mcpServers'].get('agenthub_http', {})
+                    headers = agenthub_config.get('headers', {})
+                    auth_header = headers.get('Authorization', '')
+
+                    if auth_header.startswith('Bearer '):
+                        token = auth_header[7:].strip()
+                        return token
+        except Exception as e:
+            pass  # Silent fail, try next location
+
+    # Fallback to environment variable
+    token = os.getenv('MCP_JWT_TOKEN')
+    if token:
+        return token.strip()
+
+    console.print("[red]Error: No MCP token found[/red]")
+    console.print(f"Checked: {local_mcp_path}, {config_mcp_path}, MCP_JWT_TOKEN env")
+    return None
 
 
 def create_progress_table(trackers: List[SubtaskTracker]) -> Table:
@@ -148,21 +197,30 @@ def monitor_parallel_subtasks(
     trackers = [SubtaskTracker(sid, task_id) for sid in subtask_ids]
     tracker_map = {t.subtask_id: t for t in trackers}
 
-    # Get MCP token
-    mcp_token = get_mcp_token()
+    # Get MCP token from .mcp.json (same as cclaude-wait)
+    mcp_token = get_mcp_token_from_config()
+    if not mcp_token:
+        error_result = {
+            "success": False,
+            "error": "No MCP token found",
+            "hint": "Configure token in .mcp.json",
+            "task_id": task_id
+        }
+        print(json.dumps(error_result, indent=2))
+        sys.exit(1)
 
-    # Build WebSocket endpoint
-    ws_endpoint = server_url.replace("http://", "ws://").replace("https://", "wss://")
-    ws_endpoint = f"{ws_endpoint}/ws/task-polling"
+    # Build WebSocket endpoint with token in URL (required for WebSocket auth)
+    ws_url = server_url.replace("http://", "ws://").replace("https://", "wss://")
+    ws_endpoint = f"{ws_url}/ws/task-polling?token={mcp_token}"
 
-    console.print(f"[cyan]🔌 Connecting to WebSocket: {ws_endpoint}[/cyan]")
+    # Display URL without token for security
+    console.print(f"[cyan]🔌 Connecting to WebSocket: {ws_url}/ws/task-polling[/cyan]")
 
     try:
-        # Connect to WebSocket
+        # Connect to WebSocket (token is in URL, no header needed)
         ws = websocket.create_connection(
             ws_endpoint,
-            timeout=10,
-            header={"Authorization": f"Bearer {mcp_token}"}
+            timeout=10
         )
 
         console.print("[green]✅ Connected[/green]")
