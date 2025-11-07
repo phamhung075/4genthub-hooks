@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 """
-MCP WebSocket Multiplexer - Parallel Subtask Monitoring
+MCP WebSocket Multiplexer - Parallel Subtask Monitoring with Pydantic Validation
 
 Connects to MCP WebSocket server and monitors multiple subtasks simultaneously.
 Displays aggregated live progress updates and waits for all completions.
+Includes comprehensive validation using Pydantic models and detailed debugging.
 
 Usage:
-    python poll_mcp_websocket_parallel.py <task_id> --subtask-ids="uuid1 uuid2 uuid3" [--timeout=3600]
+    python poll_mcp_websocket_parallel.py <task_id> --subtask-ids="uuid1 uuid2 uuid3" [--timeout=3600] [--debug]
+
+Features:
+    - Type-safe validation using Pydantic models from WebSocket Protocol v2.0
+    - Detailed error reporting when data doesn't match expected structure
+    - Color-coded validation feedback
+    - Debug mode showing full message structure
+    - Live progress table for all subtasks
 
 Architecture:
     - Single WebSocket connection to ws://localhost:8000/ws/task-polling
@@ -26,6 +34,19 @@ import os
 import time
 from typing import Optional, Dict, Any, List, Set
 from datetime import datetime
+
+# Add path to include agenthub_main for Pydantic models
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(project_root, 'agenthub_main/src'))
+
+try:
+    from fastmcp.task_management.domain.websocket_protocol import SubtaskCompletePayload
+    from pydantic import ValidationError
+except ImportError as e:
+    # Gracefully handle import errors (e.g., when running outside project)
+    print(f"Warning: Could not import Pydantic models: {e}", file=sys.stderr)
+    SubtaskCompletePayload = None
+    ValidationError = Exception
 
 # Import rich for console (output to stderr)
 try:
@@ -55,6 +76,92 @@ except ImportError:
     sys.exit(1)
 
 
+def validate_subtask_completion_payload(
+    data: Dict[str, Any],
+    metadata: Dict[str, Any],
+    subtask_id: str,
+    task_id: str,
+    debug: bool = False
+) -> tuple[bool, Optional[str], Optional[Dict[str, Any]]]:
+    """
+    Validate subtask completion payload using Pydantic models.
+
+    Args:
+        data: Primary payload data from WebSocket message
+        metadata: Metadata from WebSocket message
+        subtask_id: Expected subtask ID
+        task_id: Parent task ID
+        debug: Whether to show detailed debug output
+
+    Returns:
+        (is_valid, error_message, validated_data)
+    """
+    if SubtaskCompletePayload is None:
+        if debug:
+            console.print("[yellow]⚠️  Pydantic validation skipped (models not available)[/yellow]")
+        return True, None, data
+
+    try:
+        if debug:
+            console.print(f"[cyan]🔍 Validating SubtaskCompletePayload for {subtask_id[:8]}...[/cyan]")
+            console.print(f"[dim]Input data keys: {list(data.keys())}[/dim]")
+            console.print(f"[dim]Metadata keys: {list(metadata.keys())}[/dim]")
+
+        # Prepare validation data (merge data and metadata for complete picture)
+        validation_input = {
+            "id": data.get("id") or metadata.get("entity_id") or subtask_id,
+            "title": data.get("title") or metadata.get("title") or metadata.get("subtask_title", "Unknown"),
+            "status": data.get("status", "done"),
+            "task_id": data.get("task_id") or metadata.get("task_id") or task_id,
+            "completion_summary": data.get("completion_summary") or metadata.get("completion_summary"),
+            "progress_percentage": data.get("progress_percentage", 100),
+            "completed_at": data.get("completed_at") or metadata.get("timestamp")
+        }
+
+        if debug:
+            console.print("[dim]Validation input:[/dim]")
+            for key, value in validation_input.items():
+                console.print(f"[dim]  {key}: {value}[/dim]")
+
+        # Validate with Pydantic
+        validated = SubtaskCompletePayload(**validation_input)
+
+        if debug:
+            console.print(f"[green]✅ Validation passed for SubtaskCompletePayload[/green]")
+
+        # Return validated data as dict
+        return True, None, validated.model_dump()
+
+    except ValidationError as e:
+        # Detailed error reporting
+        error_msg = f"Validation failed for SubtaskCompletePayload"
+
+        if debug:
+            console.print(f"[red]❌ {error_msg}[/red]")
+
+            # Show detailed errors
+            table = Table(title=f"Validation Errors - {subtask_id[:8]}...", show_header=True, header_style="bold red")
+            table.add_column("Field", style="cyan")
+            table.add_column("Error", style="white")
+            table.add_column("Received Value", style="yellow")
+
+            for error in e.errors():
+                field = ".".join(str(loc) for loc in error['loc'])
+                error_type = error['type']
+                received = validation_input.get(field, "MISSING")
+                table.add_row(field, f"{error_type}: {error['msg']}", str(received))
+
+            console.print(table)
+
+        return False, error_msg, None
+
+    except Exception as e:
+        error_msg = f"Unexpected validation error: {e}"
+        if debug:
+            console.print(f"[red]❌ {error_msg}[/red]")
+        return False, error_msg, None
+
+
 class SubtaskTracker:
     """Tracks status and progress of individual subtasks"""
 
@@ -67,6 +174,8 @@ class SubtaskTracker:
         self.last_update = datetime.now()
         self.completion_data = None
         self.is_complete = False
+        self.validation_passed = None
+        self.validation_error = None
 
     def update(self, data: Dict[str, Any]):
         """Update tracker with new WebSocket data"""
@@ -85,6 +194,8 @@ class SubtaskTracker:
     def get_status_emoji(self) -> str:
         """Get emoji representation of status"""
         if self.is_complete:
+            if self.validation_passed == False:
+                return "⚠️"  # Warning if validation failed
             return "✅" if self.status == "done" else "❌"
         elif self.status == "in_progress":
             return "⏳"
@@ -186,7 +297,8 @@ def monitor_parallel_subtasks(
     task_id: str,
     subtask_ids: List[str],
     timeout: int = 3600,
-    server_url: str = "http://localhost:8000"
+    server_url: str = "http://localhost:8000",
+    debug: bool = False
 ) -> Dict[str, Any]:
     """
     Monitor multiple subtasks in parallel via WebSocket.
@@ -291,12 +403,32 @@ def monitor_parallel_subtasks(
 
                                 # Store full completion data when subtask completes
                                 if action == "completed" or update_data["status"] in ["done", "completed"]:
-                                    # Extract comprehensive completion data from metadata (same as cclaude-wait)
+                                    # VALIDATE COMPLETION PAYLOAD using Pydantic
+                                    is_valid, error_msg, validated_data = validate_subtask_completion_payload(
+                                        data, metadata, event_subtask_id, tracker.task_id, debug
+                                    )
+
+                                    # Store validation result
+                                    tracker.validation_passed = is_valid
+                                    tracker.validation_error = error_msg
+
+                                    if not is_valid and debug:
+                                        console.print(f"[yellow]⚠️  Subtask {event_subtask_id[:8]}... validation failed: {error_msg}[/yellow]")
+                                        console.print(f"[yellow]Proceeding with best-effort data extraction[/yellow]")
+
+                                    # Use validated data if available, otherwise fallback to metadata
+                                    final_data = validated_data if validated_data else data
+
+                                    # Build complete tracker data (with validation metadata)
                                     tracker.completion_data = {
-                                        "status": metadata.get("status", update_data["status"]),
-                                        "progress_percentage": metadata.get("progress_percentage", update_data["progress_percentage"]),
-                                        "title": metadata.get("title", update_data["title"]),
-                                        "completion_summary": metadata.get("completion_summary", ""),
+                                        "id": final_data.get("id", event_subtask_id),
+                                        "status": final_data.get("status", update_data["status"]),
+                                        "progress_percentage": final_data.get("progress_percentage", 100),
+                                        "title": final_data.get("title", tracker.title),
+                                        "task_id": final_data.get("task_id", tracker.task_id),
+                                        "completion_summary": final_data.get("completion_summary", metadata.get("completion_summary", "")),
+                                        "completed_at": final_data.get("completed_at", metadata.get("timestamp")),
+                                        # Additional metadata fields (not in Pydantic model but useful for CLI)
                                         "testing_notes": metadata.get("testing_notes", ""),
                                         "assignees": metadata.get("assignees", []),
                                         "progress_history": metadata.get("progress_history", {}),
@@ -306,7 +438,10 @@ def monitor_parallel_subtasks(
                                         "description": metadata.get("description", ""),
                                         "impact_on_parent": metadata.get("impact_on_parent", ""),
                                         "challenges_overcome": metadata.get("challenges_overcome", []),
-                                        "deliverables": metadata.get("deliverables", [])
+                                        "deliverables": metadata.get("deliverables", []),
+                                        # Validation metadata
+                                        "validation_passed": is_valid,
+                                        "validation_error": error_msg if not is_valid else None
                                     }
 
                                 # Track completion
@@ -396,6 +531,12 @@ def main():
         default="http://localhost:8000",
         help="MCP server URL (default: http://localhost:8000)"
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Enable debug logging with detailed validation feedback"
+    )
 
     args = parser.parse_args()
 
@@ -407,13 +548,18 @@ def main():
         sys.exit(1)
 
     # Show header
-    console.print(Panel.fit(
+    header_text = (
         f"[bold cyan]MCP WebSocket Multiplexer[/bold cyan]\n\n"
         f"📋 Task ID: {args.task_id}\n"
         f"📝 Monitoring {len(subtask_ids)} subtasks\n"
-        f"⏱️  Timeout: {args.timeout}s",
-        border_style="cyan"
-    ))
+        f"⏱️  Timeout: {args.timeout}s"
+    )
+
+    if args.debug:
+        pydantic_status = "✅ Available" if SubtaskCompletePayload is not None else "❌ Not available"
+        header_text += f"\n🐛 Debug: Enabled\n🔍 Pydantic validation: {pydantic_status}"
+
+    console.print(Panel.fit(header_text, border_style="cyan"))
     console.print("")
 
     # Monitor subtasks
@@ -421,7 +567,8 @@ def main():
         task_id=args.task_id,
         subtask_ids=subtask_ids,
         timeout=args.timeout,
-        server_url=args.server_url
+        server_url=args.server_url,
+        debug=args.debug
     )
 
 

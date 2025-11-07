@@ -18,5 +18,6 @@
     "browsermcp",
     "codex"
   ],
-  "outputStyle": "Ultra Concise"
+  "outputStyle": "Explanatory",
+  "spinnerTipsEnabled": false
 }
