@@ -343,6 +343,57 @@ class ClaudeSetup:
         print(f"  ✓ Deployed: {Colors.GREEN}.env.claude{Colors.END}")
         print(f"  {Colors.BLUE}ℹ  Edit .env.claude to configure Claude Code environment variables{Colors.END}")
 
+    def deploy_mcp_config(self):
+        """Copy .mcp.json.sample to project root as .mcp.json and ensure it's in .gitignore"""
+        print(f"\n{Colors.BOLD}Deploying MCP configuration...{Colors.END}")
+
+        source_path = self.claude_dir / 'templates' / '.mcp.json.sample'
+        target_path = self.project_root / '.mcp.json'
+
+        if not source_path.exists():
+            print(f"  ⚠ Source file not found: .mcp.json.sample")
+            print(f"  {Colors.YELLOW}Skipping .mcp.json deployment{Colors.END}")
+            return
+
+        if target_path.exists():
+            response = input(f"  ⊙ .mcp.json exists. Overwrite? [y/N]: ").strip().lower()
+            if response not in ('y', 'yes'):
+                print(f"    Skipped: .mcp.json")
+                self._ensure_mcp_in_gitignore()
+                return
+
+        shutil.copy(source_path, target_path)
+        print(f"  ✓ Deployed: {Colors.GREEN}.mcp.json{Colors.END}")
+        print(f"  {Colors.BLUE}ℹ  Edit .mcp.json to configure MCP servers and API tokens{Colors.END}")
+
+        # Ensure .mcp.json is in .gitignore
+        self._ensure_mcp_in_gitignore()
+
+    def _ensure_mcp_in_gitignore(self):
+        """Ensure .mcp.json is listed in .gitignore to prevent committing secrets"""
+        gitignore_path = self.project_root / '.gitignore'
+
+        if not gitignore_path.exists():
+            # Create .gitignore with .mcp.json entry
+            with open(gitignore_path, 'w') as f:
+                f.write("# MCP configuration with potential secrets\n")
+                f.write(".mcp.json\n")
+            print(f"  ✓ Created .gitignore with .mcp.json entry")
+            return
+
+        # Check if .mcp.json is already in .gitignore
+        with open(gitignore_path, 'r') as f:
+            gitignore_content = f.read()
+
+        if '.mcp.json' in gitignore_content:
+            print(f"  ✓ .mcp.json already in .gitignore")
+        else:
+            # Append .mcp.json to .gitignore
+            with open(gitignore_path, 'a') as f:
+                f.write("\n# MCP configuration with potential secrets\n")
+                f.write(".mcp.json\n")
+            print(f"  ✓ Added .mcp.json to .gitignore")
+
     def validate_setup(self) -> bool:
         """Validate that all necessary files exist and are correct"""
         print(f"\n{Colors.BOLD}Validating setup...{Colors.END}")
@@ -389,9 +440,12 @@ class ClaudeSetup:
         print(f"     - .claude/hooks/config/__claude_hook__allowed_root_files")
         print(f"     - .claude/hooks/config/__claude_hook__valid_test_paths")
         print(f"  3. Review rules files in project root")
-        print(f"  4. {Colors.BLUE}[RECOMMENDED]{Colors.END} Generate project-specific CLAUDE.local.md:")
+        print(f"  4. {Colors.BLUE}[IMPORTANT]{Colors.END} Configure MCP servers:")
+        print(f"     - Edit .mcp.json with your API tokens")
+        print(f"     - Update agenthub_http Authorization Bearer token")
+        print(f"  5. {Colors.BLUE}[RECOMMENDED]{Colors.END} Generate project-specific CLAUDE.local.md:")
         print(f"     Run: {Colors.GREEN}/generate-local-rules{Colors.END} or {Colors.GREEN}/init-local{Colors.END}")
-        print(f"  5. Start using Claude Code / Codex!\n")
+        print(f"  6. Start using Claude Code / Codex!\n")
 
         print(f"{Colors.YELLOW}To reconfigure, run this script again anytime.{Colors.END}\n")
 
@@ -422,6 +476,9 @@ class ClaudeSetup:
 
             # Step 6.5: Deploy .env.claude
             self.deploy_env_claude()
+
+            # Step 6.6: Deploy .mcp.json
+            self.deploy_mcp_config()
 
             # Step 7: Validate
             if not self.validate_setup():
