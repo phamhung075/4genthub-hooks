@@ -1,0 +1,20 @@
+> /usage 
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Settings:  Status   Config   Usage   (tab to cycle)
+
+ Configure Claude Code preferences
+
+ ❯ Auto-compact                              true
+   Show tips                                 false
+   Rewind code (checkpoints)                 true
+   Verbose output                            true
+   Respect .gitignore in file picker         true
+   Theme                                     Dark mode
+   Notifications                             Disabled
+   Output style                              Explanatory
+   Editor mode                               normal
+   Model                                     Default (recommended)
+   Diff tool                                 auto
+   Auto-install IDE extension                true
+
+ Enter/Space to change · Esc to exit
