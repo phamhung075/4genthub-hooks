@@ -2331,7 +2331,9 @@ def get_ai_data_path() -> Path:
         from utils.env_loader import get_ai_data_path as real_get_ai_data_path
         return real_get_ai_data_path()
     except Exception:
-        return Path("logs")
+        # Fallback: Use absolute path relative to this file's location
+        # .claude/hooks/session_start.py -> project_root is 2 levels up
+        return Path(__file__).parent.parent.parent / "logs"
 
 
 

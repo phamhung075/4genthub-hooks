@@ -360,7 +360,7 @@ def log_status_line(input_data, status_line_output, error_message=None):
 
 def get_session_data(session_id):
     """Get session data including agent name, prompts, and extras."""
-    session_file = Path(f".claude/data/sessions/{session_id}.json")
+    session_file = get_project_root() / f".claude/data/sessions/{session_id}.json"
 
     if not session_file.exists():
         return None, f"Session file {session_file} does not exist"

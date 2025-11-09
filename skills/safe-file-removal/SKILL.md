@@ -1,160 +1,120 @@
 ---
 name: safe-file-removal
-description: Use rmmm command to safely 'remove' files by renaming them to .obsolete instead of permanent deletion. Reversible, collision-safe, hook-compliant.
+description: Use safe-rm command to safely 'remove' files by renaming them to .obsolete instead of permanent deletion. Reversible, collision-safe, hook-compliant.
 allowed-tools: Bash, Read, Grep
 ---
 
 # Safe File Removal
 
-Safely "remove" files using `rmmm` command which renames to `.obsolete` instead of permanently deleting.
+Rename files to `.obsolete` instead of permanent deletion via `safe-rm` command.
 
 ## When to Use
 
-- Removing temporary files or build artifacts
-- Cleaning up after refactoring (keep backup during testing)
-- Removing old/deprecated code
-- Any situation where `rm` would be blocked by pre-tool hooks
-- When you want reversible "deletion"
+- Removing temp files, build artifacts, old code, deprecated tests
+- After refactoring (keep backup during testing)
+- Any situation where `rm` is blocked by pre-tool hooks
+- Need reversible "deletion"
 
 ## Why Not `rm`
 
 **Project setting**: `.claude/settings.json:132` → `"RM_BASH_BLOCK": "true"`
 
-**Issue**:
-- `rm` permanently deletes files
-- Blocked by pre-tool hooks to prevent accidental data loss
-- No recovery mechanism
+| Issue | Solution |
+|-------|----------|
+| `rm` permanently deletes | `safe-rm` renames (reversible) |
+| Blocked by pre-tool hooks | Works within safety constraints |
+| No recovery | `mv file.obsolete file` restores |
 
-**Solution**:
-- `rmmm` renames files to `.obsolete` (reversible)
-- Works within project safety constraints
-- Collision-safe with timestamp fallback
-
-## Command Location
+## Command
 
 ```bash
-./.claude/bin/rmmm
+./.claude/bin/safe-rm [file1] [file2] [dir/]
 ```
 
-**Path**: `.claude/bin/rmmm:1-72`
-
-## Basic Usage
-
-### Single File
-```bash
-./.claude/bin/rmmm unwanted_file.txt
-# Result: unwanted_file.txt → unwanted_file.txt.obsolete
-```
-
-### Multiple Files
-```bash
-./.claude/bin/rmmm old_file.txt legacy_dir/ another.js
-# Result: All three items renamed with .obsolete suffix
-```
-
-### From Anywhere (if PATH configured)
-```bash
-rmmm file_to_remove.txt
-```
+**Path**: `.claude/bin/safe-rm:1-72`
 
 ## Features
 
 | Feature | Benefit |
 |---------|---------|
-| **Reversible** | `mv file.txt.obsolete file.txt` recovers file |
-| **Multi-file** | Handle multiple arguments in one command |
-| **Collision safe** | Adds timestamp if .obsolete exists (file.txt.obsolete.20251109_110500) |
-| **Color output** | Green (success), Yellow (warning), Red (error) |
+| **Reversible** | `mv file.obsolete file` recovers |
+| **Multi-file** | Handle multiple args in one command |
+| **Collision safe** | Adds timestamp if .obsolete exists |
+| **Color output** | Green ✓ / Yellow ⚠ / Red ✗ |
 | **Statistics** | Reports renamed/failed count |
-| **Error handling** | Validates existence, clear error messages |
 
-## Recovery Process
+## Basic Usage
 
-### Restore Single File
-```bash
-mv important.txt.obsolete important.txt
-```
+| Operation | Command | Result |
+|-----------|---------|--------|
+| Single file | `./.claude/bin/safe-rm file.txt` | `file.txt.obsolete` |
+| Multiple | `./.claude/bin/safe-rm f1 f2 dir/` | All get `.obsolete` suffix |
+| Restore | `mv file.obsolete file` | Original restored |
 
-### Restore with Timestamp
-```bash
-mv config.json.obsolete.20251109_110500 config.json
-```
+## Recovery
 
-### Find All Obsolete Files
-```bash
-find . -name "*.obsolete" -type f
-```
+| Scenario | Command |
+|----------|---------|
+| Single | `mv file.obsolete file` |
+| With timestamp | `mv file.obsolete.20251109_110500 file` |
+| Find all | `find . -name "*.obsolete"` |
+| Restore all | `find . -name "*.obsolete" \| while read f; do mv "$f" "${f%.obsolete}"; done` |
 
 ## Workflow
 
-1. **Mark as obsolete** - Use rmmm instead of rm
-2. **Verify system works** - Run tests, build, manual testing
-3. **Review periodically** - `find . -name "*.obsolete"`
-4. **Permanent delete** (when confident) - After verification period
-
-## Common Patterns
-
-See **[EXAMPLES.md](EXAMPLES.md)** for real-world scenarios:
-- Removing temporary files
-- Cleaning up after refactoring
-- Removing test files
-- Collision handling
-- Asset cleanup
-- Documentation cleanup
-
-## Templates
-
-See **[TEMPLATES.md](TEMPLATES.md)** for copy-paste commands:
-- Single file removal
-- Multiple files removal
-- Directory removal
-- Batch operations with find
-- Recovery commands
-
-## Validation
-
-See **[VALIDATION.md](VALIDATION.md)** for safety checks:
-- Pre-removal verification
-- Post-removal testing
-- Recovery testing
-- Cleanup validation
+1. Mark obsolete → `safe-rm [files]`
+2. Verify works → `npm test && npm run build`
+3. Review periodic → `find . -name "*.obsolete"`
+4. Permanent delete (when confident) → `/bin/rm [file].obsolete`
 
 ## When NOT to Use
 
-| Scenario | Use rmmm? | Reason |
-|----------|-----------|--------|
-| Sensitive files (secrets, keys) | ❌ No | Needs secure deletion + git history rewrite |
-| .git folder | ❌ No | Too risky |
-| node_modules | ⚠️ Maybe | Usually safe to delete, but rmmm works |
-| Temp/build artifacts | ✅ Yes | Safe, reversible |
+| Scenario | Use safe-rm? | Why |
+|----------|-----------|-----|
+| Secrets (.env, keys) | ❌ | Needs secure deletion + git history rewrite |
+| .git folder | ❌ | Too risky |
+| node_modules | ⚠️ | `rm -rf` safe, but safe-rm works |
+| Temp/build | ✅ | Reversible, safe |
 
-## Key Insights
+## Output Examples
 
-**Safety by Design**:
-- No permanent deletion - every operation reversible
-- Collision protection - timestamp fallback prevents overwrites
-- Hook compliance - works within project safety constraints
-- Audit trail - obsolete files remain visible for review
+**Success**:
+```
+✓ Renamed: file.txt → file.txt.obsolete
+─────────────────────────────────────
+Renamed: 1
+```
 
-**Development Workflow**:
-1. Refactor code
-2. Use rmmm on old files
-3. Test thoroughly
-4. Keep .obsolete for review period
-5. Permanently delete after confidence
+**Collision** (timestamp fallback):
+```
+⚠ Already exists: file.obsolete
+  Using: file.obsolete.20251109_110500
+✓ Renamed: file → file.obsolete.20251109_110500
+```
+
+**Error**:
+```
+✗ Not found: missing.txt
+─────────────────────────────────────
+Failed: 1
+```
 
 ## Quick Reference
 
 | Task | Command |
 |------|---------|
-| Remove single | `./.claude/bin/rmmm file.txt` |
-| Remove multiple | `./.claude/bin/rmmm file1 file2 dir/` |
-| Restore | `mv file.txt.obsolete file.txt` |
+| Remove single | `./.claude/bin/safe-rm file.txt` |
+| Remove multiple | `./.claude/bin/safe-rm f1 f2 dir/` |
+| Restore | `mv file.obsolete file` |
 | List obsolete | `find . -name "*.obsolete"` |
-| Count obsolete | `find . -name "*.obsolete" \| wc -l` |
+| Count | `find . -name "*.obsolete" \| wc -l` |
 
 ## Supporting Files
 
-- **[EXAMPLES.md](EXAMPLES.md)** - Real-world patterns and scenarios
-- **[TEMPLATES.md](TEMPLATES.md)** - Copy-paste commands for common tasks
-- **[VALIDATION.md](VALIDATION.md)** - Safety checks and quality verification
+- **[EXAMPLES.md](EXAMPLES.md)** - 10 scenarios: temp files, refactoring, tests, collisions, assets, docs, batch ops, scripting, git, hooks
+- **[TEMPLATES.md](TEMPLATES.md)** - Copy-paste commands for all operations
+- **[VALIDATION.md](VALIDATION.md)** - Safety checklists, verification commands
+
+## Key Insight
+
+**Safety by design**: No permanent deletion → collision protection → hook compliance → audit trail. Development workflow: Refactor → safe-rm → Test → Review period → Permanent delete after confidence.

@@ -408,10 +408,10 @@ class UserPromptSubmitHook:
                  store_last_prompt: bool = False):
         """Initialize the hook with all components."""
         # Get paths
-        from utils.env_loader import get_ai_data_path
+        from utils.env_loader import get_ai_data_path, get_project_root
 
         self.log_dir = get_ai_data_path()
-        self.sessions_dir = Path(".claude/data/sessions")
+        self.sessions_dir = get_project_root() / ".claude/data/sessions"
 
         # Configuration
         self.enable_validation = enable_validation

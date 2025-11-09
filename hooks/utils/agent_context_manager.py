@@ -15,10 +15,11 @@ from typing import Optional, Dict, Any
 
 class AgentContextManager:
     """Manages runtime agent context switching within Claude sessions."""
-    
+
     def __init__(self):
-        self.context_file = Path(".claude/runtime_agent_context.json")
-        self.context_file.parent.mkdir(exist_ok=True)
+        from .env_loader import get_project_root
+        self.context_file = get_project_root() / ".claude/runtime_agent_context.json"
+        self.context_file.parent.mkdir(parents=True, exist_ok=True)
         
     def set_agent_context(self, agent_name: str, context_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """

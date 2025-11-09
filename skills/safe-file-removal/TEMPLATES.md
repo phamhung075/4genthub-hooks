@@ -1,426 +1,200 @@
 # Safe File Removal Templates
 
-Copy-paste commands for common rmmm use cases. Replace [PLACEHOLDERS] with actual values.
+Copy-paste commands. Replace `[PLACEHOLDERS]` with actual values.
 
 ## Basic Operations
 
-### Single File Removal
-```bash
-./.claude/bin/rmmm [PATH_TO_FILE]
-```
+| Operation | Template |
+|-----------|----------|
+| **Single file** | `safe-rm [PATH_TO_FILE]` |
+| **Multiple** | `safe-rm [FILE1] [FILE2] [FILE3]` |
+| **Directory** | `safe-rm [PATH_TO_DIR]/` |
+| **Mixed** | `safe-rm [FILE1] [DIR1]/ [FILE2]` |
+
 **Example**:
 ```bash
-./.claude/bin/rmmm src/components/OldComponent.tsx
+safe-rm src/components/OldComponent.tsx
+safe-rm old_file.txt legacy.js unused.css
+safe-rm dist/ build/ .cache/
 ```
 
-### Multiple Files Removal
-```bash
-./.claude/bin/rmmm [FILE1] [FILE2] [FILE3]
-```
-**Example**:
-```bash
-./.claude/bin/rmmm old_file.txt legacy.js unused.css
-```
+## Recovery
 
-### Directory Removal
-```bash
-./.claude/bin/rmmm [PATH_TO_DIR]/
-```
-**Example**:
-```bash
-./.claude/bin/rmmm dist/ build/ .cache/
-```
+| Operation | Template |
+|-----------|----------|
+| **Single** | `mv [FILENAME].obsolete [FILENAME]` |
+| **Timestamp** | `mv [FILENAME].obsolete.[TIMESTAMP] [FILENAME]` |
+| **Multiple** | `mv [F1].obsolete [F1]; mv [F2].obsolete [F2]` |
+| **All in dir** | `find [DIR] -name "*.obsolete" \| while read f; do mv "$f" "${f%.obsolete}"; done` |
 
-### Mixed (Files + Directories)
-```bash
-./.claude/bin/rmmm [FILE1] [DIR1]/ [FILE2] [DIR2]/
-```
-**Example**:
-```bash
-./.claude/bin/rmmm old_config.json deprecated/ unused_helper.js legacy_tests/
-```
-
-## Recovery Operations
-
-### Restore Single File
-```bash
-mv [FILENAME].obsolete [FILENAME]
-```
 **Example**:
 ```bash
 mv important.txt.obsolete important.txt
-```
-
-### Restore with Timestamp
-```bash
-mv [FILENAME].obsolete.[TIMESTAMP] [FILENAME]
-```
-**Example**:
-```bash
 mv config.json.obsolete.20251109_110500 config.json
 ```
 
-### Restore Multiple Specific Files
-```bash
-mv [FILE1].obsolete [FILE1]
-mv [FILE2].obsolete [FILE2]
-mv [FILE3].obsolete [FILE3]
-```
-**Example**:
-```bash
-mv src/utils/helper.js.obsolete src/utils/helper.js
-mv tests/unit.spec.ts.obsolete tests/unit.spec.ts
-```
+## Search & List
 
-### Restore All Obsolete Files in Directory (CAUTION)
-```bash
-find [DIRECTORY] -name "*.obsolete" -type f | while read file; do
-  mv "$file" "${file%.obsolete}"
-done
-```
-**Example**:
-```bash
-find src/ -name "*.obsolete" -type f | while read file; do
-  mv "$file" "${file%.obsolete}"
-done
-```
-
-## Search & List Operations
-
-### List All Obsolete Files
-```bash
-find . -name "*.obsolete" -type f
-```
-
-### List Obsolete Files in Specific Directory
-```bash
-find [DIRECTORY] -name "*.obsolete" -type f
-```
-**Example**:
-```bash
-find src/ -name "*.obsolete" -type f
-```
-
-### Count Obsolete Files
-```bash
-find . -name "*.obsolete" -type f | wc -l
-```
-
-### List with Details (size, date)
-```bash
-find . -name "*.obsolete" -type f -ls
-```
-
-### Disk Space Used by Obsolete Files
-```bash
-du -sh $(find . -name "*.obsolete" -type f)
-```
-
-### Find Recent Obsolete Files (last 7 days)
-```bash
-find . -name "*.obsolete" -type f -mtime -7
-```
-
-### Find Old Obsolete Files (older than 30 days)
-```bash
-find . -name "*.obsolete" -type f -mtime +30
-```
+| Operation | Template |
+|-----------|----------|
+| **List all** | `find . -name "*.obsolete"` |
+| **In directory** | `find [DIR] -name "*.obsolete"` |
+| **Count** | `find . -name "*.obsolete" \| wc -l` |
+| **With details** | `find . -name "*.obsolete" -ls` |
+| **Disk space** | `du -sh $(find . -name "*.obsolete")` |
+| **Recent (7 days)** | `find . -name "*.obsolete" -mtime -7` |
+| **Old (30+ days)** | `find . -name "*.obsolete" -mtime +30` |
 
 ## Batch Operations
 
-### Remove All .log Files
-```bash
-find . -name "*.log" -type f -exec ./.claude/bin/rmmm {} \;
-```
+| Operation | Template |
+|-----------|----------|
+| **All .log files** | `find . -name "*.log" -exec safe-rm {} \;` |
+| **Empty directories** | `find . -type d -empty -exec safe-rm {} \;` |
+| **Old files** | `find [DIR] -type f -mtime +30 -exec safe-rm {} \;` |
+| **Pattern match** | `find [DIR] -name "[PATTERN]" -exec safe-rm {} \;` |
+| **All in directory** | `find [DIR] -type f -exec safe-rm {} \;` |
 
-### Remove Empty Directories
-```bash
-find . -type d -empty -exec ./.claude/bin/rmmm {} \;
-```
-
-### Remove Files Older Than 30 Days
-```bash
-find [DIRECTORY] -type f -mtime +30 -exec ./.claude/bin/rmmm {} \;
-```
 **Example**:
 ```bash
-find logs/ -type f -mtime +30 -exec ./.claude/bin/rmmm {} \;
+find temp/ -name "*.tmp" -exec safe-rm {} \;
+find logs/ -type f -mtime +30 -exec safe-rm {} \;
 ```
 
-### Remove Files Matching Pattern
-```bash
-find [DIRECTORY] -name "[PATTERN]" -type f -exec ./.claude/bin/rmmm {} \;
-```
-**Example**:
-```bash
-find temp/ -name "*.tmp" -type f -exec ./.claude/bin/rmmm {} \;
-```
+## Cleanup
 
-### Remove All Files in Directory
-```bash
-find [DIRECTORY] -type f -exec ./.claude/bin/rmmm {} \;
-```
-**Example**:
-```bash
-find old_build/ -type f -exec ./.claude/bin/rmmm {} \;
-```
+| Operation | Template |
+|-----------|----------|
+| **Delete all .obsolete** | `find . -name "*.obsolete" -exec /bin/rm -r {} \;` |
+| **Delete old (7+ days)** | `find . -name "*.obsolete" -mtime +7 -exec /bin/rm {} \;` |
+| **Delete specific** | `/bin/rm [FILENAME].obsolete` |
 
-## Cleanup Operations
-
-### Permanently Delete All Obsolete Files (CAUTION)
-```bash
-find . -name "*.obsolete" -exec /bin/rm -r {} \;
-```
-
-### Permanently Delete Obsolete Files Older Than 7 Days
-```bash
-find . -name "*.obsolete" -type f -mtime +7 -exec /bin/rm {} \;
-```
-**Example**:
-```bash
-# Safe workflow: mark as obsolete → wait 7 days → permanent delete
-find . -name "*.obsolete" -type f -mtime +7 -exec /bin/rm {} \;
-```
-
-### Delete Specific Obsolete File
-```bash
-/bin/rm [FILENAME].obsolete
-```
-**Example**:
-```bash
-/bin/rm old_config.json.obsolete
-```
-
-## Scripting Templates
+## Scripting
 
 ### Cleanup Script
 ```bash
 #!/bin/bash
 # cleanup_[NAME].sh
 
-echo "Cleaning up [DESCRIPTION]..."
-./.claude/bin/rmmm [FILES_OR_DIRS]
+echo "Cleaning [DESCRIPTION]..."
+safe-rm [FILES_OR_DIRS]
 
-echo "Verifying [VERIFICATION]..."
+echo "Verifying..."
 [VERIFICATION_COMMAND]
 
 if [ $? -eq 0 ]; then
-  echo "✓ Success - files safely removed"
-else
-  echo "✗ Failed - recovering files"
-  find . -name "*.obsolete" | while read file; do
-    mv "$file" "${file%.obsolete}"
-  done
-  exit 1
-fi
-```
-**Example**:
-```bash
-#!/bin/bash
-# cleanup_build.sh
-
-echo "Cleaning up old build artifacts..."
-./.claude/bin/rmmm dist/ build/ .cache/
-
-echo "Verifying build still works..."
-npm run build
-
-if [ $? -eq 0 ]; then
-  echo "✓ Build successful - old artifacts safely removed"
+  echo "✓ Success"
   find . -name "*.obsolete" -mtime +0 -exec /bin/rm -r {} \;
 else
-  echo "✗ Build failed - recovering old artifacts"
-  find . -name "*.obsolete" | while read file; do
-    mv "$file" "${file%.obsolete}"
-  done
+  echo "✗ Failed - recovering"
+  find . -name "*.obsolete" | while read f; do mv "$f" "${f%.obsolete}"; done
   exit 1
 fi
 ```
 
-### Git Untrack + Local Backup
+### Git Untrack
 ```bash
-# Remove from git but keep local copy
 git rm --cached [FILENAME]
-./.claude/bin/rmmm [FILENAME]
-git commit -m "[COMMIT_MESSAGE]"
-```
-**Example**:
-```bash
-git rm --cached .env.production
-./.claude/bin/rmmm .env.production
-git commit -m "chore: remove .env.production from git tracking"
-# File available as .env.production.obsolete
+safe-rm [FILENAME]
+git commit -m "[MESSAGE]"
+# File available as [FILENAME].obsolete
 ```
 
 ### Conditional Removal
 ```bash
-# Only remove if file exists
 if [ -e [FILENAME] ]; then
-  ./.claude/bin/rmmm [FILENAME]
+  safe-rm [FILENAME]
 else
   echo "File not found: [FILENAME]"
 fi
 ```
-**Example**:
-```bash
-if [ -e old_config.json ]; then
-  ./.claude/bin/rmmm old_config.json
-else
-  echo "File not found: old_config.json"
-fi
-```
 
-## Verification Templates
+## Verification
 
-### Before Removal - Check Dependencies
+### Before Removal
 ```bash
-# Search for usage before removing
+# Check usage
 grep -r "[SEARCH_TERM]" [DIRECTORY]
 
 # If no results, safe to remove
-./.claude/bin/rmmm [FILE_TO_REMOVE]
-```
-**Example**:
-```bash
-grep -r "OldComponent" src/
-# No results found
-./.claude/bin/rmmm src/components/OldComponent.tsx
+safe-rm [FILE_TO_REMOVE]
 ```
 
-### After Removal - Verify Build
+### After Removal
 ```bash
-./.claude/bin/rmmm [FILES]
+safe-rm [FILES]
 
-# Verify build works
+# Verify
 npm run build
-
-# Verify tests pass
 npm test
 
-# If issues, recover
+# If issues
 # mv [FILE].obsolete [FILE]
 ```
 
-### After Removal - Verify App Runs
+## Workflows
+
+### Refactoring
 ```bash
-./.claude/bin/rmmm [FILES]
-
-# Start dev server
-npm run dev
-
-# Test functionality manually
-
-# If issues:
-# mv [FILE].obsolete [FILE]
-# npm run dev
-```
-
-## Common Workflows
-
-### Refactoring Workflow
-```bash
-# 1. Create new implementation
+# 1. Create new
 [CREATE_NEW_FILE]
 
-# 2. Update all references
+# 2. Update references
 grep -r "[OLD_NAME]" src/
 [UPDATE_IMPORTS]
 
-# 3. Remove old file (safely)
-./.claude/bin/rmmm [OLD_FILE]
+# 3. Remove old
+safe-rm [OLD_FILE]
 
 # 4. Verify
 npm test && npm run build
 
-# 5. If issues, recover
-# mv [OLD_FILE].obsolete [OLD_FILE]
-
-# 6. After confidence (e.g., 1 week), permanent delete
-# /bin/rm [OLD_FILE].obsolete
+# 5. If issues → mv [OLD_FILE].obsolete [OLD_FILE]
+# 6. After confidence → /bin/rm [OLD_FILE].obsolete
 ```
 
-### Asset Cleanup Workflow
+### Asset Cleanup
 ```bash
-# 1. Remove unused assets
-./.claude/bin/rmmm [ASSET_FILES]
+# 1. Remove
+safe-rm [ASSET_FILES]
 
-# 2. Check for broken references
+# 2. Check references
 grep -r "[ASSET_NAME]" src/
 
-# 3. Verify UI loads correctly
+# 3. Verify UI
 npm run dev
 
 # 4. Check browser console for 404s
-
-# 5. If issues, recover
-# mv [ASSET].obsolete [ASSET]
+# 5. If issues → mv [ASSET].obsolete [ASSET]
 ```
 
-### Test Reorganization Workflow
-```bash
-# 1. Move/rename tests to new structure
-[REORGANIZE_TESTS]
+## Quick Reference
 
-# 2. Remove old test files
-./.claude/bin/rmmm [OLD_TEST_FILES]
+| Placeholder | Example |
+|-------------|---------|
+| `[PATH_TO_FILE]` | `src/components/Old.tsx` |
+| `[PATH_TO_DIR]` | `dist` or `build` |
+| `[FILENAME]` | `config.json` |
+| `[FILE1]` `[FILE2]` | `old.js` `legacy.css` |
+| `[DIRECTORY]` | `src/` or `.` |
+| `[PATTERN]` | `*.log` or `temp_*` |
+| `[TIMESTAMP]` | `20251109_110500` |
+| `[DESCRIPTION]` | `old build artifacts` |
+| `[VERIFICATION_COMMAND]` | `npm run build` |
+| `[MESSAGE]` | `chore: remove old config` |
 
-# 3. Verify tests still pass
-npm test
+## Safety Checklist
 
-# 4. If issues, recover
-# mv [TEST].obsolete [TEST]
+### Before
+```
+- [ ] grep -r "[NAME]" [DIR]
+- [ ] Know recovery: mv [FILE].obsolete [FILE]
 ```
 
-## Quick Fill Guide
-
-| Placeholder | What to Fill | Example |
-|-------------|--------------|---------|
-| `[PATH_TO_FILE]` | Relative path to file | `src/components/Old.tsx` |
-| `[PATH_TO_DIR]` | Relative path to directory | `dist` or `build` |
-| `[FILENAME]` | Just the filename | `config.json` |
-| `[FILE1]` `[FILE2]` | Multiple file paths | `old.js` `legacy.css` |
-| `[DIRECTORY]` | Directory to search in | `src/` or `.` |
-| `[PATTERN]` | Glob pattern | `*.log` or `temp_*` |
-| `[SEARCH_TERM]` | Text to search for | `OldComponent` |
-| `[TIMESTAMP]` | Date timestamp | `20251109_110500` |
-| `[DESCRIPTION]` | Human-readable description | `old build artifacts` |
-| `[VERIFICATION_COMMAND]` | Command to verify | `npm run build` |
-| `[COMMIT_MESSAGE]` | Git commit message | `chore: remove old config` |
-
-## Safety Checklist Template
-
-Before using rmmm:
+### After
 ```
-- [ ] Searched for dependencies: `grep -r "[NAME]" [DIRECTORY]`
-- [ ] Backed up important data: [BACKUP_LOCATION]
-- [ ] Verified file is truly unused: [VERIFICATION]
-- [ ] Know how to recover: `mv [FILE].obsolete [FILE]`
-```
-
-After using rmmm:
-```
-- [ ] Tests pass: `npm test`
-- [ ] Build works: `npm run build`
-- [ ] App runs: `npm run dev`
-- [ ] No console errors: [CHECK_BROWSER]
-- [ ] Listed obsolete files: `find . -name "*.obsolete"`
-```
-
-## Command Syntax Reference
-
-```bash
-# Basic syntax
-./.claude/bin/rmmm [TARGET] [TARGET] ...
-
-# TARGET can be:
-# - Single file: file.txt
-# - Multiple files: file1.txt file2.txt
-# - Directory: dirname/
-# - Mixed: file1.txt dir1/ file2.txt
-
-# Options: None (simple command)
-
-# Exit codes:
-# 0 = Success (all files renamed)
-# 1 = Failure (one or more files failed)
+- [ ] npm test
+- [ ] npm run build
+- [ ] npm run dev (manual test)
+- [ ] find . -name "*.obsolete"
 ```
