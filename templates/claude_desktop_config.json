@@ -1,0 +1,26 @@
+{
+    "mcpServers": {
+        "sequential-thinking": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ],
+            "env": {}
+        },
+        "agenthub_http": {
+            "command": "mcp-proxy",
+            "args": [
+                "--headers",
+                "Accept",
+                "application/json, text/event-stream",
+                "--headers",
+                "Authorization",
+                "Bearer <YOUR_API_TOKEN_HERE>",
+                "--transport",
+                "streamablehttp",
+                "https://api.4genthub.com/mcp"
+            ]
+        }
+    }
+}
