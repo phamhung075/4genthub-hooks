@@ -295,15 +295,19 @@ class ClaudeSetup:
         """
         if not self.use_venv:
             print(f"\n{Colors.BOLD}Skipping dependency installation (using system Python)...{Colors.END}")
-            print(f"  {Colors.YELLOW}⚠  Make sure these packages are installed:{Colors.END}")
-            print(f"     - python-dotenv")
-            print(f"     - psutil")
-            print(f"     - pyyaml")
+            print(f"  {Colors.YELLOW}⚠  Required packages (install these):{Colors.END}")
+            print(f"     pip install python-dotenv psutil pyyaml requests")
+            print(f"  {Colors.BLUE}ℹ  Optional packages (recommended for better experience):{Colors.END}")
+            print(f"     pip install colorama rich GitPython")
             return True
 
         print(f"\n{Colors.BOLD}Installing hook dependencies...{Colors.END}")
 
-        dependencies = ['python-dotenv', 'psutil', 'pyyaml']
+        # Core required dependencies
+        core_dependencies = ['python-dotenv', 'psutil', 'pyyaml', 'requests']
+
+        # Optional dependencies for enhanced functionality
+        optional_dependencies = ['colorama', 'rich', 'GitPython']
 
         # Determine pip path
         if sys.platform == 'win32':
@@ -315,22 +319,77 @@ class ClaudeSetup:
             print(f"{Colors.RED}✗ pip not found in venv: {pip_path}{Colors.END}")
             return False
 
+        # Check if pyproject.toml exists
+        pyproject_path = self.claude_dir / 'pyproject.toml'
+
         try:
-            print(f"  Installing: {Colors.YELLOW}{', '.join(dependencies)}{Colors.END}")
+            if pyproject_path.exists():
+                # Use pyproject.toml for installation
+                print(f"  {Colors.BLUE}Using pyproject.toml for dependency management{Colors.END}")
+                print(f"  Installing core dependencies...")
 
-            result = subprocess.run(
-                [str(pip_path), 'install', '--quiet'] + dependencies,
-                capture_output=True,
-                text=True,
-                timeout=120
-            )
+                result = subprocess.run(
+                    [str(pip_path), 'install', '--quiet', '-e', str(self.claude_dir)],
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
 
-            if result.returncode != 0:
-                print(f"{Colors.RED}✗ Failed to install dependencies:{Colors.END}")
-                print(f"{result.stderr}")
-                return False
+                if result.returncode != 0:
+                    print(f"{Colors.RED}✗ Failed to install core dependencies:{Colors.END}")
+                    print(f"{result.stderr}")
+                    return False
 
-            print(f"  ✓ Installed: {Colors.GREEN}{', '.join(dependencies)}{Colors.END}")
+                print(f"  ✓ Installed core: {Colors.GREEN}{', '.join(core_dependencies)}{Colors.END}")
+
+                # Install optional dependencies
+                print(f"  Installing optional dependencies...")
+
+                result = subprocess.run(
+                    [str(pip_path), 'install', '--quiet', '-e', f'{self.claude_dir}[enhanced]'],
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+
+                if result.returncode != 0:
+                    print(f"  {Colors.YELLOW}⚠ Some optional dependencies failed (hooks will use fallbacks){Colors.END}")
+                else:
+                    print(f"  ✓ Installed optional: {Colors.GREEN}{', '.join(optional_dependencies)}{Colors.END}")
+
+            else:
+                # Fallback to manual installation
+                print(f"  Installing core: {Colors.YELLOW}{', '.join(core_dependencies)}{Colors.END}")
+
+                result = subprocess.run(
+                    [str(pip_path), 'install', '--quiet'] + core_dependencies,
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+
+                if result.returncode != 0:
+                    print(f"{Colors.RED}✗ Failed to install core dependencies:{Colors.END}")
+                    print(f"{result.stderr}")
+                    return False
+
+                print(f"  ✓ Installed core: {Colors.GREEN}{', '.join(core_dependencies)}{Colors.END}")
+
+                # Install optional dependencies (non-blocking)
+                print(f"  Installing optional: {Colors.YELLOW}{', '.join(optional_dependencies)}{Colors.END}")
+
+                result = subprocess.run(
+                    [str(pip_path), 'install', '--quiet'] + optional_dependencies,
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+
+                if result.returncode != 0:
+                    print(f"  {Colors.YELLOW}⚠ Some optional dependencies failed{Colors.END}")
+                else:
+                    print(f"  ✓ Installed optional: {Colors.GREEN}{', '.join(optional_dependencies)}{Colors.END}")
+
             return True
 
         except subprocess.TimeoutExpired:
@@ -624,10 +683,13 @@ class ClaudeSetup:
 
         if self.use_venv:
             print(f"  2. {Colors.GREEN}✓{Colors.END} Virtual environment created at: .claude/.venv")
-            print(f"     {Colors.GREEN}✓{Colors.END} Dependencies installed: python-dotenv, psutil, pyyaml")
+            print(f"     {Colors.GREEN}✓{Colors.END} Core dependencies: python-dotenv, psutil, pyyaml, requests")
+            print(f"     {Colors.GREEN}✓{Colors.END} Optional dependencies: colorama, rich, GitPython")
+            print(f"     {Colors.BLUE}ℹ{Colors.END}  Managed via pyproject.toml")
         else:
-            print(f"  2. {Colors.YELLOW}⚠{Colors.END} Using system Python - ensure these packages are installed:")
-            print(f"     {Colors.YELLOW}pip install python-dotenv psutil pyyaml{Colors.END}")
+            print(f"  2. {Colors.YELLOW}⚠{Colors.END} Using system Python - install dependencies:")
+            print(f"     {Colors.YELLOW}pip install python-dotenv psutil pyyaml requests{Colors.END}")
+            print(f"     {Colors.BLUE}pip install colorama rich GitPython{Colors.END} (optional)")
 
         print(f"  3. Customize config files if needed:")
         print(f"     - .claude/hooks/config/__claude_hook__allowed_root_files")
