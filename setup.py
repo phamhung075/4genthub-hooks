@@ -161,7 +161,7 @@ class ClaudeSetup:
         """
         print(f"\n{Colors.BOLD}Token Optimization Strategy:{Colors.END}")
         print(f"  {Colors.BLUE}[1]{Colors.END} Economic (Balanced - saves tokens, good performance)")
-        print(f"  {Colors.BLUE}[2]{Colors.END} Max Performance (Token burn - maximum context, best for learning)")
+        print(f"  {Colors.BLUE}[2]{Colors.END} Max Performance (Token burn — maximum context, best for multiple subagent delegation.)")
         print(f"\n  {Colors.YELLOW}Recommendation:{Colors.END} Use Economic for most projects")
 
         while True:
