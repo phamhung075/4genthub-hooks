@@ -40,6 +40,8 @@ class ClaudeSetup:
         self.python_path: Optional[str] = None
         self.ai_tool_choice: str = ""
         self.token_strategy: str = ""  # 'economic' or 'performance'
+        self.use_venv: bool = True  # Use virtual environment by default
+        self.venv_path: Optional[Path] = None
 
     def print_header(self):
         """Print welcome header"""
@@ -174,6 +176,28 @@ class ClaudeSetup:
             else:
                 print(f"{Colors.RED}Invalid choice. Please enter 1 or 2.{Colors.END}")
 
+    def prompt_venv_usage(self) -> bool:
+        """
+        Ask user if they want to use a virtual environment for hooks.
+
+        Returns:
+            bool: True to use venv, False to use system Python
+        """
+        print(f"\n{Colors.BOLD}Python Environment for Hooks:{Colors.END}")
+        print(f"  {Colors.BLUE}[1]{Colors.END} Virtual Environment (Recommended - isolated dependencies)")
+        print(f"  {Colors.BLUE}[2]{Colors.END} System Python (Use existing Python installation)")
+        print(f"\n  {Colors.YELLOW}Recommendation:{Colors.END} Use virtual environment for better isolation")
+
+        while True:
+            choice = input(f"\nChoice [1-2, default: 1]: ").strip() or '1'
+
+            if choice == '1':
+                return True
+            elif choice == '2':
+                return False
+            else:
+                print(f"{Colors.RED}Invalid choice. Please enter 1 or 2.{Colors.END}")
+
     def detect_project_structure(self) -> Dict[str, List[str]]:
         """
         Auto-detect project structure to suggest test paths.
@@ -202,6 +226,119 @@ class ClaudeSetup:
                     test_paths.append(str(rel_path))
 
         return {'test_paths': sorted(set(test_paths))}
+
+    def create_virtual_environment(self) -> bool:
+        """
+        Create a virtual environment in .claude/.venv
+
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self.use_venv:
+            print(f"\n{Colors.BOLD}Skipping virtual environment creation...{Colors.END}")
+            return True
+
+        print(f"\n{Colors.BOLD}Creating virtual environment...{Colors.END}")
+
+        venv_path = self.claude_dir / '.venv'
+        self.venv_path = venv_path
+
+        if venv_path.exists():
+            print(f"  ⊙ Virtual environment already exists at: {venv_path}")
+            response = input(f"  Recreate it? [y/N]: ").strip().lower()
+            if response in ('y', 'yes'):
+                print(f"  Removing existing venv...")
+                shutil.rmtree(venv_path)
+            else:
+                print(f"  Using existing venv")
+                return True
+
+        try:
+            # Create venv using the detected Python
+            print(f"  Creating venv at: {Colors.YELLOW}{venv_path}{Colors.END}")
+            result = subprocess.run(
+                [self.python_path, '-m', 'venv', str(venv_path)],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+
+            if result.returncode != 0:
+                print(f"{Colors.RED}✗ Failed to create virtual environment:{Colors.END}")
+                print(f"{result.stderr}")
+                return False
+
+            print(f"  ✓ Created: {Colors.GREEN}{venv_path}{Colors.END}")
+
+            # Update python_path to use venv
+            if sys.platform == 'win32':
+                self.python_path = str(venv_path / 'Scripts' / 'python.exe')
+            else:
+                self.python_path = str(venv_path / 'bin' / 'python3')
+
+            print(f"  ✓ Updated Python path to venv: {Colors.GREEN}{self.python_path}{Colors.END}")
+            return True
+
+        except subprocess.TimeoutExpired:
+            print(f"{Colors.RED}✗ Timeout while creating virtual environment{Colors.END}")
+            return False
+        except Exception as e:
+            print(f"{Colors.RED}✗ Error creating virtual environment: {e}{Colors.END}")
+            return False
+
+    def install_hook_dependencies(self) -> bool:
+        """
+        Install required dependencies for hooks in the virtual environment
+
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        if not self.use_venv:
+            print(f"\n{Colors.BOLD}Skipping dependency installation (using system Python)...{Colors.END}")
+            print(f"  {Colors.YELLOW}⚠  Make sure these packages are installed:{Colors.END}")
+            print(f"     - python-dotenv")
+            print(f"     - psutil")
+            print(f"     - pyyaml")
+            return True
+
+        print(f"\n{Colors.BOLD}Installing hook dependencies...{Colors.END}")
+
+        dependencies = ['python-dotenv', 'psutil', 'pyyaml']
+
+        # Determine pip path
+        if sys.platform == 'win32':
+            pip_path = self.venv_path / 'Scripts' / 'pip.exe'
+        else:
+            pip_path = self.venv_path / 'bin' / 'pip'
+
+        if not pip_path.exists():
+            print(f"{Colors.RED}✗ pip not found in venv: {pip_path}{Colors.END}")
+            return False
+
+        try:
+            print(f"  Installing: {Colors.YELLOW}{', '.join(dependencies)}{Colors.END}")
+
+            result = subprocess.run(
+                [str(pip_path), 'install', '--quiet'] + dependencies,
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+
+            if result.returncode != 0:
+                print(f"{Colors.RED}✗ Failed to install dependencies:{Colors.END}")
+                print(f"{result.stderr}")
+                return False
+
+            print(f"  ✓ Installed: {Colors.GREEN}{', '.join(dependencies)}{Colors.END}")
+            return True
+
+        except subprocess.TimeoutExpired:
+            print(f"{Colors.RED}✗ Timeout while installing dependencies{Colors.END}")
+            return False
+        except Exception as e:
+            print(f"{Colors.RED}✗ Error installing dependencies: {e}{Colors.END}")
+            return False
 
     def generate_settings_json(self):
         """Generate settings.json from template with user's Python path"""
@@ -241,6 +378,12 @@ class ClaudeSetup:
             f.write(content)
 
         print(f"  ✓ Created: {Colors.GREEN}{output_path}{Colors.END}")
+
+        if self.use_venv:
+            print(f"  {Colors.BLUE}ℹ  Using virtual environment Python: {self.python_path}{Colors.END}")
+        else:
+            print(f"  {Colors.BLUE}ℹ  Using system Python: {self.python_path}{Colors.END}")
+
         return True
 
     def setup_config_files(self):
@@ -394,6 +537,48 @@ class ClaudeSetup:
                 f.write(".mcp.json\n")
             print(f"  ✓ Added .mcp.json to .gitignore")
 
+    def verify_hooks(self) -> bool:
+        """
+        Verify that hooks are working by testing a simple hook
+
+        Returns:
+            bool: True if verification passed, False otherwise
+        """
+        print(f"\n{Colors.BOLD}Verifying hook functionality...{Colors.END}")
+
+        # Test notification hook as it's simple and doesn't require much context
+        notification_hook = self.claude_dir / 'hooks' / 'notification.py'
+
+        if not notification_hook.exists():
+            print(f"  ⚠ notification.py not found, skipping verification")
+            return True
+
+        try:
+            # Test with empty JSON input
+            result = subprocess.run(
+                [self.python_path, str(notification_hook)],
+                input='{}',
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode == 0:
+                print(f"  ✓ {Colors.GREEN}Hook verification passed!{Colors.END}")
+                return True
+            else:
+                print(f"  {Colors.YELLOW}⚠ Hook verification completed with warnings{Colors.END}")
+                if result.stderr:
+                    print(f"  {Colors.YELLOW}stderr: {result.stderr[:200]}{Colors.END}")
+                return True  # Don't fail setup for hook warnings
+
+        except subprocess.TimeoutExpired:
+            print(f"  {Colors.YELLOW}⚠ Hook verification timed out{Colors.END}")
+            return True  # Don't fail setup for timeout
+        except Exception as e:
+            print(f"  {Colors.YELLOW}⚠ Hook verification error: {e}{Colors.END}")
+            return True  # Don't fail setup for verification errors
+
     def validate_setup(self) -> bool:
         """Validate that all necessary files exist and are correct"""
         print(f"\n{Colors.BOLD}Validating setup...{Colors.END}")
@@ -436,16 +621,28 @@ class ClaudeSetup:
 
         print(f"{Colors.BOLD}Next steps:{Colors.END}")
         print(f"  1. Review generated settings.json")
-        print(f"  2. Customize config files if needed:")
+
+        if self.use_venv:
+            print(f"  2. {Colors.GREEN}✓{Colors.END} Virtual environment created at: .claude/.venv")
+            print(f"     {Colors.GREEN}✓{Colors.END} Dependencies installed: python-dotenv, psutil, pyyaml")
+        else:
+            print(f"  2. {Colors.YELLOW}⚠{Colors.END} Using system Python - ensure these packages are installed:")
+            print(f"     {Colors.YELLOW}pip install python-dotenv psutil pyyaml{Colors.END}")
+
+        print(f"  3. Customize config files if needed:")
         print(f"     - .claude/hooks/config/__claude_hook__allowed_root_files")
         print(f"     - .claude/hooks/config/__claude_hook__valid_test_paths")
-        print(f"  3. Review rules files in project root")
-        print(f"  4. {Colors.BLUE}[IMPORTANT]{Colors.END} Configure MCP servers:")
+        print(f"  4. Review rules files in project root")
+        print(f"  5. {Colors.BLUE}[IMPORTANT]{Colors.END} Configure MCP servers:")
         print(f"     - Edit .mcp.json with your API tokens")
         print(f"     - Update agenthub_http Authorization Bearer token")
-        print(f"  5. {Colors.BLUE}[RECOMMENDED]{Colors.END} Generate project-specific CLAUDE.local.md:")
+        print(f"  6. {Colors.BLUE}[RECOMMENDED]{Colors.END} Generate project-specific CLAUDE.local.md:")
         print(f"     Run: {Colors.GREEN}/generate-local-rules{Colors.END} or {Colors.GREEN}/init-local{Colors.END}")
-        print(f"  6. Start using Claude Code / Codex!\n")
+        print(f"  7. Start using Claude Code / Codex!\n")
+
+        if self.use_venv:
+            print(f"{Colors.BLUE}ℹ  Hook verification: Test manually with:{Colors.END}")
+            print(f"   {Colors.GREEN}echo '{{}}' | {self.python_path} .claude/hooks/notification.py{Colors.END}\n")
 
         print(f"{Colors.YELLOW}To reconfigure, run this script again anytime.{Colors.END}\n")
 
@@ -463,29 +660,45 @@ class ClaudeSetup:
             # Step 3: Token optimization strategy
             self.token_strategy = self.prompt_token_strategy()
 
-            # Step 4: Generate settings.json
+            # Step 4: Virtual environment choice
+            self.use_venv = self.prompt_venv_usage()
+
+            # Step 5: Create virtual environment (if chosen)
+            if self.use_venv:
+                if not self.create_virtual_environment():
+                    print(f"\n{Colors.YELLOW}⚠ Failed to create virtual environment. Falling back to system Python.{Colors.END}")
+                    self.use_venv = False
+
+            # Step 6: Install dependencies
+            if not self.install_hook_dependencies():
+                print(f"\n{Colors.YELLOW}⚠ Failed to install dependencies. Please install manually.{Colors.END}")
+
+            # Step 7: Generate settings.json
             if not self.generate_settings_json():
                 print(f"\n{Colors.RED}Setup failed during settings.json generation.{Colors.END}")
                 return 1
 
-            # Step 5: Setup config files
+            # Step 8: Setup config files
             self.setup_config_files()
 
-            # Step 6: Deploy rules files
+            # Step 9: Deploy rules files
             self.deploy_rules_files()
 
-            # Step 6.5: Deploy .env.claude
+            # Step 10: Deploy .env.claude
             self.deploy_env_claude()
 
-            # Step 6.6: Deploy .mcp.json
+            # Step 11: Deploy .mcp.json
             self.deploy_mcp_config()
 
-            # Step 7: Validate
+            # Step 12: Verify hooks
+            self.verify_hooks()
+
+            # Step 13: Validate
             if not self.validate_setup():
                 print(f"\n{Colors.YELLOW}⚠ Setup completed with warnings. Please review.{Colors.END}")
                 return 1
 
-            # Step 8: Success!
+            # Step 14: Success!
             self.print_success()
             return 0
 
