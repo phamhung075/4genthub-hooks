@@ -15,6 +15,7 @@
 *env.*
 
 # Keep only template files
+!.env.claude.sample
 !.env.example
 !.env.*.example
 !**/.env.example
@@ -22,7 +23,6 @@
 # Keycloak sensitive configuration
 .env.keycloak
 !.env.keycloak.example
-!.env.claude
 # =============================================================================
 # 🚨 SECURITY: PREVENT SECRET LEAKS
 # =============================================================================

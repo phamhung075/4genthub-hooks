@@ -10,7 +10,7 @@
         },
         "agenthub_http": {
             "type": "http",
-            "url": "http://localhost:8000/mcp",
+            "url": "https://api.4genthub.com/mcp",
             "headers": {
                 "Accept": "application/json, text/event-stream",
                 "Authorization": "Bearer <YOUR_API_TOKEN_HERE>"

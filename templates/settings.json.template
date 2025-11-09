@@ -14,14 +14,31 @@
       "Bash(chmod:*)",
       "Bash(touch:*)"
     ],
-    "deny": []
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/status_lines/status_line_mcp.py",
-    "padding": 0
+    "deny": [
+      "Task",
+      "Read(./00_RESOURCES/**)",
+      "Read(./00_RULES/**)",
+      "Read(./node_modules/**)",
+      "Read(./.venv/**)",
+      "Read(./agenthub_main/.venv/**)",
+      "Read(./__pycache__/**)",
+      "Read(./.pytest_cache/**)",
+      "Read(./.mypy_cache/**)",
+      "Read(./.ruff_cache/**)",
+      "Read(./dist/**)",
+      "Read(./build/**)",
+      "Read(./agenthub-frontend/node_modules/**)",
+      "Read(./agenthub-frontend/dist/**)",
+      "Read(./agenthub-frontend/build/**)",
+      "Read(./.git/**)"
+    ]
   },
   "includeCoAuthoredBy": false,
+  "statusLine": {
+    "type": "command",
+    "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/status_lines/status_line_mcp.py",
+    "padding": 0
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -29,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/hooks/pre_tool_use.py"
+            "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/pre_tool_use.py"
           }
         ]
       }
@@ -40,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/hooks/post_tool_use.py"
+            "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/post_tool_use.py"
           }
         ]
       }
@@ -51,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/hooks/notification.py"
+            "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/notification.py"
           }
         ]
       }
@@ -62,7 +79,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/hooks/stop.py"
+            "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/stop.py"
           }
         ]
       }
@@ -73,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/hooks/subagent_stop.py"
+            "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/subagent_stop.py"
           }
         ]
       }
@@ -83,7 +100,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/hooks/user_prompt_submit.py"
+            "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/user_prompt_submit.py"
           }
         ]
       }
@@ -94,7 +111,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/hooks/pre_compact.py"
+            "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/pre_compact.py"
           }
         ]
       }
@@ -105,10 +122,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{{PYTHON_EXECUTABLE}} {{PROJECT_ROOT}}/.claude/hooks/session_start.py"
+            "command": "{{PYTHON_PATH}} {{PROJECT_ROOT}}/.claude/hooks/session_start.py"
           }
         ]
       }
     ]
+  },
+  "env": {
+    "CLAUDE_PYTHON_PATH": "{{PYTHON_PATH_ENV}}"
   }
 }
