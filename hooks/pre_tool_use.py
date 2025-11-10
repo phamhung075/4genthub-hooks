@@ -259,22 +259,42 @@ class TestPathValidator(Validator):
 
     def _is_test_file(self, file_path: Path) -> bool:
         """Check if file is a test file based on naming patterns."""
+        # Exclude CI/CD configuration directories
+        excluded_dirs = [
+            '.github/workflows',
+            '.github/actions',
+            '.gitlab-ci',
+            'ci',
+            'scripts'
+        ]
+
+        # Check if file is in excluded directory
+        file_path_str = str(file_path).replace('\\', '/')
+        for excluded_dir in excluded_dirs:
+            if f'/{excluded_dir}/' in file_path_str or file_path_str.startswith(excluded_dir + '/'):
+                return False
+
         filename = file_path.name.lower()
         stem = file_path.stem.lower()
 
-        # Common test file patterns
+        # Common test file patterns - more specific patterns
         test_patterns = [
-            'test' in filename,  # Covers test_*.py, *_test.py, *test*.py
+            # Explicit test file extensions
             filename.endswith('.test.js'),
             filename.endswith('.test.ts'),
             filename.endswith('.test.jsx'),
             filename.endswith('.test.tsx'),
+            filename.endswith('.test.py'),
             filename.endswith('.spec.js'),
             filename.endswith('.spec.ts'),
             filename.endswith('.spec.jsx'),
             filename.endswith('.spec.tsx'),
+            filename.endswith('.spec.py'),
+            # Python test naming conventions
             stem.startswith('test_'),
             stem.endswith('_test'),
+            # Catch test*.py pattern but exclude config files
+            (stem.startswith('test') and filename.endswith('.py')),
         ]
 
         return any(test_patterns)
