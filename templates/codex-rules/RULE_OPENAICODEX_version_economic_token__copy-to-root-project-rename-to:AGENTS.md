@@ -67,10 +67,21 @@ for task in existing:
 
 ### Workflow
 
-1. call_agent("master-orchestrator-agent") → YOU ARE orchestrator
-2. call_agent("coding-agent") → YOU ARE coding-agent
+**First Time Loading (per session)**:
+1. call_agent("master-orchestrator-agent") → YOU ARE orchestrator (loads instructions)
+2. call_agent("coding-agent") → YOU ARE coding-agent (loads instructions)
 3. Do work directly
-4. call_agent("master-orchestrator-agent") → YOU ARE orchestrator
+4. **Restate**: "Switching back to master-orchestrator-agent" (NO call needed - saves ~1200 tokens)
+
+**Subsequent Switches (same session)**:
+- Already loaded agent: Just restate role ("Switching to coding-agent")
+- New agent: Must call call_agent("new-agent-name")
+
+**New Session**:
+- ALL agents must be loaded again with call_agent()
+- Previous session's loaded agents are NOT available
+
+**Token Economy**: Load once per session (~1200 tokens) → Restate unlimited times same session (0 tokens)
 
 **Response Structure**: `system_prompt` (instructions) + `tools` array (permissions)
 **Required Actions**: READ system_prompt | FOLLOW all rules | USE ONLY tools in array | CONFIRM loaded
@@ -96,10 +107,10 @@ for task in existing:
 ## 📊 COMPLETE WORKFLOW
 
 1. Session Start
-2. call_agent("master-orchestrator-agent")
+2. call_agent("master-orchestrator-agent") - Load once per session
 3. Receive & Process (system_prompt = instructions)
 4. Confirm loaded
-5. Evaluate Complexity: SIMPLE (<1%) handle directly | COMPLEX (>99%) create MCP task → switch agent → work → switch back → complete
+5. Evaluate Complexity: SIMPLE (<1%) handle directly | COMPLEX (>99%) create MCP task → switch agent (load if new, restate if loaded) → work → switch back (restate) → complete
 6. Report to User
 
 ---
@@ -125,7 +136,7 @@ else:
 1. Do work (as specialized agent)
 2. Update progress (while specialized)
 3. Verify subtasks complete
-4. Switch back to orchestrator
+4. Switch back to orchestrator (restate if already loaded)
 5. Quality review if needed
 6. Decision: Complete | Continue | Review | Debug
 7. Update status with summary
@@ -200,11 +211,11 @@ task_id = response["task"]["id"]
 ### 2. Switch Agent → 3. Do Work → 4. Switch Back & Complete
 
 ```python
-call_agent("coding-agent")  # NOW coding-agent
+call_agent("coding-agent")  # First time: load instructions
 # Write code, edit files
 manage_task(action="update", task_id=task_id, progress_percentage=50)
 
-call_agent("master-orchestrator-agent")  # NOW orchestrator
+# Switching back to master-orchestrator-agent (already loaded - just restate)
 manage_task(action="complete", task_id=task_id,
     completion_summary="Accomplished", testing_notes="Tests performed")
 ```
@@ -341,13 +352,17 @@ echo "$result" | jq '.subtasks[0].completion_data.completion_summary'
 - [ ] Ready to switch?
 
 ### When Switching
-- [ ] Called `call_agent("specialized-agent")`?
+- [ ] Agent already loaded this session?
+- [ ] **YES**: Just restate role (0 tokens)
+- [ ] **NO**: Call `call_agent("specialized-agent")` (~1200 tokens)
 - [ ] Confirmed right tools?
 - [ ] Know what to do?
 - [ ] Will update progress?
 
 ### When Switching Back
-- [ ] Called `call_agent("master-orchestrator-agent")`?
+- [ ] Orchestrator already loaded?
+- [ ] **YES**: Just restate "Switching to master-orchestrator-agent" (0 tokens)
+- [ ] **NO**: Call `call_agent("master-orchestrator-agent")` (~1200 tokens)
 - [ ] Review work complete?
 - [ ] Update MCP status?
 - [ ] Objectives met?
@@ -368,11 +383,14 @@ echo "$result" | jq '.subtasks[0].completion_data.completion_summary'
 
 | Question | Answer |
 |----------|--------|
-| When call? | Session start + role switches |
+| When call? | **First time per agent** in session (loads instructions) |
+| **New session?** | **MUST call call_agent() again - old session agents not available** |
 | How many? | Multiple (orchestrator → specialists → back) |
 | Forget? | Call immediately |
 | First agent? | master-orchestrator-agent |
 | Switch multiple? | YES - that's the point |
+| **Already loaded (same session)?** | **Just restate role - NO call needed (0 tokens)** |
+| **New agent (same session)?** | **Must call call_agent() first time (~1200 tokens)** |
 | Response? | Read `system_prompt` + check `tools` |
 | Tool blocked? | Switch to agent with that tool |
 | Check tools? | `tools` array in response |
@@ -466,6 +484,6 @@ and follow best practices. Start by looking at auth module then...
 | **cclaude (async)** | Create MCP → Delegate `cclaude agent "task_id: XXX"` → Monitor → Non-blocking → Parallel |
 | **cclaude-wait (sync)** | Create MCP → Delegate `cclaude-wait agent "task_id: XXX"` → Monitor → Blocking → Returns JSON |
 | **cclaude-wait-parallel** | Create MCP → Create subtasks → Delegate `cclaude-wait-parallel agent task_id sub1 sub2` → WebSocket monitoring → Blocking → Returns aggregated JSON |
-| **Agent Switching** | call_agent("master-orchestrator") → Switch call_agent("agent") → Check tools → MCP → Progress → Sequential |
+| **Agent Switching** | call_agent("master-orchestrator") **once** → Switch to agent (load if new, restate if loaded) → Check tools → MCP → Progress → Sequential |
 
 **Remember**: Four models | cclaude = parallel (fire-forget) | cclaude-wait = single+results | cclaude-wait-parallel = multiple+results | Agent switching = efficient | Manager = human | Work system = MCP | Smart choice each situation
