@@ -10,9 +10,9 @@ Full details available via /mcp_status slash command.
 """
 
 import sys
-from pathlib import Path
-from typing import Dict, Any, Optional
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -22,7 +22,7 @@ class ContextProvider(ABC):
     """Base context provider interface."""
 
     @abstractmethod
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get context information."""
         pass
 
@@ -30,7 +30,7 @@ class ContextProvider(ABC):
 class ConditionalMCPProvider(ContextProvider):
     """Only loads MCP if explicitly needed."""
 
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Check MCP availability without loading full context."""
 
         # Check if MCP tools were used in recent conversation
@@ -65,11 +65,11 @@ class ConditionalMCPProvider(ContextProvider):
         # Full MCP context only when tools were recently used
         return self._load_full_mcp_context(input_data)
 
-    def _load_full_mcp_context(self, input_data: Dict) -> Dict[str, Any]:
+    def _load_full_mcp_context(self, input_data: dict) -> dict[str, Any]:
         """Load complete MCP context when needed."""
         try:
-            from utils.mcp_client import MCPHTTPClient
             from utils.env_loader import get_project_root
+            from utils.mcp_client import MCPHTTPClient
 
             client = MCPHTTPClient()
 

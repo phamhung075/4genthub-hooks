@@ -5,9 +5,8 @@ Tracks modified files during a session to avoid blocking ongoing work.
 """
 
 import json
-import os
-from pathlib import Path
 from datetime import datetime, timedelta
+
 
 def get_session_file():
     """Get the session tracking file path."""
@@ -30,7 +29,7 @@ def get_current_session():
     
     if session_file.exists():
         try:
-            with open(session_file, 'r') as f:
+            with open(session_file) as f:
                 session = json.load(f)
                 
             # Check if session is still valid (within 2 hours)
@@ -87,7 +86,7 @@ def clear_expired_sessions():
     session_file = get_session_file()
     if session_file.exists():
         try:
-            with open(session_file, 'r') as f:
+            with open(session_file) as f:
                 session = json.load(f)
             
             started = datetime.fromisoformat(session['started_at'])

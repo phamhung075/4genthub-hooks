@@ -3,10 +3,11 @@ Configuration loader for Claude hooks.
 Provides centralized access to all configuration files in the config directory.
 """
 
-import yaml
-from pathlib import Path
-from typing import Dict, Any, Optional
 import logging
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class ConfigLoader:
         self.config_dir = Path(__file__).parent
         self._cache = {}
 
-    def load_config(self, config_name: str, use_cache: bool = True) -> Optional[Dict[str, Any]]:
+    def load_config(self, config_name: str, use_cache: bool = True) -> dict[str, Any] | None:
         """
         Load a configuration file from the config directory.
 
@@ -39,7 +40,7 @@ class ConfigLoader:
             return None
 
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
+            with open(config_path, encoding='utf-8') as f:
                 config_data = yaml.safe_load(f)
 
             if use_cache:
@@ -55,15 +56,15 @@ class ConfigLoader:
             logger.error(f"Error loading configuration {config_path}: {e}")
             return None
 
-    def get_mcp_post_hints_config(self) -> Optional[Dict[str, Any]]:
+    def get_mcp_post_hints_config(self) -> dict[str, Any] | None:
         """Get MCP post-action hints configuration."""
         return self.load_config("mcp_post_action_hints")
 
-    def get_session_start_config(self) -> Optional[Dict[str, Any]]:
+    def get_session_start_config(self) -> dict[str, Any] | None:
         """Get session start messages configuration."""
         return self.load_config("session_start_messages")
 
-    def get_hint_message_config(self, message_type: str) -> Optional[Dict[str, Any]]:
+    def get_hint_message_config(self, message_type: str) -> dict[str, Any] | None:
         """
         Get hint message configuration for a specific type.
 
@@ -80,7 +81,7 @@ class ConfigLoader:
         self._cache.clear()
         logger.debug("Configuration cache cleared")
 
-    def reload_config(self, config_name: str) -> Optional[Dict[str, Any]]:
+    def reload_config(self, config_name: str) -> dict[str, Any] | None:
         """
         Force reload a configuration file, bypassing cache.
 
@@ -102,17 +103,17 @@ def get_config_loader() -> ConfigLoader:
         _config_loader = ConfigLoader()
     return _config_loader
 
-def load_mcp_hints_config() -> Optional[Dict[str, Any]]:
+def load_mcp_hints_config() -> dict[str, Any] | None:
     """Convenience function to load MCP post-action hints configuration."""
     loader = get_config_loader()
     return loader.get_mcp_post_hints_config()
 
-def load_session_messages_config() -> Optional[Dict[str, Any]]:
+def load_session_messages_config() -> dict[str, Any] | None:
     """Convenience function to load session start messages configuration."""
     loader = get_config_loader()
     return loader.get_session_start_config()
 
-def load_hint_messages_config(message_type: str) -> Optional[Dict[str, Any]]:
+def load_hint_messages_config(message_type: str) -> dict[str, Any] | None:
     """Convenience function to load hint message configuration."""
     loader = get_config_loader()
     return loader.get_hint_message_config(message_type)

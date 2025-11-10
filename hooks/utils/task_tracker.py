@@ -4,11 +4,11 @@ Task Tracker for Status Line
 Tracks active tasks per session and provides status line integration
 """
 
-import json
-from pathlib import Path
-from datetime import datetime, timedelta
-from typing import Dict, List, Any
 import hashlib
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List
 
 
 class TaskTracker:
@@ -28,33 +28,33 @@ class TaskTracker:
         timestamp = datetime.now().isoformat()
         return hashlib.md5(timestamp.encode()).hexdigest()
 
-    def _load_tasks(self) -> Dict[str, Any]:
+    def _load_tasks(self) -> dict[str, Any]:
         """Load all active tasks."""
         if self.tasks_file.exists():
             try:
-                with open(self.tasks_file, 'r') as f:
+                with open(self.tasks_file) as f:
                     return json.load(f)
             except (json.JSONDecodeError, IOError):
                 return {}
         return {}
 
-    def _save_tasks(self, tasks: Dict[str, Any]):
+    def _save_tasks(self, tasks: dict[str, Any]):
         """Save tasks to file."""
         with open(self.tasks_file, 'w') as f:
             json.dump(tasks, f, indent=2, default=str)
 
-    def _load_session_tasks(self) -> List[Dict[str, Any]]:
+    def _load_session_tasks(self) -> list[dict[str, Any]]:
         """Load tasks for current session."""
         if self.session_file.exists():
             try:
-                with open(self.session_file, 'r') as f:
+                with open(self.session_file) as f:
                     data = json.load(f)
                     return data.get('tasks', [])
             except (json.JSONDecodeError, IOError):
                 return []
         return []
 
-    def _save_session_tasks(self, tasks: List[Dict[str, Any]]):
+    def _save_session_tasks(self, tasks: list[dict[str, Any]]):
         """Save session-specific tasks."""
         session_data = {
             'session_id': self.session_id,
@@ -144,13 +144,13 @@ class TaskTracker:
             return True
         return False
 
-    def _archive_task(self, task: Dict[str, Any]):
+    def _archive_task(self, task: dict[str, Any]):
         """Archive completed task."""
         archive_file = self.data_dir / "completed_tasks.json"
 
         if archive_file.exists():
             try:
-                with open(archive_file, 'r') as f:
+                with open(archive_file) as f:
                     archive = json.load(f)
             except (json.JSONDecodeError, IOError):
                 archive = []
@@ -166,7 +166,7 @@ class TaskTracker:
         with open(archive_file, 'w') as f:
             json.dump(archive, f, indent=2, default=str)
 
-    def get_active_tasks(self, session_only: bool = False) -> List[Dict[str, Any]]:
+    def get_active_tasks(self, session_only: bool = False) -> list[dict[str, Any]]:
         """Get list of active tasks."""
         if session_only:
             session_tasks = self._load_session_tasks()
@@ -181,7 +181,7 @@ class TaskTracker:
             tasks = self._load_tasks()
             return list(tasks.values())
 
-    def get_task_summary(self) -> Dict[str, Any]:
+    def get_task_summary(self) -> dict[str, Any]:
         """Get summary of tasks for status line display."""
         tasks = self.get_active_tasks()
         session_tasks = self.get_active_tasks(session_only=True)
@@ -221,7 +221,7 @@ class TaskTracker:
 
         for file in self.data_dir.glob("session_*.json"):
             try:
-                with open(file, 'r') as f:
+                with open(file) as f:
                     data = json.load(f)
                 created = datetime.fromisoformat(data.get('created_at', ''))
                 if created < cutoff:
@@ -270,7 +270,7 @@ def get_task_tracker(session_id: str = None) -> TaskTracker:
     return _tracker_instance
 
 
-def track_task_from_mcp(action: str, task_data: Dict[str, Any], session_id: str = None):
+def track_task_from_mcp(action: str, task_data: dict[str, Any], session_id: str = None):
     """Track task operations from MCP calls."""
     tracker = get_task_tracker(session_id)
 

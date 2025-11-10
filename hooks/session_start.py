@@ -22,19 +22,20 @@ Refactored with:
 - Centralized configuration
 """
 
-import json
-import sys
-import subprocess
-import os
 import argparse
-import yaml
 import hashlib
+import json
+import os
+import subprocess
+import sys
 import time
-import psutil
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, Optional, List
 from abc import ABC, abstractmethod
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import psutil
+import yaml
 
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -71,7 +72,7 @@ class ContextProvider(ABC):
     """Base context provider interface."""
 
     @abstractmethod
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get context information."""
         pass
 
@@ -80,7 +81,7 @@ class SessionProcessor(ABC):
     """Base session processor interface."""
 
     @abstractmethod
-    def process(self, input_data: Dict) -> Optional[str]:
+    def process(self, input_data: dict) -> str | None:
         """Process session start data."""
         pass
 
@@ -89,7 +90,7 @@ class Logger(ABC):
     """Abstract logger interface."""
 
     @abstractmethod
-    def log(self, level: str, message: str, data: Optional[Dict] = None):
+    def log(self, level: str, message: str, data: dict | None = None):
         """Log a message with optional data."""
         pass
 
@@ -105,7 +106,7 @@ class ConfigurationLoader:
         self.config_dir = config_dir
         self._cache = {}
 
-    def load_config(self, config_name: str) -> Optional[Dict]:
+    def load_config(self, config_name: str) -> dict | None:
         """Load a YAML configuration file."""
         if config_name in self._cache:
             return self._cache[config_name]
@@ -115,14 +116,14 @@ class ConfigurationLoader:
             return None
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
                 self._cache[config_name] = config
                 return config
         except Exception:
             return None
 
-    def get_agent_message(self, agent_name: str) -> Optional[Dict]:
+    def get_agent_message(self, agent_name: str) -> dict | None:
         """Get initialization message for a specific agent."""
         config = self.load_config('session_start_messages')
         if not config:
@@ -159,7 +160,7 @@ class FileLogger(Logger):
         self.log_path = log_dir / log_name
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
-    def log(self, level: str, message: str, data: Optional[Dict] = None):
+    def log(self, level: str, message: str, data: dict | None = None):
         """Log to JSON file with session tracking."""
         entry = {
             'timestamp': datetime.now().isoformat(),
@@ -172,7 +173,7 @@ class FileLogger(Logger):
         log_data = []
         if self.log_path.exists():
             try:
-                with open(self.log_path, 'r') as f:
+                with open(self.log_path) as f:
                     log_data = json.load(f)
             except:
                 log_data = []
@@ -191,7 +192,7 @@ class FileLogger(Logger):
 class GitContextProvider(ContextProvider):
     """Provides git repository context."""
 
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get git status and branch information."""
         try:
             # Get current branch
@@ -250,7 +251,7 @@ class MCPContextProvider(ContextProvider):
                         break
 
             if mcp_json_path.exists():
-                with open(mcp_json_path, 'r') as f:
+                with open(mcp_json_path) as f:
                     mcp_config = json.load(f)
 
                 # Extract URL from agenthub_http configuration exactly as shown
@@ -264,13 +265,14 @@ class MCPContextProvider(ContextProvider):
         # Fallback to default
         return "https://api.4genthub.com"
 
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get MCP tasks and project context with project/branch IDs."""
         # Load .env for debug logging
         DEBUG_ENABLED = os.getenv('APP_LOG_LEVEL', '').upper() == 'DEBUG'
         logger = None
         if DEBUG_ENABLED:
             import logging
+
             from utils.env_loader import get_ai_data_path
             log_dir = get_ai_data_path()
             debug_log = log_dir / 'claude-hooks' / 'session_start_mcp_context_debug.log'
@@ -288,6 +290,7 @@ class MCPContextProvider(ContextProvider):
         try:
             # ALWAYS log to file
             import logging
+
             from utils.env_loader import get_ai_data_path
             debug_log = get_ai_data_path() / 'session_start_main.log'
             debug_log.parent.mkdir(parents=True, exist_ok=True)
@@ -335,7 +338,7 @@ class MCPContextProvider(ContextProvider):
 
             # Add MCP server URL to context (from .mcp.json)
             context['mcp_server_url'] = mcp_server_url
-            main_logger.debug(f"✓ Added MCP URL to context")
+            main_logger.debug("✓ Added MCP URL to context")
 
             # Get project and branch information with IDs
             main_logger.debug("Calling _get_project_info...")
@@ -344,9 +347,9 @@ class MCPContextProvider(ContextProvider):
 
             if project_info:
                 context['project_info'] = project_info
-                main_logger.debug(f"✓ Added project_info to context")
+                main_logger.debug("✓ Added project_info to context")
             else:
-                main_logger.debug(f"✗ NO project_info returned - skipping branch_info")
+                main_logger.debug("✗ NO project_info returned - skipping branch_info")
 
             main_logger.debug("Calling _get_branch_info...")
             branch_info = self._get_branch_info(client, project_info)
@@ -354,9 +357,9 @@ class MCPContextProvider(ContextProvider):
 
             if branch_info:
                 context['branch_info'] = branch_info
-                main_logger.debug(f"✓ Added branch_info to context")
+                main_logger.debug("✓ Added branch_info to context")
             else:
-                main_logger.debug(f"✗ NO branch_info returned")
+                main_logger.debug("✗ NO branch_info returned")
 
             # DEBUG: After branch_info
             if logger:
@@ -408,10 +411,11 @@ class MCPContextProvider(ContextProvider):
                 logger.exception("Full traceback:")
             return {'error': str(e)}
 
-    def _get_project_info(self, client) -> Optional[Dict]:
+    def _get_project_info(self, client) -> dict | None:
         """Get project information from MCP by matching git repository name."""
         # DEBUG: Log at method entry
         import logging
+
         from utils.env_loader import get_ai_data_path
         debug_log = get_ai_data_path() / 'session_start_project_info.log'
         debug_log.parent.mkdir(parents=True, exist_ok=True)
@@ -473,6 +477,7 @@ class MCPContextProvider(ContextProvider):
                         try:
                             # DEBUG: Log project API response
                             import logging
+
                             from utils.env_loader import get_ai_data_path
                             debug_log = get_ai_data_path() / 'session_start_project_info.log'
                             debug_log.parent.mkdir(parents=True, exist_ok=True)
@@ -543,7 +548,7 @@ class MCPContextProvider(ContextProvider):
 
         return None
 
-    def _get_branch_info(self, client, project_info: Optional[Dict]) -> Optional[Dict]:
+    def _get_branch_info(self, client, project_info: dict | None) -> dict | None:
         """Get branch information from MCP by matching current git branch."""
         try:
             if not project_info or not project_info.get("project_id"):
@@ -613,6 +618,7 @@ class MCPContextProvider(ContextProvider):
 
             # DEBUG: Log API call
             import logging
+
             from utils.env_loader import get_ai_data_path
             debug_log = get_ai_data_path() / 'session_start_branch_match.log'
             debug_log.parent.mkdir(parents=True, exist_ok=True)
@@ -677,6 +683,7 @@ class MCPContextProvider(ContextProvider):
 
                             # DEBUG: Log branch matching attempt
                             import logging
+
                             from utils.env_loader import get_ai_data_path
                             debug_log = get_ai_data_path() / 'session_start_branch_match.log'
                             debug_log.parent.mkdir(parents=True, exist_ok=True)
@@ -691,7 +698,7 @@ class MCPContextProvider(ContextProvider):
                                 logger.addHandler(handler)
 
                             logger.debug("=" * 80)
-                            logger.debug(f"BRANCH MATCHING START")
+                            logger.debug("BRANCH MATCHING START")
                             logger.debug(f"Current git branch: '{current_branch}'")
                             logger.debug(f"Normalized: '{current_branch.replace('.', '-')}'")
                             logger.debug(f"Total branches from API: {len(branches)}")
@@ -757,7 +764,7 @@ class MCPContextProvider(ContextProvider):
 
         return None
 
-    def _get_project_name(self) -> Optional[str]:
+    def _get_project_name(self) -> str | None:
         """Get project name from git remote URL or folder name, checking parent repo if in submodule."""
         try:
             # First, check if we're in a git submodule by looking for .git file vs directory
@@ -836,7 +843,7 @@ class MCPContextProvider(ContextProvider):
             except:
                 return None
 
-    def _extract_project_name_from_url(self, remote_url: str) -> Optional[str]:
+    def _extract_project_name_from_url(self, remote_url: str) -> str | None:
         """Extract project name from git remote URL."""
         if not remote_url:
             return None
@@ -853,7 +860,7 @@ class MCPContextProvider(ContextProvider):
 
         return project_name if project_name else None
 
-    def _query_pending_tasks(self, client) -> Optional[List[Dict]]:
+    def _query_pending_tasks(self, client) -> list[dict] | None:
         """Query pending tasks from MCP."""
         try:
             mcp_request = {
@@ -894,7 +901,7 @@ class MCPContextProvider(ContextProvider):
             pass
         return None
 
-    def _query_active_tasks(self, client, git_branch_id: str) -> Optional[List[Dict]]:
+    def _query_active_tasks(self, client, git_branch_id: str) -> list[dict] | None:
         """Query active tasks (todo and in_progress status) from MCP for the current branch."""
         # Only enable debug logging if APP_LOG_LEVEL=DEBUG in environment
         DEBUG_ENABLED = os.getenv('APP_LOG_LEVEL', '').upper() == 'DEBUG'
@@ -925,7 +932,7 @@ class MCPContextProvider(ContextProvider):
             # DEBUG POINT 1: Method Entry
             if logger:
                 logger.debug(f"_query_active_tasks called with git_branch_id: {git_branch_id}")
-                logger.debug(f"Starting active tasks query for todo and in_progress statuses")
+                logger.debug("Starting active tasks query for todo and in_progress statuses")
                 logger.debug(f"Debug log location: {debug_log}")
 
             # Query all tasks for the branch (without status filter)
@@ -1054,7 +1061,7 @@ class MCPContextProvider(ContextProvider):
             logger.debug("Returning None from _query_active_tasks")
         return None
 
-    def _query_next_task(self, client, git_branch_id: str) -> Optional[Dict]:
+    def _query_next_task(self, client, git_branch_id: str) -> dict | None:
         """Query next recommended task."""
         try:
             mcp_request = {
@@ -1099,7 +1106,7 @@ class MCPContextProvider(ContextProvider):
 class DevelopmentContextProvider(ContextProvider):
     """Provides development environment context with multi-project architecture detection."""
 
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get comprehensive development environment context."""
         try:
             context = {}
@@ -1136,7 +1143,7 @@ class DevelopmentContextProvider(ContextProvider):
         except Exception as e:
             return {'error': str(e)}
 
-    def _detect_frontend(self, project_root: Path) -> Optional[Dict[str, Any]]:
+    def _detect_frontend(self, project_root: Path) -> dict[str, Any] | None:
         """Detect frontend project (React/TypeScript/Vite)."""
         try:
             frontend_dir = project_root / 'agenthub-frontend'
@@ -1148,7 +1155,7 @@ class DevelopmentContextProvider(ContextProvider):
             # Parse package.json for versions
             package_json = frontend_dir / 'package.json'
             if package_json.exists():
-                with open(package_json, 'r') as f:
+                with open(package_json) as f:
                     data = json.load(f)
                     deps = data.get('dependencies', {})
                     dev_deps = data.get('devDependencies', {})
@@ -1190,7 +1197,7 @@ class DevelopmentContextProvider(ContextProvider):
         except Exception:
             return None
 
-    def _detect_backend(self, project_root: Path) -> Optional[Dict[str, Any]]:
+    def _detect_backend(self, project_root: Path) -> dict[str, Any] | None:
         """Detect backend project (Python/FastMCP/DDD)."""
         try:
             backend_dir = project_root / 'agenthub_main'
@@ -1224,7 +1231,7 @@ class DevelopmentContextProvider(ContextProvider):
 
                 except ImportError:
                     # Fallback if toml not available - parse manually
-                    with open(pyproject, 'r') as f:
+                    with open(pyproject) as f:
                         content = f.read()
                         if 'mcp>=' in content:
                             info['frameworks'] = ['FastMCP', 'FastAPI']
@@ -1249,7 +1256,7 @@ class DevelopmentContextProvider(ContextProvider):
         except Exception:
             return None
 
-    def _detect_hook_system(self, project_root: Path) -> Optional[Dict[str, Any]]:
+    def _detect_hook_system(self, project_root: Path) -> dict[str, Any] | None:
         """Detect Claude Code hook system."""
         try:
             hooks_dir = project_root / '.claude' / 'hooks'
@@ -1285,7 +1292,7 @@ class DevelopmentContextProvider(ContextProvider):
         except Exception:
             return None
 
-    def _detect_infrastructure(self, project_root: Path) -> Optional[Dict[str, Any]]:
+    def _detect_infrastructure(self, project_root: Path) -> dict[str, Any] | None:
         """Detect infrastructure components."""
         try:
             info = {}
@@ -1304,7 +1311,7 @@ class DevelopmentContextProvider(ContextProvider):
                 if compose_file.exists():
                     docker_found = True
                     try:
-                        with open(compose_file, 'r') as f:
+                        with open(compose_file) as f:
                             docker_compose_content += f.read()
                     except:
                         pass
@@ -1348,7 +1355,7 @@ class DevelopmentContextProvider(ContextProvider):
 class IssueContextProvider(ContextProvider):
     """Provides recent issues and problem context."""
 
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get recent issues from logs."""
         try:
             from utils.env_loader import get_ai_data_path
@@ -1361,7 +1368,7 @@ class IssueContextProvider(ContextProvider):
                 error_path = log_dir / error_file
                 if error_path.exists():
                     try:
-                        with open(error_path, 'r') as f:
+                        with open(error_path) as f:
                             lines = f.readlines()[-5:]  # Last 5 errors
                             recent_issues.extend([line.strip() for line in lines if line.strip()])
                     except:
@@ -1379,7 +1386,7 @@ class AgentMessageProvider(ContextProvider):
     def __init__(self, config_loader: ConfigurationLoader):
         self.config_loader = config_loader
 
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get agent initialization messages based on session type."""
         try:
             # Detect session type
@@ -1427,7 +1434,7 @@ class AgentMessageProvider(ContextProvider):
             return 'sub-agent'
         return 'principal'
 
-    def _detect_agent_from_context(self, input_data: Dict) -> Optional[str]:
+    def _detect_agent_from_context(self, input_data: dict) -> str | None:
         """Detect agent type from input context."""
         try:
             conversation = input_data.get('conversation_history', [])
@@ -1468,7 +1475,7 @@ class SessionStartProcessor(SessionProcessor):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, input_data: Dict) -> Optional[str]:
+    def process(self, input_data: dict) -> str | None:
         """Process session start and generate context output."""
         try:
             # Log session start
@@ -1501,7 +1508,7 @@ class SessionStartProcessor(SessionProcessor):
             self.logger.log('error', f'Session processing failed: {e}')
             return None
 
-    def _detect_session_type(self) -> Optional[str]:
+    def _detect_session_type(self) -> str | None:
         """Detect the type of session (principal vs sub-agent)."""
         try:
             # Check if this is a sub-agent session by looking for specific patterns
@@ -1513,7 +1520,7 @@ class SessionStartProcessor(SessionProcessor):
         except:
             return None
 
-    def _detect_agent_from_context(self, input_data: Dict) -> Optional[str]:
+    def _detect_agent_from_context(self, input_data: dict) -> str | None:
         """Detect agent type from input context."""
         try:
             # Check conversation history for agent loading patterns
@@ -1537,7 +1544,7 @@ class SessionStartProcessor(SessionProcessor):
         except:
             return None
 
-    def _get_session_id(self, input_data: Dict) -> str:
+    def _get_session_id(self, input_data: dict) -> str:
         """Get session ID from input data or generate a new one."""
         try:
             # Try to get session ID from input data first
@@ -1559,11 +1566,11 @@ class SessionStartProcessor(SessionProcessor):
 class ContextFormatterProcessor(SessionProcessor):
     """Formats and presents context information."""
 
-    def __init__(self, context_providers: List[ContextProvider], logger: Logger):
+    def __init__(self, context_providers: list[ContextProvider], logger: Logger):
         self.context_providers = context_providers
         self.logger = logger
 
-    def process(self, input_data: Dict) -> Optional[str]:
+    def process(self, input_data: dict) -> str | None:
         """Format all context information."""
         try:
             context_data = {}
@@ -1584,7 +1591,7 @@ class ContextFormatterProcessor(SessionProcessor):
             self.logger.log('error', f'Context formatting failed: {e}')
             return None
 
-    def _format_context(self, context_data: Dict) -> str:
+    def _format_context(self, context_data: dict) -> str:
         """Format context data into readable output based on mode."""
         # Use compact or full formatter based on mode
         if USE_COMPACT_MODE:
@@ -1594,7 +1601,7 @@ class ContextFormatterProcessor(SessionProcessor):
             # Original verbose formatting
             return self._format_context_verbose(context_data)
 
-    def _normalize_context_data(self, context_data: Dict) -> Dict:
+    def _normalize_context_data(self, context_data: dict) -> dict:
         """Normalize context data keys for formatter compatibility."""
         normalized = {}
 
@@ -1640,7 +1647,7 @@ class ContextFormatterProcessor(SessionProcessor):
 
         return normalized
 
-    def _format_context_verbose(self, context_data: Dict) -> str:
+    def _format_context_verbose(self, context_data: dict) -> str:
         """Original verbose formatting logic."""
         output_parts = []
 
@@ -1687,7 +1694,7 @@ class ContextFormatterProcessor(SessionProcessor):
                 branch = mcp['branch_info']
                 # Defensive type check: ensure branch is a dict before accessing with .get()
                 if not isinstance(branch, dict):
-                    mcp_parts.append(f"⚠️ Error fetching branch info: Invalid data type returned")
+                    mcp_parts.append("⚠️ Error fetching branch info: Invalid data type returned")
                 elif branch.get('error'):
                     # Error occurred while fetching branch info
                     mcp_parts.append(f"⚠️ Error fetching branch info: {branch['error']}")
@@ -1885,16 +1892,16 @@ class ComponentFactory:
         return ConfigurationLoader(config_dir)
 
     @staticmethod
-    def create_context_providers(config_loader: ConfigurationLoader) -> List[ContextProvider]:
+    def create_context_providers(config_loader: ConfigurationLoader) -> list[ContextProvider]:
         """Create all context providers based on CONTEXT_MODE."""
         # Always include agent message provider (critical for agent roles)
         providers = [AgentMessageProvider(config_loader)]
 
         if USE_COMPACT_MODE:
             # Import compact providers
-            from providers.lazy_git import LazyGitContextProvider
-            from providers.conditional_mcp import ConditionalMCPProvider
             from providers.compact_env import CompactEnvironmentProvider
+            from providers.conditional_mcp import ConditionalMCPProvider
+            from providers.lazy_git import LazyGitContextProvider
 
             providers.extend([
                 LazyGitContextProvider(),      # Saves ~2,850 tokens
@@ -1914,7 +1921,7 @@ class ComponentFactory:
         return providers
 
     @staticmethod
-    def create_processors(context_providers: List[ContextProvider], logger: Logger) -> List[SessionProcessor]:
+    def create_processors(context_providers: list[ContextProvider], logger: Logger) -> list[SessionProcessor]:
         """Create all session processors."""
         return [
             SessionStartProcessor(logger),
@@ -1937,7 +1944,7 @@ class ClaudeSessionCleanup:
         self.cpu_threshold = float(os.getenv('CLAUDE_CPU_THRESHOLD', '0.5'))
         self.cleanup_enabled = os.getenv('CLAUDE_AUTO_CLEANUP', 'true').lower() == 'true'
 
-    def find_claude_processes(self) -> List[Dict[str, Any]]:
+    def find_claude_processes(self) -> list[dict[str, Any]]:
         """Find all Claude processes running on the system."""
         claude_processes = []
         current_pid = os.getpid()
@@ -1966,14 +1973,14 @@ class ClaudeSessionCleanup:
 
         return claude_processes
 
-    def is_process_idle(self, process: Dict[str, Any]) -> bool:
+    def is_process_idle(self, process: dict[str, Any]) -> bool:
         """Determine if a process is idle based on age and CPU usage."""
         # Process is idle if it's older than threshold AND has low CPU usage
         is_old = process['age_hours'] > self.idle_threshold_hours
         is_low_cpu = process['cpu_percent'] < self.cpu_threshold
         return is_old and is_low_cpu
 
-    def cleanup_idle_sessions(self) -> Dict[str, Any]:
+    def cleanup_idle_sessions(self) -> dict[str, Any]:
         """Find and kill idle Claude sessions."""
         if not self.cleanup_enabled:
             return {'enabled': False, 'message': 'Auto-cleanup is disabled'}
@@ -2039,7 +2046,7 @@ class ClaudeSessionCleanup:
 
         return results
 
-    def format_cleanup_message(self, results: Dict[str, Any]) -> str:
+    def format_cleanup_message(self, results: dict[str, Any]) -> str:
         """Format cleanup results for display."""
         if not results.get('enabled', True):
             return ""
@@ -2079,12 +2086,12 @@ class SessionStartHook:
         self.config_loader = self.factory.create_config_loader(self.config_dir)
 
         # Initialize components with config loader
-        self.context_providers: List[ContextProvider] = self.factory.create_context_providers(self.config_loader)
-        self.processors: List[SessionProcessor] = self.factory.create_processors(
+        self.context_providers: list[ContextProvider] = self.factory.create_context_providers(self.config_loader)
+        self.processors: list[SessionProcessor] = self.factory.create_processors(
             self.context_providers, self.logger
         )
 
-    def execute(self, input_data: Dict[str, Any]) -> int:
+    def execute(self, input_data: dict[str, Any]) -> int:
         """Execute the session start hook."""
         # Log the execution
         self.logger.log('info', 'Processing session start')
@@ -2124,7 +2131,7 @@ class SessionStartHook:
 # Backward Compatibility Functions (for test compatibility)
 # ============================================================================
 
-def log_session_start(input_data: Dict) -> None:
+def log_session_start(input_data: dict) -> None:
     """Backward compatibility wrapper for log_session_start."""
     try:
         log_dir = get_ai_data_path()
@@ -2137,7 +2144,7 @@ def log_session_start(input_data: Dict) -> None:
         log_data = []
         if log_path.exists():
             try:
-                with open(log_path, 'r') as f:
+                with open(log_path) as f:
                     log_data = json.load(f)
             except:
                 log_data = []
@@ -2173,7 +2180,7 @@ def get_git_status() -> tuple:
         return None, None
 
 
-def get_recent_issues() -> Optional[str]:
+def get_recent_issues() -> str | None:
     """Backward compatibility wrapper for recent issues."""
     try:
         # Check if gh CLI is available
@@ -2201,7 +2208,7 @@ def get_recent_issues() -> Optional[str]:
         return None
 
 
-def query_mcp_pending_tasks() -> Optional[List]:
+def query_mcp_pending_tasks() -> list | None:
     """Backward compatibility wrapper for pending tasks."""
     try:
         # Direct server query without cache
@@ -2216,7 +2223,7 @@ def query_mcp_pending_tasks() -> Optional[List]:
         return None
 
 
-def query_mcp_next_task(branch_id: Optional[str] = None) -> Optional[Dict]:
+def query_mcp_next_task(branch_id: str | None = None) -> dict | None:
     """Backward compatibility wrapper for next task."""
     try:
         if not branch_id:
@@ -2234,7 +2241,7 @@ def query_mcp_next_task(branch_id: Optional[str] = None) -> Optional[Dict]:
         return None
 
 
-def get_git_branch_context() -> Optional[Dict]:
+def get_git_branch_context() -> dict | None:
     """Backward compatibility wrapper for git branch context."""
     try:
 
@@ -2277,7 +2284,7 @@ def get_git_branch_context() -> Optional[Dict]:
         return None
 
 
-def format_mcp_context(context_data: Dict) -> str:
+def format_mcp_context(context_data: dict) -> str:
     """Backward compatibility wrapper for MCP context formatting."""
     try:
         if not context_data:

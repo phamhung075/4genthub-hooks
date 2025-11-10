@@ -8,14 +8,14 @@ Saves ~800 tokens (80% reduction from 1,000 to 200 tokens).
 Formats context data into minimal, scannable output.
 """
 
-from typing import Dict, Any, List
+from typing import Any, Dict
 
 
 class SimpleFormatter:
     """Minimal formatting with inline data."""
 
     @staticmethod
-    def format(context: Dict[str, Any]) -> str:
+    def format(context: dict[str, Any]) -> str:
         """Format context data into compact output."""
         parts = []
 
@@ -39,7 +39,7 @@ class SimpleFormatter:
 
             if mcp.get('mode') == 'compact':
                 if status == 'ready':
-                    parts.append(f"🌐 MCP: Ready | 💡 Use /mcp_status for details")
+                    parts.append("🌐 MCP: Ready | 💡 Use /mcp_status for details")
                 elif status == 'unavailable':
                     parts.append("🌐 MCP: Unavailable")
                 else:
@@ -98,7 +98,7 @@ class SimpleFormatter:
         return "\n".join(parts) + "\n"
 
     @staticmethod
-    def format_full(context: Dict[str, Any]) -> str:
+    def format_full(context: dict[str, Any]) -> str:
         """Format context data into verbose multi-line output (original behavior)."""
         sections = []
 

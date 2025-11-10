@@ -23,13 +23,13 @@ Refactored with:
 """
 
 import json
-import sys
-import re
 import os
+import re
+import sys
+from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Tuple
-from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Tuple
 
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -88,7 +88,7 @@ class Validator(ABC):
     """Base validator interface."""
 
     @abstractmethod
-    def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """
         Validate the tool call.
 
@@ -102,7 +102,7 @@ class Processor(ABC):
     """Base processor interface."""
 
     @abstractmethod
-    def process(self, tool_name: str, tool_input: Dict) -> Optional[str]:
+    def process(self, tool_name: str, tool_input: dict) -> str | None:
         """
         Process the tool call and return any output.
 
@@ -116,7 +116,7 @@ class Logger(ABC):
     """Abstract logger interface."""
 
     @abstractmethod
-    def log(self, level: str, message: str, data: Optional[Dict] = None):
+    def log(self, level: str, message: str, data: dict | None = None):
         """Log a message with optional data."""
         pass
 
@@ -134,7 +134,7 @@ class FileLogger(Logger):
         self.log_path = log_dir / f"{log_name}.json"
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
-    def log(self, level: str, message: str, data: Optional[Dict] = None):
+    def log(self, level: str, message: str, data: dict | None = None):
         """Log to JSON file."""
         entry = {
             'timestamp': datetime.now().isoformat(),
@@ -147,7 +147,7 @@ class FileLogger(Logger):
         log_data = []
         if self.log_path.exists():
             try:
-                with open(self.log_path, 'r') as f:
+                with open(self.log_path) as f:
                     log_data = json.load(f)
             except:
                 pass
@@ -169,7 +169,7 @@ class RootFileValidator(Validator):
     def __init__(self):
         self.allowed_files = self._load_allowed_files()
 
-    def _load_allowed_files(self) -> List[str]:
+    def _load_allowed_files(self) -> list[str]:
         """Load allowed root files from configuration."""
         config_path = CONFIG_DIR / '__claude_hook__allowed_root_files'
 
@@ -184,7 +184,7 @@ class RootFileValidator(Validator):
 
         if config_path.exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     lines = [line.strip() for line in f.readlines()
                             if line.strip() and not line.startswith('#')]
                 return lines if lines else default_allowed
@@ -193,7 +193,7 @@ class RootFileValidator(Validator):
 
         return default_allowed
 
-    def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate file creation in root directory."""
         if tool_name not in ['Write', 'Edit', 'MultiEdit', 'NotebookEdit']:
             return True, None
@@ -234,7 +234,7 @@ class TestPathValidator(Validator):
     def __init__(self):
         self.valid_test_paths = self._load_valid_test_paths()
 
-    def _load_valid_test_paths(self) -> List[str]:
+    def _load_valid_test_paths(self) -> list[str]:
         """Load valid test paths from configuration."""
         config_path = CONFIG_DIR / '__claude_hook__valid_test_paths'
 
@@ -248,7 +248,7 @@ class TestPathValidator(Validator):
 
         if config_path.exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     lines = [line.strip() for line in f.readlines()
                             if line.strip() and not line.startswith('#')]
                 return lines if lines else default_test_paths
@@ -299,7 +299,7 @@ class TestPathValidator(Validator):
 
         return any(test_patterns)
 
-    def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate test file creation in designated directories."""
         if tool_name not in ['Write', 'Edit', 'MultiEdit', 'NotebookEdit']:
             return True, None
@@ -363,7 +363,7 @@ class EnvFileValidator(Validator):
     def __init__(self):
         self.valid_env_paths = self._load_valid_env_paths()
 
-    def _load_valid_env_paths(self) -> List[str]:
+    def _load_valid_env_paths(self) -> list[str]:
         """Load valid paths for .env file creation from configuration."""
         config_path = CONFIG_DIR / '__claude_hook__valid_env_paths'
 
@@ -372,7 +372,7 @@ class EnvFileValidator(Validator):
 
         if config_path.exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     lines = [line.strip() for line in f.readlines()
                             if line.strip() and not line.startswith('#')]
                     # If file has content, use those paths
@@ -386,7 +386,7 @@ class EnvFileValidator(Validator):
 
         return valid_paths
 
-    def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate environment file access and creation."""
         if tool_name not in ['Read', 'Write', 'Edit', 'MultiEdit']:
             return True, None
@@ -474,7 +474,7 @@ class EnvFileValidator(Validator):
 class CommandValidator(Validator):
     """Validates dangerous commands."""
 
-    def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate bash commands for dangerous operations."""
         if tool_name != 'Bash':
             return True, None
@@ -527,7 +527,7 @@ class CommandValidator(Validator):
 class DocumentationValidator(Validator):
     """Validates documentation requirements."""
 
-    def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate documentation requirements."""
         try:
             from utils.docs_indexer import check_documentation_requirement
@@ -552,7 +552,7 @@ class DocumentationValidator(Validator):
 
         return True, None
 
-    def _extract_file_path(self, tool_name: str, tool_input: Dict) -> Optional[str]:
+    def _extract_file_path(self, tool_name: str, tool_input: dict) -> str | None:
         """Extract file path from tool input."""
         if tool_name in ['Write', 'Edit', 'MultiEdit']:
             return tool_input.get('file_path')
@@ -564,7 +564,7 @@ class DocumentationValidator(Validator):
 class PermissionValidator(Validator):
     """Validates tool permissions based on agent role."""
 
-    def validate(self, tool_name: str, tool_input: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate tool permissions."""
         try:
             from utils.role_enforcer import check_tool_permission
@@ -586,7 +586,7 @@ class PermissionValidator(Validator):
 class ContextProcessor(Processor):
     """Processes context injection."""
 
-    def process(self, tool_name: str, tool_input: Dict) -> Optional[str]:
+    def process(self, tool_name: str, tool_input: dict) -> str | None:
         """Inject context if available."""
         try:
             from utils.context_injector import inject_context_sync
@@ -609,7 +609,7 @@ class HintProcessor(Processor):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, tool_name: str, tool_input: Dict) -> Optional[str]:
+    def process(self, tool_name: str, tool_input: dict) -> str | None:
         """Generate and display hints."""
         hint_output = []
 
@@ -661,7 +661,7 @@ class HintProcessor(Processor):
 class MCPProcessor(Processor):
     """Processes MCP task interception."""
 
-    def process(self, tool_name: str, tool_input: Dict) -> Optional[str]:
+    def process(self, tool_name: str, tool_input: dict) -> str | None:
         """Process MCP task interception."""
         try:
             from utils.mcp_task_interceptor import get_mcp_interceptor
@@ -690,7 +690,7 @@ class ComponentFactory:
         return FileLogger(log_dir, log_name)
 
     @staticmethod
-    def create_validators() -> List[Validator]:
+    def create_validators() -> list[Validator]:
         """Create all validators."""
         return [
             RootFileValidator(),
@@ -702,7 +702,7 @@ class ComponentFactory:
         ]
 
     @staticmethod
-    def create_processors(logger: Logger) -> List[Processor]:
+    def create_processors(logger: Logger) -> list[Processor]:
         """Create all processors."""
         return [
             ContextProcessor(),
@@ -730,10 +730,10 @@ class PreToolUseHook:
         self.logger = self.factory.create_logger(self.log_dir)
 
         # Initialize components
-        self.validators: List[Validator] = self.factory.create_validators()
-        self.processors: List[Processor] = self.factory.create_processors(self.logger)
+        self.validators: list[Validator] = self.factory.create_validators()
+        self.processors: list[Processor] = self.factory.create_processors(self.logger)
 
-    def execute(self, data: Dict[str, Any]) -> int:
+    def execute(self, data: dict[str, Any]) -> int:
         """Execute the pre-tool use hook."""
         tool_name = data.get('tool_name', '')
         tool_input = data.get('tool_input', {})

@@ -4,13 +4,14 @@ Role Enforcer for Tool Usage
 Enforces role-based permissions for tool usage based on active agent
 """
 
-import yaml
-import json
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
 import fnmatch
+import json
 import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
+
+import yaml
 
 # Add parent directory to import messages
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -42,19 +43,19 @@ class RoleEnforcer:
         self._current_role = None
         self._role_cache_time = None
 
-    def _load_config(self, file_path: Path) -> Dict[str, Any]:
+    def _load_config(self, file_path: Path) -> dict[str, Any]:
         """Load YAML configuration file."""
         if not file_path.exists():
             return {"enabled": False}
 
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 return yaml.safe_load(f) or {"enabled": False}
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
             return {"enabled": False}
 
-    def check_tool_permission(self, tool_name: str, parameters: Dict[str, Any]) -> Tuple[bool, str]:
+    def check_tool_permission(self, tool_name: str, parameters: dict[str, Any]) -> tuple[bool, str]:
         """
         Check if the current role is allowed to use this tool.
 
@@ -117,12 +118,12 @@ class RoleEnforcer:
         # Default to uninitialized if no agent loaded
         return "uninitialized"
 
-    def _get_role_definition(self, role_name: str) -> Optional[Dict[str, Any]]:
+    def _get_role_definition(self, role_name: str) -> dict[str, Any] | None:
         """Get role definition from configuration."""
         roles = self.role_config.get("roles", {})
         return roles.get(role_name)
 
-    def _get_default_role(self) -> Dict[str, Any]:
+    def _get_default_role(self) -> dict[str, Any]:
         """Get default role configuration."""
         default = self.role_config.get("default_role", {})
         if default:
@@ -136,7 +137,7 @@ class RoleEnforcer:
             "warning": "[NO ROLE] Must call mcp__agenthub_http__call_agent first!"
         }
 
-    def _check_path_restrictions(self, role: str, tool_name: str, parameters: Dict[str, Any]) -> Tuple[bool, str]:
+    def _check_path_restrictions(self, role: str, tool_name: str, parameters: dict[str, Any]) -> tuple[bool, str]:
         """Check path restrictions for write operations."""
         role_def = self._get_role_definition(role)
         if not role_def:
@@ -228,7 +229,7 @@ class RoleEnforcer:
             # Read existing log
             if log_path.exists():
                 try:
-                    with open(log_path, 'r') as f:
+                    with open(log_path) as f:
                         log_data = json.load(f)
                 except:
                     log_data = []
@@ -249,7 +250,7 @@ class RoleEnforcer:
             except:
                 pass  # Don't fail on log write errors
 
-    def get_role_info(self, role: str = None) -> Dict[str, Any]:
+    def get_role_info(self, role: str = None) -> dict[str, Any]:
         """Get information about a role's permissions."""
         if not role:
             role = self._get_current_role()
@@ -292,8 +293,8 @@ def get_role_enforcer(session_id: str = None) -> RoleEnforcer:
     return _enforcer_instance
 
 
-def check_tool_permission(tool_name: str, parameters: Dict[str, Any],
-                         session_id: str = None) -> Tuple[bool, str]:
+def check_tool_permission(tool_name: str, parameters: dict[str, Any],
+                         session_id: str = None) -> tuple[bool, str]:
     """Convenience function to check tool permission."""
     enforcer = get_role_enforcer(session_id)
     return enforcer.check_tool_permission(tool_name, parameters)

@@ -9,24 +9,24 @@ Task ID: de7621a4-df75-4d03-a967-8fb743b455f1 (Phase 2)
 Architecture Reference: Real-Time Context Injection System
 """
 
-import os
-import json
-import time
 import asyncio
+import json
 import logging
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Optional, Dict, Any, List, Tuple
+import os
+import time
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 # Import MCP client and cache manager
 try:
-    from .mcp_client import OptimizedMCPClient
     from .cache_manager import SessionContextCache
+    from .mcp_client import OptimizedMCPClient
 except ImportError:
     # Fall back to absolute imports when run as script
-    from mcp_client import OptimizedMCPClient
     from cache_manager import SessionContextCache
+    from mcp_client import OptimizedMCPClient
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ class ContextRelevanceDetector:
             }
         }
     
-    def is_context_relevant(self, tool_name: str, tool_input: Dict[str, Any]) -> Tuple[bool, str, Dict]:
+    def is_context_relevant(self, tool_name: str, tool_input: dict[str, Any]) -> tuple[bool, str, dict]:
         """
         Determine if a tool call requires context injection.
         
@@ -171,7 +171,7 @@ class ContextRelevanceDetector:
         
         return False, 'none', {}
     
-    def _get_mcp_context_requirements(self, tool_name: str, action: str, tool_input: Dict) -> Dict:
+    def _get_mcp_context_requirements(self, tool_name: str, action: str, tool_input: dict) -> dict:
         """Get context requirements for MCP operations."""
         requirements = {
             'type': 'mcp_operation',
@@ -195,7 +195,7 @@ class ContextRelevanceDetector:
         
         return requirements
     
-    def _get_file_context_requirements(self, file_path: str, tool_input: Dict) -> Dict:
+    def _get_file_context_requirements(self, file_path: str, tool_input: dict) -> dict:
         """Get context requirements for file operations."""
         return {
             'type': 'file_operation',
@@ -204,7 +204,7 @@ class ContextRelevanceDetector:
             'operation_type': 'write' if 'content' in tool_input else 'edit'
         }
     
-    def _get_git_context_requirements(self, command: str) -> Dict:
+    def _get_git_context_requirements(self, command: str) -> dict:
         """Get context requirements for git operations."""
         return {
             'type': 'git_operation',
@@ -213,7 +213,7 @@ class ContextRelevanceDetector:
             'needs_branch_info': 'branch' in command
         }
     
-    def _get_search_context_requirements(self, pattern: str, tool_input: Dict) -> Dict:
+    def _get_search_context_requirements(self, pattern: str, tool_input: dict) -> dict:
         """Get context requirements for search operations."""
         return {
             'type': 'search_operation',
@@ -231,7 +231,7 @@ class MCPContextQuery:
         self.mcp_client = OptimizedMCPClient()
         self.cache = SessionContextCache()
     
-    async def query_context(self, context_requirements: Dict) -> Optional[Dict]:
+    async def query_context(self, context_requirements: dict) -> dict | None:
         """
         Query MCP for relevant context based on requirements.
         
@@ -277,7 +277,7 @@ class MCPContextQuery:
             logger.error(f"MCP context query failed: {e}")
             return None
     
-    async def _query_mcp_operation_context(self, requirements: Dict) -> Optional[Dict]:
+    async def _query_mcp_operation_context(self, requirements: dict) -> dict | None:
         """Query context for MCP operations."""
         tool_name = requirements['tool_name']
         action = requirements['action']
@@ -314,7 +314,7 @@ class MCPContextQuery:
         
         return context_data
     
-    async def _query_file_context(self, requirements: Dict) -> Optional[Dict]:
+    async def _query_file_context(self, requirements: dict) -> dict | None:
         """Query context for file operations."""
         file_path = requirements['file_path']
         
@@ -342,7 +342,7 @@ class MCPContextQuery:
         
         return context_data
     
-    async def _query_git_context(self, requirements: Dict) -> Optional[Dict]:
+    async def _query_git_context(self, requirements: dict) -> dict | None:
         """Query context for git operations."""
         command = requirements['command']
         
@@ -364,7 +364,7 @@ class MCPContextQuery:
         
         return context_data
     
-    async def _query_search_context(self, requirements: Dict) -> Optional[Dict]:
+    async def _query_search_context(self, requirements: dict) -> dict | None:
         """Query context for search operations."""
         pattern = requirements['pattern']
         
@@ -384,7 +384,7 @@ class MCPContextQuery:
         
         return context_data
     
-    async def _get_task_context(self, task_id: str) -> Optional[Dict]:
+    async def _get_task_context(self, task_id: str) -> dict | None:
         """Get task context from MCP."""
         # Skip MCP requests in test mode
         if self.config.test_mode:
@@ -411,7 +411,7 @@ class MCPContextQuery:
         
         return None
     
-    async def _get_branch_context(self, git_branch_id: str) -> Optional[Dict]:
+    async def _get_branch_context(self, git_branch_id: str) -> dict | None:
         """Get git branch context from MCP."""
         # Skip MCP requests in test mode
         if self.config.test_mode:
@@ -431,7 +431,7 @@ class MCPContextQuery:
         
         return None
     
-    async def _get_current_branch_info(self) -> Optional[Dict]:
+    async def _get_current_branch_info(self) -> dict | None:
         """Get current git branch information."""
         # This would integrate with git commands or existing git utilities
         return {
@@ -440,7 +440,7 @@ class MCPContextQuery:
             'cached': True
         }
     
-    async def _get_recent_tasks(self, limit: int = 5) -> Optional[List[Dict]]:
+    async def _get_recent_tasks(self, limit: int = 5) -> list[dict] | None:
         """Get recent tasks from MCP."""
         # Skip MCP requests in test mode
         if self.config.test_mode:
@@ -467,7 +467,7 @@ class MCPContextQuery:
         
         return None
     
-    async def _get_project_context(self) -> Optional[Dict]:
+    async def _get_project_context(self) -> dict | None:
         """Get current project context from MCP."""
         # Skip MCP requests in test mode
         if self.config.test_mode:
@@ -492,7 +492,7 @@ class MCPContextQuery:
         
         return None
     
-    async def _get_file_related_tasks(self, file_path: str) -> Optional[List[Dict]]:
+    async def _get_file_related_tasks(self, file_path: str) -> list[dict] | None:
         """Get tasks related to a specific file."""
         # Search for tasks mentioning this file
         try:
@@ -517,7 +517,7 @@ class MCPContextQuery:
         
         return None
     
-    async def _get_pattern_related_tasks(self, pattern: str) -> Optional[List[Dict]]:
+    async def _get_pattern_related_tasks(self, pattern: str) -> list[dict] | None:
         """Get tasks related to search pattern."""
         try:
             result = self.mcp_client.make_request("/mcp/manage_task", {
@@ -533,7 +533,7 @@ class MCPContextQuery:
         
         return None
     
-    def _get_documentation_path(self, file_path: str) -> Optional[Path]:
+    def _get_documentation_path(self, file_path: str) -> Path | None:
         """Get documentation path for a file."""
         try:
             from env_loader import get_project_root
@@ -548,7 +548,7 @@ class MCPContextQuery:
         except Exception:
             return None
     
-    def _create_cache_key(self, context_requirements: Dict) -> str:
+    def _create_cache_key(self, context_requirements: dict) -> str:
         """Create a cache key from context requirements."""
         # Sort dict keys for consistent cache keys
         sorted_reqs = json.dumps(context_requirements, sort_keys=True)
@@ -559,12 +559,12 @@ class MCPContextQuery:
 class ContextInjector:
     """Main context injection manager for pre-tool hooks."""
     
-    def __init__(self, config: Optional[ContextInjectionConfig] = None):
+    def __init__(self, config: ContextInjectionConfig | None = None):
         self.config = config or ContextInjectionConfig()
         self.detector = ContextRelevanceDetector()
         self.query_engine = MCPContextQuery(self.config)
         
-    async def inject_context(self, tool_name: str, tool_input: Dict[str, Any]) -> Optional[str]:
+    async def inject_context(self, tool_name: str, tool_input: dict[str, Any]) -> str | None:
         """
         Main entry point for context injection.
         
@@ -610,7 +610,7 @@ class ContextInjector:
             logger.error(f"Context injection failed after {execution_time:.2f}ms: {e}")
             return None
     
-    def _format_context_injection(self, context_data: Dict, priority: str) -> str:
+    def _format_context_injection(self, context_data: dict, priority: str) -> str:
         """Format context data for injection into system reminder."""
         lines = ["<context-injection>"]
         lines.append(f"Priority: {priority}")
@@ -680,13 +680,13 @@ class ContextInjector:
 
 
 # Factory function for easy usage
-def create_context_injector(config: Optional[ContextInjectionConfig] = None) -> ContextInjector:
+def create_context_injector(config: ContextInjectionConfig | None = None) -> ContextInjector:
     """Create a context injector instance with optional configuration."""
     return ContextInjector(config)
 
 
 # Synchronous wrapper for use in existing hook infrastructure
-def inject_context_sync(tool_name: str, tool_input: Dict[str, Any]) -> Optional[str]:
+def inject_context_sync(tool_name: str, tool_input: dict[str, Any]) -> str | None:
     """
     Synchronous wrapper for context injection.
     

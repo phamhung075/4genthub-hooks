@@ -14,19 +14,19 @@ Features:
 - Git repository type detection (regular vs submodule)
 """
 
-import sys
 import os
 import platform
-import subprocess
 import shutil
+import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class EnvironmentDetector:
     """Comprehensive environment detection for Claude Code hooks."""
 
-    def __init__(self, project_root: Optional[Path] = None):
+    def __init__(self, project_root: Path | None = None):
         """
         Initialize environment detector.
 
@@ -36,7 +36,7 @@ class EnvironmentDetector:
         self.project_root = project_root or self._find_project_root()
         self._cache = {}
 
-    def get_environment_info(self) -> Dict[str, Any]:
+    def get_environment_info(self) -> dict[str, Any]:
         """
         Get comprehensive environment information.
 
@@ -53,7 +53,7 @@ class EnvironmentDetector:
             'claude_structure': self.get_claude_structure_info()
         }
 
-    def get_platform_info(self) -> Dict[str, str]:
+    def get_platform_info(self) -> dict[str, str]:
         """Get operating system and platform information."""
         if 'platform' in self._cache:
             return self._cache['platform']
@@ -76,7 +76,7 @@ class EnvironmentDetector:
         # Detect Windows Subsystem for Linux (WSL)
         if info['is_linux']:
             try:
-                with open('/proc/version', 'r') as f:
+                with open('/proc/version') as f:
                     version_info = f.read().lower()
                     info['is_wsl'] = 'microsoft' in version_info or 'wsl' in version_info
             except (FileNotFoundError, PermissionError):
@@ -87,7 +87,7 @@ class EnvironmentDetector:
         self._cache['platform'] = info
         return info
 
-    def get_python_info(self) -> Dict[str, Any]:
+    def get_python_info(self) -> dict[str, Any]:
         """Get Python executable and version information."""
         if 'python' in self._cache:
             return self._cache['python']
@@ -113,7 +113,7 @@ class EnvironmentDetector:
         self._cache['python'] = info
         return info
 
-    def get_virtual_env_info(self) -> Dict[str, Any]:
+    def get_virtual_env_info(self) -> dict[str, Any]:
         """Detect virtual environment type and details."""
         if 'virtual_env' in self._cache:
             return self._cache['virtual_env']
@@ -159,7 +159,7 @@ class EnvironmentDetector:
         self._cache['virtual_env'] = info
         return info
 
-    def get_git_info(self) -> Dict[str, Any]:
+    def get_git_info(self) -> dict[str, Any]:
         """Get Git repository information."""
         if 'git' in self._cache:
             return self._cache['git']
@@ -227,7 +227,7 @@ class EnvironmentDetector:
         self._cache['git'] = info
         return info
 
-    def get_project_info(self) -> Dict[str, Any]:
+    def get_project_info(self) -> dict[str, Any]:
         """Get project structure and configuration information."""
         if 'project' in self._cache:
             return self._cache['project']
@@ -281,7 +281,7 @@ class EnvironmentDetector:
         self._cache['project'] = info
         return info
 
-    def get_dependency_info(self) -> Dict[str, Any]:
+    def get_dependency_info(self) -> dict[str, Any]:
         """Check for required dependencies and tools."""
         if 'dependencies' in self._cache:
             return self._cache['dependencies']
@@ -310,7 +310,7 @@ class EnvironmentDetector:
         self._cache['dependencies'] = info
         return info
 
-    def get_claude_structure_info(self) -> Dict[str, Any]:
+    def get_claude_structure_info(self) -> dict[str, Any]:
         """Get information about Claude directory structure."""
         if 'claude_structure' in self._cache:
             return self._cache['claude_structure']
@@ -360,7 +360,7 @@ class EnvironmentDetector:
         self._cache['claude_structure'] = info
         return info
 
-    def _find_project_root(self) -> Optional[Path]:
+    def _find_project_root(self) -> Path | None:
         """Find the project root directory."""
         # Marker files that indicate project root (ordered by priority)
         markers = [
@@ -403,7 +403,7 @@ class EnvironmentDetector:
 
         return None
 
-    def _find_python_executables(self) -> List[str]:
+    def _find_python_executables(self) -> list[str]:
         """Find all available Python executables."""
         executables = []
         common_names = ['python', 'python3', 'python3.9', 'python3.10', 'python3.11', 'python3.12']
@@ -435,7 +435,7 @@ class EnvironmentDetector:
         # Fallback to current executable
         return sys.executable
 
-    def validate_environment(self) -> Tuple[bool, List[str]]:
+    def validate_environment(self) -> tuple[bool, list[str]]:
         """
         Validate that the environment is suitable for Claude hooks.
 
@@ -499,15 +499,15 @@ class EnvironmentDetector:
 
         # Platform information
         platform = env_info['platform']
-        report.append(f"\n🖥️  Platform Information:")
+        report.append("\n🖥️  Platform Information:")
         report.append(f"   • System: {platform['system']} {platform['release']}")
         report.append(f"   • Architecture: {platform['machine']} ({platform['architecture']})")
         if platform.get('is_wsl'):
-            report.append(f"   • WSL Detected: Yes")
+            report.append("   • WSL Detected: Yes")
 
         # Python information
         python = env_info['python']
-        report.append(f"\n🐍 Python Information:")
+        report.append("\n🐍 Python Information:")
         report.append(f"   • Current Executable: {python['executable']}")
         report.append(f"   • Version: {python['version_info']['major']}.{python['version_info']['minor']}.{python['version_info']['micro']}")
         report.append(f"   • Available Executables: {', '.join(python['available_executables'])}")
@@ -515,16 +515,16 @@ class EnvironmentDetector:
         # Virtual environment
         venv = env_info['virtual_env']
         if venv['is_virtual_env']:
-            report.append(f"\n🔒 Virtual Environment:")
+            report.append("\n🔒 Virtual Environment:")
             report.append(f"   • Type: {venv['type']}")
             report.append(f"   • Name: {venv['name']}")
             report.append(f"   • Path: {venv['path']}")
         else:
-            report.append(f"\n🔒 Virtual Environment: Not detected")
+            report.append("\n🔒 Virtual Environment: Not detected")
 
         # Git information
         git = env_info['git']
-        report.append(f"\n📁 Git Repository:")
+        report.append("\n📁 Git Repository:")
         report.append(f"   • Git Available: {'Yes' if git['git_available'] else 'No'}")
         if git['is_git_repo']:
             report.append(f"   • Repository Root: {git['root_path']}")
@@ -533,11 +533,11 @@ class EnvironmentDetector:
             if git['submodules']:
                 report.append(f"   • Submodules: {', '.join(git['submodules'])}")
         else:
-            report.append(f"   • Repository: Not detected")
+            report.append("   • Repository: Not detected")
 
         # Project information
         project = env_info['project']
-        report.append(f"\n📦 Project Information:")
+        report.append("\n📦 Project Information:")
         report.append(f"   • Root Path: {project['root_path']}")
         report.append(f"   • Project Type: {project['project_type']}")
         config_files = [k for k, v in project.items() if k.startswith('has_') and v]
@@ -546,7 +546,7 @@ class EnvironmentDetector:
 
         # Claude structure
         claude = env_info['claude_structure']
-        report.append(f"\n🤖 Claude Structure:")
+        report.append("\n🤖 Claude Structure:")
         report.append(f"   • Complete Installation: {'Yes' if claude['is_complete_installation'] else 'No'}")
         report.append(f"   • Settings Configured: {'Yes' if claude['settings_json_exists'] else 'No'}")
 
@@ -561,19 +561,19 @@ class EnvironmentDetector:
 
 
 # Convenience functions for quick access
-def detect_environment(project_root: Optional[Path] = None) -> Dict[str, Any]:
+def detect_environment(project_root: Path | None = None) -> dict[str, Any]:
     """Quick function to get environment information."""
     detector = EnvironmentDetector(project_root)
     return detector.get_environment_info()
 
 
-def validate_environment(project_root: Optional[Path] = None) -> Tuple[bool, List[str]]:
+def validate_environment(project_root: Path | None = None) -> tuple[bool, list[str]]:
     """Quick function to validate environment."""
     detector = EnvironmentDetector(project_root)
     return detector.validate_environment()
 
 
-def generate_environment_report(project_root: Optional[Path] = None) -> str:
+def generate_environment_report(project_root: Path | None = None) -> str:
     """Quick function to generate environment report."""
     detector = EnvironmentDetector(project_root)
     return detector.generate_environment_report()

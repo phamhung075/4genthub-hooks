@@ -31,7 +31,7 @@ Usage in hooks:
 import os
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 class PathResolver:
@@ -69,7 +69,7 @@ class PathResolver:
         if self._debug:
             print(f"[PATH_RESOLVER_DEBUG] {message}", file=sys.stderr)
 
-    def _find_project_root(self) -> Optional[Path]:
+    def _find_project_root(self) -> Path | None:
         """
         Find the project root by looking for marker files.
 
@@ -135,7 +135,7 @@ class PathResolver:
         self._log_debug("Project root not found")
         return None
 
-    def get_project_root(self) -> Optional[Path]:
+    def get_project_root(self) -> Path | None:
         """
         Get the project root directory.
 
@@ -144,7 +144,7 @@ class PathResolver:
         """
         return self._project_root
 
-    def get_hooks_dir(self) -> Optional[Path]:
+    def get_hooks_dir(self) -> Path | None:
         """
         Get the .claude/hooks directory.
 
@@ -155,7 +155,7 @@ class PathResolver:
             return None
         return self._project_root / '.claude' / 'hooks'
 
-    def get_utils_dir(self) -> Optional[Path]:
+    def get_utils_dir(self) -> Path | None:
         """
         Get the .claude/hooks/utils directory.
 
@@ -167,7 +167,7 @@ class PathResolver:
             return None
         return hooks_dir / 'utils'
 
-    def get_claude_dir(self) -> Optional[Path]:
+    def get_claude_dir(self) -> Path | None:
         """
         Get the .claude directory.
 
@@ -178,7 +178,7 @@ class PathResolver:
             return None
         return self._project_root / '.claude'
 
-    def resolve_path(self, relative_path: str) -> Optional[Path]:
+    def resolve_path(self, relative_path: str) -> Path | None:
         """
         Resolve a path relative to project root.
 
@@ -244,7 +244,7 @@ class PathResolver:
                 sys.path.insert(0, path)
                 self._log_debug(f"Added to sys.path: {path}")
 
-    def get_project_info(self) -> Dict[str, Any]:
+    def get_project_info(self) -> dict[str, Any]:
         """
         Get comprehensive project information.
 
@@ -303,7 +303,7 @@ def initialize_hook_environment(debug: bool = False) -> PathResolver:
 
 
 # For backward compatibility and convenience
-def get_project_root() -> Optional[Path]:
+def get_project_root() -> Path | None:
     """Quick function to get project root."""
     resolver = PathResolver()
     return resolver.get_project_root()

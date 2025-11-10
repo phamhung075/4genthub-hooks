@@ -9,11 +9,11 @@
 
 import json
 import os
+import subprocess
 import sys
 import time
-import subprocess
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
 try:
     # Note: Do NOT call load_dotenv() here - env_loader handles loading .env.claude
@@ -29,7 +29,7 @@ _hooks_dir = Path(__file__).resolve().parent.parent
 if str(_hooks_dir) not in sys.path:
     sys.path.insert(0, str(_hooks_dir))
 
-from utils.agent_state_manager import get_current_agent, get_agent_role_from_session
+from utils.agent_state_manager import get_agent_role_from_session, get_current_agent
 from utils.env_loader import get_ai_data_path, get_project_root
 
 
@@ -49,7 +49,7 @@ def check_mcp_authentication():
                     break
 
         if mcp_json_path.exists():
-            with open(mcp_json_path, 'r') as f:
+            with open(mcp_json_path) as f:
                 mcp_config = json.load(f)
 
             # Extract token from agenthub_http configuration
@@ -88,7 +88,7 @@ def get_mcp_connection_status():
                     break
 
         if mcp_json_path.exists():
-            with open(mcp_json_path, 'r') as f:
+            with open(mcp_json_path) as f:
                 mcp_config = json.load(f)
 
             # Extract URL from agenthub_http configuration
@@ -108,7 +108,7 @@ def get_mcp_connection_status():
     try:
         # Check cache first
         if cache_file.exists():
-            with open(cache_file, 'r') as f:
+            with open(cache_file) as f:
                 cache_data = json.load(f)
                 cache_time = datetime.fromisoformat(cache_data.get("timestamp", ""))
 
@@ -233,7 +233,7 @@ def _get_mcp_token():
                     break
 
         if mcp_json_path.exists():
-            with open(mcp_json_path, 'r') as f:
+            with open(mcp_json_path) as f:
                 mcp_config = json.load(f)
 
             # Extract token from agenthub_http configuration
@@ -331,7 +331,7 @@ def log_status_line(input_data, status_line_output, error_message=None):
 
     # Read existing log data or initialize empty list
     if log_file.exists():
-        with open(log_file, "r") as f:
+        with open(log_file) as f:
             try:
                 log_data = json.load(f)
             except (json.JSONDecodeError, ValueError):
@@ -366,7 +366,7 @@ def get_session_data(session_id):
         return None, f"Session file {session_file} does not exist"
 
     try:
-        with open(session_file, "r") as f:
+        with open(session_file) as f:
             session_data = json.load(f)
             return session_data, None
     except Exception as e:

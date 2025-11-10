@@ -5,14 +5,15 @@ This file is now a backwards compatibility wrapper.
 USE utils.config_factory instead for all new code.
 """
 
-from typing import Dict, Any
-import warnings
-
 # Import from new ConfigFactory for backwards compatibility
 import sys
+import warnings
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / 'utils'))
-from config_factory import get_error_message as _get_error_message, get_warning_message as _get_warning_message, get_info_message as _get_info_message
+from config_factory import get_error_message as _get_error_message
+from config_factory import get_info_message as _get_info_message
+from config_factory import get_warning_message as _get_warning_message
 
 # Issue deprecation warning
 warnings.warn(

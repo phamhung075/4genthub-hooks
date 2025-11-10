@@ -9,10 +9,9 @@
 import argparse
 import json
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
-from datetime import datetime
 
 try:
     # Note: Do NOT call load_dotenv() here - env_loader handles loading .env.claude
@@ -101,7 +100,7 @@ def main():
 
         # Read existing log data or initialize empty list
         if os.path.exists(log_path):
-            with open(log_path, 'r') as f:
+            with open(log_path) as f:
                 try:
                     log_data = json.load(f)
                 except (json.JSONDecodeError, ValueError):
@@ -123,7 +122,7 @@ def main():
                 # Read .jsonl file and convert to JSON array
                 chat_data = []
                 try:
-                    with open(transcript_path, 'r') as f:
+                    with open(transcript_path) as f:
                         for line in f:
                             line = line.strip()
                             if line:

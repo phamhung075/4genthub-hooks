@@ -15,13 +15,10 @@ Replaces multiple separate hint files with a unified architecture.
 """
 
 import json
-import yaml
-import sys
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, Optional, Any, List, Tuple
-from abc import ABC, abstractmethod
 import re
+from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 # Import configuration factory
 try:
@@ -50,7 +47,7 @@ class HintProvider(ABC):
     """Abstract base class for hint providers."""
 
     @abstractmethod
-    def generate_hints(self, context: Dict[str, Any]) -> List[str]:
+    def generate_hints(self, context: dict[str, Any]) -> list[str]:
         """Generate hints based on provided context."""
         pass
 
@@ -87,7 +84,7 @@ class PostActionHintProvider(HintProvider):
                 'general_reminders': ['Keep documentation updated', 'Test changes thoroughly']
             }
 
-    def generate_hints(self, context: Dict[str, Any]) -> List[str]:
+    def generate_hints(self, context: dict[str, Any]) -> list[str]:
         """Generate post-action hints based on context."""
         hints = []
 
@@ -139,7 +136,7 @@ class PreActionHintProvider(HintProvider):
                 }
             }
 
-    def generate_hints(self, context: Dict[str, Any]) -> List[str]:
+    def generate_hints(self, context: dict[str, Any]) -> list[str]:
         """Generate pre-action hints based on context."""
         hints = []
 
@@ -173,7 +170,7 @@ class PatternAnalysisHintProvider(HintProvider):
             'testing_operations': r'(test|pytest|coverage)'
         }
 
-    def generate_hints(self, context: Dict[str, Any]) -> List[str]:
+    def generate_hints(self, context: dict[str, Any]) -> list[str]:
         """Generate hints based on pattern analysis."""
         hints = []
 
@@ -234,7 +231,7 @@ class HintBridge:
         except Exception:
             pass  # Fail silently to not disrupt workflow
 
-    def retrieve_hints(self, category: Optional[str] = None) -> List[str]:
+    def retrieve_hints(self, category: str | None = None) -> list[str]:
         """Retrieve stored hints."""
         try:
             hints = self.load_stored_hints()
@@ -259,13 +256,13 @@ class HintBridge:
         except Exception:
             return []
 
-    def load_stored_hints(self) -> List[Dict]:
+    def load_stored_hints(self) -> list[dict]:
         """Load hints from storage."""
         if not self.hint_storage_file.exists():
             return []
 
         try:
-            with open(self.hint_storage_file, 'r') as f:
+            with open(self.hint_storage_file) as f:
                 return json.load(f)
         except Exception:
             return []
@@ -282,7 +279,7 @@ class UnifiedHintSystem:
         ]
         self.hint_bridge = HintBridge()
 
-    def generate_post_action_hints(self, tool_name: str, tool_input: Dict, tool_result: Any = None) -> List[str]:
+    def generate_post_action_hints(self, tool_name: str, tool_input: dict, tool_result: Any = None) -> list[str]:
         """Generate hints after a tool action."""
         context = {
             'tool_name': tool_name,
@@ -310,7 +307,7 @@ class UnifiedHintSystem:
 
         return self._deduplicate_hints(all_hints)
 
-    def generate_pre_action_hints(self, tool_name: str, tool_input: Dict) -> List[str]:
+    def generate_pre_action_hints(self, tool_name: str, tool_input: dict) -> list[str]:
         """Generate hints before a tool action."""
         context = {
             'tool_name': tool_name,
@@ -342,13 +339,13 @@ class UnifiedHintSystem:
                 pass
         return 'unknown'
 
-    def _get_recent_tool_usage(self) -> List[str]:
+    def _get_recent_tool_usage(self) -> list[str]:
         """Get recent tool usage for pattern analysis."""
         # This would typically come from a tool usage tracker
         # For now, return empty list
         return []
 
-    def _deduplicate_hints(self, hints: List[str]) -> List[str]:
+    def _deduplicate_hints(self, hints: list[str]) -> list[str]:
         """Remove duplicate hints while preserving order."""
         seen = set()
         deduplicated = []
@@ -379,12 +376,12 @@ def get_hint_system() -> UnifiedHintSystem:
 
 
 # Convenience functions for backward compatibility
-def generate_post_action_hints(tool_name: str, tool_input: Dict, tool_result: Any = None) -> List[str]:
+def generate_post_action_hints(tool_name: str, tool_input: dict, tool_result: Any = None) -> list[str]:
     """Generate post-action hints (backward compatibility)."""
     return get_hint_system().generate_post_action_hints(tool_name, tool_input, tool_result)
 
 
-def generate_pre_action_hints(tool_name: str, tool_input: Dict) -> List[str]:
+def generate_pre_action_hints(tool_name: str, tool_input: dict) -> list[str]:
     """Generate pre-action hints (backward compatibility)."""
     return get_hint_system().generate_pre_action_hints(tool_name, tool_input)
 

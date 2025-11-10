@@ -28,12 +28,10 @@ This installer will:
 6. Provide next steps and troubleshooting
 """
 
-import sys
-import os
 import subprocess
-import shutil
+import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Optional
 
 # Ensure we can import our utilities
 script_dir = Path(__file__).parent
@@ -47,8 +45,12 @@ if utils_dir.exists():
     sys.path.insert(0, str(utils_dir))
 
 try:
+    from dependency_manager import (
+        DependencyManager,
+        generate_dependency_report,
+        setup_default_fallbacks,
+    )
     from environment_detector import EnvironmentDetector, generate_environment_report
-    from dependency_manager import DependencyManager, setup_default_fallbacks, generate_dependency_report
     UTILS_AVAILABLE = True
 except ImportError:
     print("⚠️  Warning: Hook utilities not found. Using basic installation mode.")
@@ -158,7 +160,7 @@ class ClaudeHooksInstaller:
                 if env_info['git']['is_git_repo']:
                     print(f"   • Git: {env_info['git']['current_branch']}")
                     if env_info['git']['is_submodule']:
-                        print(f"   • .claude is a git submodule")
+                        print("   • .claude is a git submodule")
 
         return True
 
@@ -192,7 +194,7 @@ class ClaudeHooksInstaller:
                 print(f"✅ Found: {file_path}")
 
         if missing_files:
-            print(f"\n❌ Missing required files:")
+            print("\n❌ Missing required files:")
             for file_path in missing_files:
                 print(f"   • {file_path}")
             print("\nThis appears to be an incomplete Claude hooks installation.")
@@ -338,7 +340,7 @@ class ClaudeHooksInstaller:
         if settings_file.exists():
             try:
                 import json
-                with open(settings_file, 'r') as f:
+                with open(settings_file) as f:
                     settings = json.load(f)
 
                 # Validate structure
@@ -472,7 +474,7 @@ class ClaudeHooksInstaller:
             print("=" * 50)
             print(self.env_detector.generate_environment_report())
 
-    def _find_project_root(self) -> Optional[Path]:
+    def _find_project_root(self) -> Path | None:
         """Find the project root directory."""
         # Marker files that indicate project root (ordered by priority)
         markers = [

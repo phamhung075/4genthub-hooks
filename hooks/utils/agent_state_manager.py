@@ -86,7 +86,7 @@ class AgentStateManager:
             if not self.state_file.exists():
                 return {}
 
-            with open(self.state_file, 'r') as f:
+            with open(self.state_file) as f:
                 return json.load(f)
         except (json.JSONDecodeError, ValueError, IOError, PermissionError, OSError):
             # Return empty state if file is corrupted, unreadable, or permission denied

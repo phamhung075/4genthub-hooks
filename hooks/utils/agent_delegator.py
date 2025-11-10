@@ -10,9 +10,7 @@ Usage:
     delegate_to_agent("debugger-agent", "Fix this critical bug")
 """
 
-import json
-import sys
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 class AgentDelegator:
@@ -56,7 +54,7 @@ class AgentDelegator:
     def __init__(self):
         self.current_agent = None
     
-    def delegate_to_agent(self, agent_name: str, context: str = "") -> Dict[str, Any]:
+    def delegate_to_agent(self, agent_name: str, context: str = "") -> dict[str, Any]:
         """
         Delegate directly to a specific agent, bypassing Task tool limitations.
         
@@ -86,7 +84,7 @@ class AgentDelegator:
             "note": "This bypasses the Task tool's master-orchestrator routing"
         }
     
-    def get_agent_by_specialization(self, task_type: str) -> Optional[str]:
+    def get_agent_by_specialization(self, task_type: str) -> str | None:
         """
         Get the best agent for a specific task type.
         
@@ -124,13 +122,13 @@ class AgentDelegator:
 
 
 # Convenience functions for direct use
-def delegate_to_agent(agent_name: str, context: str = "") -> Dict[str, Any]:
+def delegate_to_agent(agent_name: str, context: str = "") -> dict[str, Any]:
     """Quick delegation function."""
     delegator = AgentDelegator()
     return delegator.delegate_to_agent(agent_name, context)
 
 
-def get_agent_for_task(task_type: str) -> Optional[str]:
+def get_agent_for_task(task_type: str) -> str | None:
     """Get best agent for task type."""
     delegator = AgentDelegator()
     return delegator.get_agent_by_specialization(task_type)

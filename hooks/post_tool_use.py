@@ -22,10 +22,10 @@ Refactored with:
 
 import json
 import sys
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, Optional, List
 from abc import ABC, abstractmethod
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -49,7 +49,7 @@ class Component(ABC):
     """Base component interface."""
 
     @abstractmethod
-    def process(self, tool_name: str, tool_input: Dict, tool_result: Any) -> Optional[Any]:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
         """Process the tool execution data."""
         pass
 
@@ -58,7 +58,7 @@ class Logger(ABC):
     """Abstract logger interface."""
 
     @abstractmethod
-    def log(self, level: str, message: str, data: Optional[Dict] = None):
+    def log(self, level: str, message: str, data: dict | None = None):
         """Log a message with optional data."""
         pass
 
@@ -76,7 +76,7 @@ class FileLogger(Logger):
         self.log_path = log_dir / f"{log_name}.json"
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
-    def log(self, level: str, message: str, data: Optional[Dict] = None):
+    def log(self, level: str, message: str, data: dict | None = None):
         """Log to JSON file."""
         entry = {
             'timestamp': datetime.now().isoformat(),
@@ -89,7 +89,7 @@ class FileLogger(Logger):
         log_data = []
         if self.log_path.exists():
             try:
-                with open(self.log_path, 'r') as f:
+                with open(self.log_path) as f:
                     log_data = json.load(f)
             except:
                 pass
@@ -111,7 +111,7 @@ class DocumentationUpdater(Component):
     def __init__(self, ai_docs_path: Path):
         self.ai_docs_path = ai_docs_path
 
-    def process(self, tool_name: str, tool_input: Dict, tool_result: Any) -> Optional[Any]:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
         """Update documentation index if needed."""
         modified_file = self._get_modified_file(tool_name, tool_input)
 
@@ -126,7 +126,7 @@ class DocumentationUpdater(Component):
 
         return None
 
-    def _get_modified_file(self, tool_name: str, tool_input: Dict) -> Optional[str]:
+    def _get_modified_file(self, tool_name: str, tool_input: dict) -> str | None:
         """Extract the file path that was modified."""
         if tool_name in ['Write', 'Edit', 'MultiEdit']:
             return tool_input.get('file_path')
@@ -148,14 +148,15 @@ class HintGenerator(Component):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, tool_name: str, tool_input: Dict, tool_result: Any) -> Optional[Any]:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
         """Generate hints based on tool execution."""
         if not tool_name.startswith('mcp__agenthub_http'):
             return None
 
         try:
             # Import hint generator dynamically
-            from utils.unified_hint_system import generate_post_action_hints, store_hint_for_later as store_hint
+            from utils.unified_hint_system import generate_post_action_hints
+            from utils.unified_hint_system import store_hint_for_later as store_hint
 
             hints = generate_post_action_hints(tool_name, tool_input, tool_result)
 
@@ -183,7 +184,7 @@ class AgentStateTracker(Component):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, tool_name: str, tool_input: Dict, tool_result: Any) -> Optional[Any]:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
         """Update agent state if call_agent was used."""
         if tool_name != 'mcp__agenthub_http__call_agent':
             return None
@@ -215,7 +216,7 @@ class ContextSynchronizer(Component):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, tool_name: str, tool_input: Dict, tool_result: Any) -> Optional[Any]:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
         """Synchronize context if needed."""
         try:
             # Import context updater dynamically
@@ -284,14 +285,14 @@ class PostToolUseHook:
         self.logger = self.factory.create_logger(self.log_dir)
 
         # Initialize components
-        self.components: List[Component] = [
+        self.components: list[Component] = [
             self.factory.create_documentation_updater(self.ai_docs_path),
             self.factory.create_hint_generator(self.logger),
             self.factory.create_agent_tracker(self.logger),
             self.factory.create_context_synchronizer(self.logger)
         ]
 
-    def execute(self, data: Dict[str, Any]) -> int:
+    def execute(self, data: dict[str, Any]) -> int:
         """Execute the post-tool use hook."""
         tool_name = data.get('tool_name', '')
         tool_input = data.get('tool_input', {})

@@ -9,7 +9,7 @@ similar to how session-start-hook is displayed.
 import json
 import sys
 from datetime import datetime
-from typing import Optional
+
 
 def format_for_claude_display(hints: str, tool_name: str = None, action: str = None) -> str:
     """

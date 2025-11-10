@@ -21,14 +21,14 @@ Refactored with:
 - Centralized configuration
 """
 
-import json
-import sys
 import argparse
+import json
 import subprocess
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, Optional, List, Tuple
+import sys
 from abc import ABC, abstractmethod
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -42,7 +42,7 @@ class Validator(ABC):
     """Base validator interface."""
 
     @abstractmethod
-    def validate(self, prompt: str, session_data: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, prompt: str, session_data: dict) -> tuple[bool, str | None]:
         """
         Validate the prompt.
 
@@ -56,7 +56,7 @@ class Processor(ABC):
     """Base processor interface."""
 
     @abstractmethod
-    def process(self, prompt: str, session_data: Dict) -> Optional[str]:
+    def process(self, prompt: str, session_data: dict) -> str | None:
         """
         Process the prompt and return any context.
 
@@ -70,12 +70,12 @@ class SessionManager(ABC):
     """Base session manager interface."""
 
     @abstractmethod
-    def load_session(self, session_id: str) -> Dict[str, Any]:
+    def load_session(self, session_id: str) -> dict[str, Any]:
         """Load session data."""
         pass
 
     @abstractmethod
-    def save_session(self, session_id: str, session_data: Dict):
+    def save_session(self, session_id: str, session_data: dict):
         """Save session data."""
         pass
 
@@ -84,7 +84,7 @@ class Logger(ABC):
     """Abstract logger interface."""
 
     @abstractmethod
-    def log(self, level: str, message: str, data: Optional[Dict] = None):
+    def log(self, level: str, message: str, data: dict | None = None):
         """Log a message with optional data."""
         pass
 
@@ -102,7 +102,7 @@ class FileLogger(Logger):
         self.log_path = log_dir / f"{log_name}.json"
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
-    def log(self, level: str, message: str, data: Optional[Dict] = None):
+    def log(self, level: str, message: str, data: dict | None = None):
         """Log to JSON file."""
         entry = {
             'timestamp': datetime.now().isoformat(),
@@ -115,7 +115,7 @@ class FileLogger(Logger):
         log_data = []
         if self.log_path.exists():
             try:
-                with open(self.log_path, 'r') as f:
+                with open(self.log_path) as f:
                     log_data = json.load(f)
             except:
                 log_data = []
@@ -138,20 +138,20 @@ class JSONSessionManager(SessionManager):
         self.sessions_dir = sessions_dir
         self.sessions_dir.mkdir(parents=True, exist_ok=True)
 
-    def load_session(self, session_id: str) -> Dict[str, Any]:
+    def load_session(self, session_id: str) -> dict[str, Any]:
         """Load session data from JSON file."""
         session_file = self.sessions_dir / f"{session_id}.json"
 
         if session_file.exists():
             try:
-                with open(session_file, 'r') as f:
+                with open(session_file) as f:
                     return json.load(f)
             except (json.JSONDecodeError, ValueError):
                 pass
 
         return {"session_id": session_id, "prompts": []}
 
-    def save_session(self, session_id: str, session_data: Dict):
+    def save_session(self, session_id: str, session_data: dict):
         """Save session data to JSON file."""
         session_file = self.sessions_dir / f"{session_id}.json"
         try:
@@ -173,7 +173,7 @@ class SecurityValidator(Validator):
             # Add more patterns as needed
         ]
 
-    def validate(self, prompt: str, session_data: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, prompt: str, session_data: dict) -> tuple[bool, str | None]:
         """Validate prompt for security violations."""
         prompt_lower = prompt.lower()
 
@@ -187,7 +187,7 @@ class SecurityValidator(Validator):
 class ContentValidator(Validator):
     """Validates prompts for content policy violations."""
 
-    def validate(self, prompt: str, session_data: Dict) -> Tuple[bool, Optional[str]]:
+    def validate(self, prompt: str, session_data: dict) -> tuple[bool, str | None]:
         """Validate prompt content."""
         # Add content validation logic here
         # For now, just check length
@@ -204,7 +204,7 @@ class PromptLogger(Processor):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, prompt: str, session_data: Dict) -> Optional[str]:
+    def process(self, prompt: str, session_data: dict) -> str | None:
         """Log the prompt submission."""
         session_id = session_data.get('session_id', 'unknown')
 
@@ -225,7 +225,7 @@ class SessionTracker(Processor):
         self.logger = logger
         self.store_last_prompt = store_last_prompt
 
-    def process(self, prompt: str, session_data: Dict) -> Optional[str]:
+    def process(self, prompt: str, session_data: dict) -> str | None:
         """Update session tracking data."""
         try:
             session_id = session_data.get('session_id', 'unknown')
@@ -263,7 +263,7 @@ class AgentNameGenerator(Processor):
         self.logger = logger
         self.enabled = enabled
 
-    def process(self, prompt: str, session_data: Dict) -> Optional[str]:
+    def process(self, prompt: str, session_data: dict) -> str | None:
         """Generate agent name if requested and not present."""
         if not self.enabled:
             return None
@@ -289,7 +289,7 @@ class AgentNameGenerator(Processor):
 
         return None
 
-    def _generate_name(self) -> Optional[str]:
+    def _generate_name(self) -> str | None:
         """Generate an agent name using LLM services."""
         # Try Ollama first (local)
         try:
@@ -334,7 +334,7 @@ class ContextInjector(Processor):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, prompt: str, session_data: Dict) -> Optional[str]:
+    def process(self, prompt: str, session_data: dict) -> str | None:
         """Add contextual information to the prompt."""
         try:
             context_parts = []
@@ -377,7 +377,7 @@ class ComponentFactory:
         return JSONSessionManager(sessions_dir)
 
     @staticmethod
-    def create_validators() -> List[Validator]:
+    def create_validators() -> list[Validator]:
         """Create all validators."""
         return [
             SecurityValidator(),
@@ -386,7 +386,7 @@ class ComponentFactory:
 
     @staticmethod
     def create_processors(session_manager: SessionManager, logger: Logger,
-                         enable_agent_name: bool = False, store_last_prompt: bool = False) -> List[Processor]:
+                         enable_agent_name: bool = False, store_last_prompt: bool = False) -> list[Processor]:
         """Create all processors."""
         return [
             PromptLogger(logger),
@@ -425,12 +425,12 @@ class UserPromptSubmitHook:
         self.session_manager = self.factory.create_session_manager(self.sessions_dir)
 
         # Initialize components
-        self.validators: List[Validator] = self.factory.create_validators()
-        self.processors: List[Processor] = self.factory.create_processors(
+        self.validators: list[Validator] = self.factory.create_validators()
+        self.processors: list[Processor] = self.factory.create_processors(
             self.session_manager, self.logger, self.enable_agent_name, self.store_last_prompt
         )
 
-    def execute(self, input_data: Dict[str, Any]) -> int:
+    def execute(self, input_data: dict[str, Any]) -> int:
         """Execute the user prompt submit hook."""
         session_id = input_data.get('session_id', 'unknown')
         prompt = input_data.get('prompt', '')

@@ -7,10 +7,8 @@ allowing the master orchestrator to switch to sub-agent mode and back.
 """
 
 import json
-import os
-from pathlib import Path
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 class AgentContextManager:
@@ -21,7 +19,7 @@ class AgentContextManager:
         self.context_file = get_project_root() / ".claude/runtime_agent_context.json"
         self.context_file.parent.mkdir(parents=True, exist_ok=True)
         
-    def set_agent_context(self, agent_name: str, context_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    def set_agent_context(self, agent_name: str, context_data: dict[str, Any] = None) -> dict[str, Any]:
         """
         Set the current agent context for runtime switching.
         
@@ -51,11 +49,11 @@ class AgentContextManager:
         # Return appropriate context instructions
         return self._get_agent_instructions(agent_name)
     
-    def get_current_agent_context(self) -> Optional[Dict[str, Any]]:
+    def get_current_agent_context(self) -> dict[str, Any] | None:
         """Get the current agent context if any."""
         try:
             if self.context_file.exists():
-                with open(self.context_file, 'r') as f:
+                with open(self.context_file) as f:
                     return json.load(f)
         except Exception:
             pass
@@ -69,7 +67,7 @@ class AgentContextManager:
         except Exception:
             pass
     
-    def _get_agent_instructions(self, agent_name: str) -> Dict[str, Any]:
+    def _get_agent_instructions(self, agent_name: str) -> dict[str, Any]:
         """Get specific instructions for an agent."""
         
         # Base instructions for all sub-agents
@@ -88,7 +86,7 @@ class AgentContextManager:
                 "- Complete the specific task assigned to you",
                 "",
                 f"**Agent Role**: {agent_name}",
-                f"**Session Mode**: Runtime-switched sub-agent",
+                "**Session Mode**: Runtime-switched sub-agent",
                 ""
             ]
         }
@@ -158,21 +156,21 @@ class AgentContextManager:
         
         return base_instructions
     
-    def format_context_for_claude(self, agent_context: Dict[str, Any]) -> str:
+    def format_context_for_claude(self, agent_context: dict[str, Any]) -> str:
         """Format agent context for Claude's consumption."""
         instructions = agent_context.get("instructions", [])
         return "\n".join(instructions)
 
 
 # Convenience functions for easy use
-def switch_to_agent(agent_name: str, context_data: Dict[str, Any] = None) -> str:
+def switch_to_agent(agent_name: str, context_data: dict[str, Any] = None) -> str:
     """Switch to a specific agent and return context instructions."""
     manager = AgentContextManager()
     context = manager.set_agent_context(agent_name, context_data)
     return manager.format_context_for_claude(context)
 
 
-def get_current_agent() -> Optional[str]:
+def get_current_agent() -> str | None:
     """Get the currently active agent name."""
     manager = AgentContextManager()
     context = manager.get_current_agent_context()
@@ -186,7 +184,7 @@ def clear_agent_context():
     return "🎯 **RETURNED TO MASTER ORCHESTRATOR MODE**\n\nYou are now back to being the master orchestrator."
 
 
-def get_agent_context_instructions() -> Optional[str]:
+def get_agent_context_instructions() -> str | None:
     """Get current agent context instructions if any."""
     manager = AgentContextManager()
     context = manager.get_current_agent_context()

@@ -18,7 +18,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
 
 class Colors:
@@ -37,12 +37,12 @@ class ClaudeSetup:
     def __init__(self):
         self.claude_dir = Path(__file__).parent.resolve()
         self.project_root = self.claude_dir.parent
-        self.python_path: Optional[str] = None
+        self.python_path: str | None = None
         self.ai_tool_choice: str = ""
         self.token_strategy: str = ""  # 'economic' or 'performance'
         self.use_venv: bool = True  # Use virtual environment by default
-        self.venv_path: Optional[Path] = None
-        self.mcp_api_token: Optional[str] = None  # 4genthub.com API token
+        self.venv_path: Path | None = None
+        self.mcp_api_token: str | None = None  # 4genthub.com API token
 
     def print_header(self):
         """Print welcome header"""
@@ -51,7 +51,7 @@ class ClaudeSetup:
         print(f"{Colors.BOLD}{Colors.BLUE}╚════════════════════════════════════════════╝{Colors.END}\n")
         print(f"Project root: {Colors.YELLOW}{self.project_root}{Colors.END}\n")
 
-    def detect_python_path(self) -> Optional[str]:
+    def detect_python_path(self) -> str | None:
         """
         Auto-detect Python path using multiple strategies.
 
@@ -83,7 +83,7 @@ class ClaudeSetup:
 
         return None
 
-    def _check_command(self, command: str) -> Optional[str]:
+    def _check_command(self, command: str) -> str | None:
         """Execute a shell command and return output, or None if failed"""
         try:
             result = subprocess.run(
@@ -118,18 +118,18 @@ class ClaudeSetup:
         # Manual input
         while True:
             print(f"\n{Colors.YELLOW}Please enter the full path to your Python executable:{Colors.END}")
-            print(f"  Examples:")
-            print(f"    - /usr/bin/python3")
-            print(f"    - /home/user/.pyenv/shims/python3")
-            print(f"    - /usr/local/bin/python")
+            print("  Examples:")
+            print("    - /usr/bin/python3")
+            print("    - /home/user/.pyenv/shims/python3")
+            print("    - /usr/local/bin/python")
 
-            path = input(f"\nPython path: ").strip()
+            path = input("\nPython path: ").strip()
 
             if os.path.isfile(path):
                 return path
             else:
                 print(f"{Colors.RED}✗ File not found: {path}{Colors.END}")
-                print(f"  Please enter a valid path to Python executable.\n")
+                print("  Please enter a valid path to Python executable.\n")
 
     def prompt_ai_tool_choice(self) -> str:
         """
@@ -144,7 +144,7 @@ class ClaudeSetup:
         print(f"  {Colors.BLUE}[3]{Colors.END} Both")
 
         while True:
-            choice = input(f"\nChoice [1-3]: ").strip()
+            choice = input("\nChoice [1-3]: ").strip()
 
             if choice == '1':
                 return 'claude'
@@ -168,7 +168,7 @@ class ClaudeSetup:
         print(f"\n  {Colors.YELLOW}Recommendation:{Colors.END} Use Economic for most projects")
 
         while True:
-            choice = input(f"\nChoice [1-2, default: 1]: ").strip() or '1'
+            choice = input("\nChoice [1-2, default: 1]: ").strip() or '1'
 
             if choice == '1':
                 return 'economic'
@@ -190,7 +190,7 @@ class ClaudeSetup:
         print(f"\n  {Colors.YELLOW}Recommendation:{Colors.END} Use virtual environment for better isolation")
 
         while True:
-            choice = input(f"\nChoice [1-2, default: 1]: ").strip() or '1'
+            choice = input("\nChoice [1-2, default: 1]: ").strip() or '1'
 
             if choice == '1':
                 return True
@@ -199,7 +199,7 @@ class ClaudeSetup:
             else:
                 print(f"{Colors.RED}Invalid choice. Please enter 1 or 2.{Colors.END}")
 
-    def prompt_mcp_api_token(self) -> Optional[str]:
+    def prompt_mcp_api_token(self) -> str | None:
         """
         Ask user for their 4genthub.com API token.
 
@@ -208,22 +208,22 @@ class ClaudeSetup:
         """
         print(f"\n{Colors.BOLD}MCP API Token Configuration:{Colors.END}")
         print(f"  {Colors.BLUE}ℹ{Colors.END}  MCP (Model Context Protocol) enables advanced features like:")
-        print(f"     • Task management and tracking")
-        print(f"     • Agent coordination")
-        print(f"     • Sequential thinking")
-        print(f"     • Enhanced context handling")
+        print("     • Task management and tracking")
+        print("     • Agent coordination")
+        print("     • Sequential thinking")
+        print("     • Enhanced context handling")
         print(f"\n  {Colors.YELLOW}📍 Get your API token:{Colors.END}")
         print(f"     1. Visit: {Colors.GREEN}https://www.4genthub.com/{Colors.END}")
-        print(f"     2. Create an account or log in")
-        print(f"     3. Navigate to Account Settings → API Keys")
-        print(f"     4. Generate a new API token")
-        print(f"     5. Copy and paste it below")
+        print("     2. Create an account or log in")
+        print("     3. Navigate to Account Settings → API Keys")
+        print("     4. Generate a new API token")
+        print("     5. Copy and paste it below")
         print(f"\n  {Colors.BLUE}ℹ{Colors.END}  You can skip this and configure later by editing .mcp.json")
 
         while True:
             print(f"\n{Colors.BOLD}Enter your 4genthub.com API token{Colors.END}")
             print(f"  {Colors.YELLOW}(Press Enter to skip and configure later):{Colors.END}")
-            token = input(f"\nAPI Token: ").strip()
+            token = input("\nAPI Token: ").strip()
 
             if not token:
                 print(f"  {Colors.YELLOW}⊙ Skipped - You'll need to edit .mcp.json manually{Colors.END}")
@@ -232,23 +232,23 @@ class ClaudeSetup:
             # Basic validation - JWT tokens typically start with "eyJ"
             if len(token) < 20:
                 print(f"{Colors.RED}✗ Token seems too short. Please check and try again.{Colors.END}")
-                retry = input(f"  Try again? [Y/n]: ").strip().lower()
+                retry = input("  Try again? [Y/n]: ").strip().lower()
                 if retry in ('n', 'no'):
                     return None
                 continue
 
             # Confirm token
             print(f"\n  Token preview: {Colors.GREEN}{token[:20]}...{token[-10:]}{Colors.END}")
-            confirm = input(f"  Use this token? [Y/n]: ").strip().lower()
+            confirm = input("  Use this token? [Y/n]: ").strip().lower()
 
             if confirm in ('', 'y', 'yes'):
                 return token
             else:
-                retry = input(f"  Enter a different token? [Y/n]: ").strip().lower()
+                retry = input("  Enter a different token? [Y/n]: ").strip().lower()
                 if retry in ('n', 'no'):
                     return None
 
-    def detect_project_structure(self) -> Dict[str, List[str]]:
+    def detect_project_structure(self) -> dict[str, list[str]]:
         """
         Auto-detect project structure to suggest test paths.
 
@@ -295,12 +295,12 @@ class ClaudeSetup:
 
         if venv_path.exists():
             print(f"  ⊙ Virtual environment already exists at: {venv_path}")
-            response = input(f"  Recreate it? [y/N]: ").strip().lower()
+            response = input("  Recreate it? [y/N]: ").strip().lower()
             if response in ('y', 'yes'):
-                print(f"  Removing existing venv...")
+                print("  Removing existing venv...")
                 shutil.rmtree(venv_path)
             else:
-                print(f"  Using existing venv")
+                print("  Using existing venv")
                 return True
 
         try:
@@ -346,9 +346,9 @@ class ClaudeSetup:
         if not self.use_venv:
             print(f"\n{Colors.BOLD}Skipping dependency installation (using system Python)...{Colors.END}")
             print(f"  {Colors.YELLOW}⚠  Required packages (install these):{Colors.END}")
-            print(f"     pip install python-dotenv psutil pyyaml requests")
+            print("     pip install python-dotenv psutil pyyaml requests")
             print(f"  {Colors.BLUE}ℹ  Optional packages (recommended for better experience):{Colors.END}")
-            print(f"     pip install colorama rich GitPython")
+            print("     pip install colorama rich GitPython")
             return True
 
         print(f"\n{Colors.BOLD}Installing hook dependencies...{Colors.END}")
@@ -376,7 +376,7 @@ class ClaudeSetup:
             if pyproject_path.exists():
                 # Use pyproject.toml for installation
                 print(f"  {Colors.BLUE}Using pyproject.toml for dependency management{Colors.END}")
-                print(f"  Installing core dependencies...")
+                print("  Installing core dependencies...")
 
                 # Install directly without editable mode to avoid setup.py conflicts
                 result = subprocess.run(
@@ -394,7 +394,7 @@ class ClaudeSetup:
                 print(f"  ✓ Installed core: {Colors.GREEN}{', '.join(core_dependencies)}{Colors.END}")
 
                 # Install optional dependencies
-                print(f"  Installing optional dependencies...")
+                print("  Installing optional dependencies...")
 
                 result = subprocess.run(
                     [str(pip_path), 'install', '--quiet'] + optional_dependencies,
@@ -462,7 +462,7 @@ class ClaudeSetup:
             return False
 
         # Read template
-        with open(template_path, 'r') as f:
+        with open(template_path) as f:
             template_content = f.read()
 
         # Replace placeholders
@@ -582,14 +582,14 @@ class ClaudeSetup:
         target_path = self.project_root / '.env.claude'
 
         if not source_path.exists():
-            print(f"  ⚠ Source file not found: .env.claude.sample")
+            print("  ⚠ Source file not found: .env.claude.sample")
             print(f"  {Colors.YELLOW}Skipping .env.claude deployment{Colors.END}")
             return
 
         if target_path.exists():
-            response = input(f"  ⊙ .env.claude exists. Overwrite? [y/N]: ").strip().lower()
+            response = input("  ⊙ .env.claude exists. Overwrite? [y/N]: ").strip().lower()
             if response not in ('y', 'yes'):
-                print(f"    Skipped: .env.claude")
+                print("    Skipped: .env.claude")
                 return
 
         shutil.copy(source_path, target_path)
@@ -604,19 +604,19 @@ class ClaudeSetup:
         target_path = self.project_root / '.mcp.json'
 
         if not source_path.exists():
-            print(f"  ⚠ Source file not found: .mcp.json.sample")
+            print("  ⚠ Source file not found: .mcp.json.sample")
             print(f"  {Colors.YELLOW}Skipping .mcp.json deployment{Colors.END}")
             return
 
         if target_path.exists():
-            response = input(f"  ⊙ .mcp.json exists. Overwrite? [y/N]: ").strip().lower()
+            response = input("  ⊙ .mcp.json exists. Overwrite? [y/N]: ").strip().lower()
             if response not in ('y', 'yes'):
-                print(f"    Skipped: .mcp.json")
+                print("    Skipped: .mcp.json")
                 self._ensure_mcp_in_gitignore()
                 return
 
         # Read template content
-        with open(source_path, 'r') as f:
+        with open(source_path) as f:
             mcp_content = f.read()
 
         # Replace API token placeholder if token was provided
@@ -655,11 +655,11 @@ class ClaudeSetup:
 
         # Read existing content or create new file
         if gitignore_path.exists():
-            with open(gitignore_path, 'r') as f:
+            with open(gitignore_path) as f:
                 existing_content = f.read()
         else:
             existing_content = ""
-            print(f"  ✓ Creating .gitignore")
+            print("  ✓ Creating .gitignore")
 
         # Track what we added
         added_entries = []
@@ -690,7 +690,7 @@ class ClaudeSetup:
 
             print(f"  ✓ Updated .gitignore ({', '.join(added_entries)})")
         else:
-            print(f"  ✓ .gitignore already configured")
+            print("  ✓ .gitignore already configured")
 
     def verify_hooks(self) -> bool:
         """
@@ -705,7 +705,7 @@ class ClaudeSetup:
         notification_hook = self.claude_dir / 'hooks' / 'notification.py'
 
         if not notification_hook.exists():
-            print(f"  ⚠ notification.py not found, skipping verification")
+            print("  ⚠ notification.py not found, skipping verification")
             return True
 
         try:
@@ -755,7 +755,7 @@ class ClaudeSetup:
         # Validate settings.json has correct Python path
         settings_path = self.claude_dir / 'settings.json'
         if settings_path.exists():
-            with open(settings_path, 'r') as f:
+            with open(settings_path) as f:
                 settings = json.load(f)
 
             # Check if Python path is in the settings
@@ -784,7 +784,7 @@ class ClaudeSetup:
             ("Config Files", "✓ Created (__claude_hook__allowed_root_files, __claude_hook__valid_test_paths)"),
             ("Rules Files", "✓ Deployed (CLAUDE.md, CLAUDE.local.md)" if self.ai_tool_choice in ('claude', 'both') else "✓ Deployed (AGENTS.md)"),
             (".env.claude", "✓ Deployed"),
-            ("MCP Configuration", f"✓ Token configured in .mcp.json" if self.mcp_api_token else "⚠ Manual token configuration required"),
+            ("MCP Configuration", "✓ Token configured in .mcp.json" if self.mcp_api_token else "⚠ Manual token configuration required"),
             (".gitignore", "✓ Updated (.mcp.json, .claude/settings.json, .env.claude, logs/**)"),
             ("Hooks", "✓ Verified and functional"),
         ]
@@ -804,7 +804,7 @@ class ClaudeSetup:
         print(f"{Colors.BOLD}{Colors.GREEN}╚════════════════════════════════════════════╝{Colors.END}\n")
 
         print(f"{Colors.BOLD}Next steps:{Colors.END}")
-        print(f"  1. Review generated settings.json")
+        print("  1. Review generated settings.json")
 
         if self.use_venv:
             print(f"  2. {Colors.GREEN}✓{Colors.END} Virtual environment created at: .claude/.venv")
@@ -816,24 +816,24 @@ class ClaudeSetup:
             print(f"     {Colors.YELLOW}pip install python-dotenv psutil pyyaml requests{Colors.END}")
             print(f"     {Colors.BLUE}pip install colorama rich GitPython{Colors.END} (optional)")
 
-        print(f"  3. Customize config files if needed:")
-        print(f"     - .claude/hooks/config/__claude_hook__allowed_root_files")
-        print(f"     - .claude/hooks/config/__claude_hook__valid_test_paths")
-        print(f"  4. Review rules files in project root")
+        print("  3. Customize config files if needed:")
+        print("     - .claude/hooks/config/__claude_hook__allowed_root_files")
+        print("     - .claude/hooks/config/__claude_hook__valid_test_paths")
+        print("  4. Review rules files in project root")
 
         if self.mcp_api_token:
             print(f"  5. {Colors.GREEN}✓{Colors.END} MCP API token configured!")
-            print(f"     - Token set for agenthub_http in .mcp.json")
+            print("     - Token set for agenthub_http in .mcp.json")
             print(f"     - {Colors.YELLOW}⚠{Colors.END} Keep .mcp.json secure (already in .gitignore)")
         else:
             print(f"  5. {Colors.YELLOW}[IMPORTANT]{Colors.END} Configure MCP API token:")
             print(f"     - Get token from: {Colors.GREEN}https://www.4genthub.com/{Colors.END}")
-            print(f"     - Edit .mcp.json and replace <YOUR_API_TOKEN_HERE>")
-            print(f"     - Or run setup again to configure it")
+            print("     - Edit .mcp.json and replace <YOUR_API_TOKEN_HERE>")
+            print("     - Or run setup again to configure it")
 
         print(f"  6. {Colors.BLUE}[RECOMMENDED]{Colors.END} Generate project-specific CLAUDE.local.md:")
         print(f"     Run: {Colors.GREEN}/generate-local-rules{Colors.END} or {Colors.GREEN}/init-local{Colors.END}")
-        print(f"  7. Start using Claude Code / Codex!\n")
+        print("  7. Start using Claude Code / Codex!\n")
 
         if self.use_venv:
             print(f"{Colors.BLUE}ℹ  Hook verification: Test manually with:{Colors.END}")
@@ -963,7 +963,7 @@ Examples:
         if not venv_path.exists():
             print(f"{Colors.RED}✗ Virtual environment not found at: {venv_path}{Colors.END}")
             print(f"\n{Colors.YELLOW}Run without --install-deps flag to create venv first:{Colors.END}")
-            print(f"  python .claude/setup.py")
+            print("  python .claude/setup.py")
             return 1
 
         # Set venv path and Python path
@@ -1037,7 +1037,7 @@ Examples:
         else:
             print(f"  ✗ {Colors.RED}Virtual environment not found{Colors.END}")
             print(f"\n{Colors.YELLOW}Run setup to create venv:{Colors.END}")
-            print(f"  python .claude/setup.py")
+            print("  python .claude/setup.py")
             return 1
 
         print()

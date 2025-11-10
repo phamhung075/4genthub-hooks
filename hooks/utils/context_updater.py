@@ -9,20 +9,20 @@ Task ID: de7621a4-df75-4d03-a967-8fb743b455f1 (Phase 2)
 Architecture Reference: Real-Time Context Injection System
 """
 
-import os
+import asyncio
 import json
+import logging
 import re
 import time
-import asyncio
-import logging
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Optional, Dict, Any, List, Tuple
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+from .cache_manager import SessionContextCache
 
 # Import MCP client and cache manager
 from .mcp_client import OptimizedMCPClient
-from .cache_manager import SessionContextCache
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ class OperationClassifier:
             }
         }
     
-    def classify_operation(self, tool_name: str, tool_input: Dict[str, Any], tool_output: Optional[Dict] = None) -> Tuple[str, str, Dict]:
+    def classify_operation(self, tool_name: str, tool_input: dict[str, Any], tool_output: dict | None = None) -> tuple[str, str, dict]:
         """
         Classify tool operation to determine update requirements.
         
@@ -105,7 +105,7 @@ class OperationClassifier:
         
         return 'unknown', 'none', {}
     
-    def _matches_pattern(self, tool_name: str, tool_input: Dict, tool_output: Optional[Dict], pattern: Dict) -> bool:
+    def _matches_pattern(self, tool_name: str, tool_input: dict, tool_output: dict | None, pattern: dict) -> bool:
         """Check if operation matches a specific pattern."""
         
         # Check tool name match
@@ -138,7 +138,7 @@ class OperationClassifier:
         
         return True
     
-    def _get_update_requirements(self, operation_type: str, tool_name: str, tool_input: Dict, tool_output: Optional[Dict]) -> Dict:
+    def _get_update_requirements(self, operation_type: str, tool_name: str, tool_input: dict, tool_output: dict | None) -> dict:
         """Get specific update requirements for operation type."""
         
         base_requirements = {
@@ -198,7 +198,7 @@ class MCPContextUpdater:
         self.mcp_client = OptimizedMCPClient()
         self.cache = SessionContextCache()
     
-    async def update_context(self, update_requirements: Dict) -> bool:
+    async def update_context(self, update_requirements: dict) -> bool:
         """
         Update MCP context based on operation requirements.
         
@@ -227,7 +227,7 @@ class MCPContextUpdater:
             logger.error(f"Failed to update context for {operation_type}: {e}")
             return False
     
-    async def _handle_file_operation_update(self, requirements: Dict) -> bool:
+    async def _handle_file_operation_update(self, requirements: dict) -> bool:
         """Handle context updates for file operations."""
         file_path = requirements.get('file_path', '')
         
@@ -247,7 +247,7 @@ class MCPContextUpdater:
         
         return True
     
-    async def _handle_task_update(self, requirements: Dict) -> bool:
+    async def _handle_task_update(self, requirements: dict) -> bool:
         """Handle context updates for task operations."""
         task_id = requirements.get('task_id', '')
         action = requirements.get('action', '')
@@ -265,7 +265,7 @@ class MCPContextUpdater:
         
         return True
     
-    async def _handle_subtask_update(self, requirements: Dict) -> bool:
+    async def _handle_subtask_update(self, requirements: dict) -> bool:
         """Handle context updates for subtask operations."""
         task_id = requirements.get('task_id', '')
         subtask_id = requirements.get('subtask_id', '')
@@ -283,7 +283,7 @@ class MCPContextUpdater:
         
         return True
     
-    async def _handle_context_update(self, requirements: Dict) -> bool:
+    async def _handle_context_update(self, requirements: dict) -> bool:
         """Handle context updates for direct context operations."""
         context_id = requirements.get('context_id', '')
         level = requirements.get('level', '')
@@ -301,7 +301,7 @@ class MCPContextUpdater:
         
         return True
     
-    async def _handle_git_update(self, requirements: Dict) -> bool:
+    async def _handle_git_update(self, requirements: dict) -> bool:
         """Handle context updates for git operations."""
         git_command = requirements.get('git_command', '')
         
@@ -316,7 +316,7 @@ class MCPContextUpdater:
         
         return True
     
-    async def _handle_documentation_update(self, requirements: Dict) -> bool:
+    async def _handle_documentation_update(self, requirements: dict) -> bool:
         """Handle context updates for documentation changes."""
         file_path = requirements.get('file_path', '')
         
@@ -327,7 +327,7 @@ class MCPContextUpdater:
         
         return True
     
-    async def _handle_task_completion(self, task_id: str, requirements: Dict) -> bool:
+    async def _handle_task_completion(self, task_id: str, requirements: dict) -> bool:
         """Handle special processing when a task is completed."""
         try:
             # Get task details
@@ -353,7 +353,7 @@ class MCPContextUpdater:
         
         return False
     
-    async def _find_tasks_mentioning_file(self, file_path: str) -> List[Dict]:
+    async def _find_tasks_mentioning_file(self, file_path: str) -> list[dict]:
         """Find tasks that mention a specific file."""
         try:
             result = self.mcp_client.make_request("/mcp/manage_task", {
@@ -469,12 +469,12 @@ class MCPContextUpdater:
 class ContextUpdater:
     """Main context updater for post-tool hooks."""
     
-    def __init__(self, config: Optional[ContextUpdateConfig] = None):
+    def __init__(self, config: ContextUpdateConfig | None = None):
         self.config = config or ContextUpdateConfig()
         self.classifier = OperationClassifier()
         self.mcp_updater = MCPContextUpdater(self.config)
         
-    async def update_context(self, tool_name: str, tool_input: Dict[str, Any], tool_output: Optional[Dict] = None) -> bool:
+    async def update_context(self, tool_name: str, tool_input: dict[str, Any], tool_output: dict | None = None) -> bool:
         """
         Main entry point for context updates.
         
@@ -520,7 +520,7 @@ class ContextUpdater:
             logger.error(f"Context update failed after {execution_time:.2f}ms: {e}")
             return False
     
-    def _create_audit_entry(self, tool_name: str, operation_type: str, success: bool, requirements: Dict):
+    def _create_audit_entry(self, tool_name: str, operation_type: str, success: bool, requirements: dict):
         """Create audit trail entry for context updates."""
         try:
             from .env_loader import get_ai_data_path
@@ -537,7 +537,7 @@ class ContextUpdater:
             
             # Read existing audit data
             if audit_log_path.exists():
-                with open(audit_log_path, 'r') as f:
+                with open(audit_log_path) as f:
                     try:
                         audit_data = json.load(f)
                     except (json.JSONDecodeError, ValueError):
@@ -559,13 +559,13 @@ class ContextUpdater:
 
 
 # Factory function for easy usage
-def create_context_updater(config: Optional[ContextUpdateConfig] = None) -> ContextUpdater:
+def create_context_updater(config: ContextUpdateConfig | None = None) -> ContextUpdater:
     """Create a context updater instance with optional configuration."""
     return ContextUpdater(config)
 
 
 # Synchronous wrapper for use in existing hook infrastructure
-def update_context_sync(tool_name: str, tool_input: Dict[str, Any], tool_output: Optional[Dict] = None) -> bool:
+def update_context_sync(tool_name: str, tool_input: dict[str, Any], tool_output: dict | None = None) -> bool:
     """
     Synchronous wrapper for context updates.
     

@@ -7,7 +7,8 @@ Works from any subdirectory within the project.
 import os
 import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
+
 
 class ProjectRootFinder:
     """Utility class to find project root and construct paths."""
@@ -24,7 +25,7 @@ class ProjectRootFinder:
         'requirements.txt'
     ]
 
-    def __init__(self, start_path: Optional[str] = None):
+    def __init__(self, start_path: str | None = None):
         """
         Initialize the finder.
 
@@ -34,7 +35,7 @@ class ProjectRootFinder:
         self.start_path = Path(start_path or os.getcwd()).resolve()
         self._project_root = None
 
-    def find_project_root(self) -> Optional[Path]:
+    def find_project_root(self) -> Path | None:
         """
         Find the project root by looking for marker files.
         Prefers the highest level directory with CLAUDE.md file.
@@ -78,7 +79,7 @@ class ProjectRootFinder:
 
         return None
 
-    def get_absolute_path(self, relative_path: str) -> Optional[Path]:
+    def get_absolute_path(self, relative_path: str) -> Path | None:
         """
         Get absolute path from project root.
 

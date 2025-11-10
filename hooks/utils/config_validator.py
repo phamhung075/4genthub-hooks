@@ -6,7 +6,7 @@ Checks that all required configuration files exist before hook execution.
 
 import sys
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 
 class ConfigurationValidator:
@@ -96,7 +96,7 @@ class ConfigurationValidator:
         # Last fallback
         return project_root
 
-    def validate(self) -> Tuple[bool, List[Dict]]:
+    def validate(self) -> tuple[bool, list[dict]]:
         """
         Validate all required configuration files.
 
@@ -117,7 +117,7 @@ class ConfigurationValidator:
 
         return len(errors) == 0, errors
 
-    def format_error_message(self, errors: List[Dict]) -> str:
+    def format_error_message(self, errors: list[dict]) -> str:
         """
         Format validation errors into a clear error message.
 
@@ -142,7 +142,7 @@ class ConfigurationValidator:
                 f"{i}. {error['description']}",
                 f"   📁 Missing file: {error['file']}",
                 f"   📝 Purpose: {error['purpose']}",
-                f"   ✅ To fix:",
+                "   ✅ To fix:",
                 ""
             ])
 

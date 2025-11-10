@@ -9,16 +9,15 @@ Full details available via /git_status slash command.
 """
 
 import subprocess
-from pathlib import Path
-from typing import Dict, Any, Optional
 from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
 
 class ContextProvider(ABC):
     """Base context provider interface."""
 
     @abstractmethod
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get context information."""
         pass
 
@@ -26,7 +25,7 @@ class ContextProvider(ABC):
 class LazyGitContextProvider(ContextProvider):
     """Provides git summary with on-demand details."""
 
-    def get_context(self, input_data: Dict) -> Optional[Dict[str, Any]]:
+    def get_context(self, input_data: dict) -> dict[str, Any] | None:
         """Get minimal git summary (branch + change count only)."""
         try:
             # Get current branch

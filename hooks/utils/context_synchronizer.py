@@ -9,17 +9,15 @@ Task ID: de7621a4-df75-4d03-a967-8fb743b455f1 (Phase 2)
 Architecture Reference: Real-Time Context Injection System
 """
 
-import os
-import json
-import time
 import asyncio
+import json
 import logging
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Optional, Dict, Any, List, Set
-from dataclasses import dataclass, asdict
-from threading import Lock
+import time
+from dataclasses import asdict, dataclass
+from datetime import datetime
 from enum import Enum
+from threading import Lock
+from typing import Any, Dict, List, Optional, Set
 
 # Import cache manager
 from .cache_manager import SessionContextCache
@@ -44,7 +42,7 @@ class ContextChange:
     operation: str  # create, update, delete, sync
     context_type: str  # task, branch, project, global
     context_id: str
-    changes: Dict[str, Any]
+    changes: dict[str, Any]
     priority: int = 1  # 1-5, higher = more important
     requires_sync: bool = True
 
@@ -66,7 +64,7 @@ class ConflictResolver:
         self.strategy = strategy
         self.resolution_history = []
     
-    async def resolve_conflicts(self, conflicts: List[Dict]) -> List[ContextChange]:
+    async def resolve_conflicts(self, conflicts: list[dict]) -> list[ContextChange]:
         """
         Resolve context conflicts using the configured strategy.
         
@@ -90,7 +88,7 @@ class ConflictResolver:
         else:  # MANUAL_REVIEW
             return await self._resolve_manual_review(conflicts)
     
-    async def _resolve_latest_wins(self, conflicts: List[Dict]) -> List[ContextChange]:
+    async def _resolve_latest_wins(self, conflicts: list[dict]) -> list[ContextChange]:
         """Resolve conflicts by taking the latest change."""
         # Group conflicts by context_id
         conflict_groups = {}
@@ -111,7 +109,7 @@ class ConflictResolver:
         
         return resolved_changes
     
-    async def _resolve_merge_compatible(self, conflicts: List[Dict]) -> List[ContextChange]:
+    async def _resolve_merge_compatible(self, conflicts: list[dict]) -> list[ContextChange]:
         """Resolve conflicts by merging compatible changes."""
         # Group conflicts by context_id
         conflict_groups = {}
@@ -140,7 +138,7 @@ class ConflictResolver:
         
         return resolved_changes
     
-    async def _resolve_priority_based(self, conflicts: List[Dict]) -> List[ContextChange]:
+    async def _resolve_priority_based(self, conflicts: list[dict]) -> list[ContextChange]:
         """Resolve conflicts based on priority levels."""
         # Group conflicts by context_id
         conflict_groups = {}
@@ -164,14 +162,14 @@ class ConflictResolver:
         
         return resolved_changes
     
-    async def _resolve_manual_review(self, conflicts: List[Dict]) -> List[ContextChange]:
+    async def _resolve_manual_review(self, conflicts: list[dict]) -> list[ContextChange]:
         """Mark conflicts for manual review (placeholder)."""
         # In a real implementation, this would queue conflicts for manual review
         # For now, we'll fall back to latest wins with logging
         logger.warning(f"Manual review required for {len(conflicts)} conflicts - falling back to latest wins")
         return await self._resolve_latest_wins(conflicts)
     
-    async def _merge_changes(self, changes: List[Dict]) -> Optional[ContextChange]:
+    async def _merge_changes(self, changes: list[dict]) -> ContextChange | None:
         """
         Attempt to merge compatible changes.
         
@@ -236,7 +234,7 @@ class ConflictResolver:
 class ContextSynchronizer:
     """Main context synchronization manager."""
     
-    def __init__(self, config: Optional[SynchronizationConfig] = None):
+    def __init__(self, config: SynchronizationConfig | None = None):
         self.config = config or SynchronizationConfig()
         self.cache = SessionContextCache()
         self.mcp_client = OptimizedMCPClient()
@@ -244,8 +242,8 @@ class ContextSynchronizer:
         
         # Synchronization state
         self.sync_lock = Lock()
-        self.pending_changes: List[ContextChange] = []
-        self.change_subscribers: Set[str] = set()
+        self.pending_changes: list[ContextChange] = []
+        self.change_subscribers: set[str] = set()
         self.last_sync_time = time.time()
         
         # Performance tracking
@@ -256,7 +254,7 @@ class ContextSynchronizer:
             'average_sync_time_ms': 0
         }
     
-    async def sync_context_changes(self, changes: List[ContextChange]) -> bool:
+    async def sync_context_changes(self, changes: list[ContextChange]) -> bool:
         """
         Synchronize context changes across the system.
         
@@ -314,7 +312,7 @@ class ContextSynchronizer:
                           operation: str,
                           context_type: str,
                           context_id: str,
-                          changes: Dict[str, Any],
+                          changes: dict[str, Any],
                           priority: int = 1) -> ContextChange:
         """
         Add a new context change to the synchronization queue.
@@ -353,7 +351,7 @@ class ContextSynchronizer:
         
         return await self.sync_context_changes(changes_to_sync)
     
-    def _detect_conflicts(self, changes: List[ContextChange]) -> List[Dict]:
+    def _detect_conflicts(self, changes: list[ContextChange]) -> list[dict]:
         """
         Detect conflicts in context changes.
         
@@ -383,7 +381,7 @@ class ContextSynchronizer:
         
         return conflicts
     
-    async def _apply_changes_to_cache(self, changes: List[ContextChange]) -> None:
+    async def _apply_changes_to_cache(self, changes: list[ContextChange]) -> None:
         """Apply resolved changes to the shared cache."""
         for change in changes:
             try:
@@ -415,7 +413,7 @@ class ContextSynchronizer:
             except Exception as e:
                 logger.warning(f"Failed to apply change {change.change_id} to cache: {e}")
     
-    async def _broadcast_context_updates(self, changes: List[ContextChange]) -> None:
+    async def _broadcast_context_updates(self, changes: list[ContextChange]) -> None:
         """
         Broadcast context updates to interested parties.
         
@@ -450,7 +448,7 @@ class ContextSynchronizer:
             broadcast_log_path = get_ai_data_path() / 'context_broadcasts.json'
             
             if broadcast_log_path.exists():
-                with open(broadcast_log_path, 'r') as f:
+                with open(broadcast_log_path) as f:
                     try:
                         broadcast_data = json.load(f)
                     except (json.JSONDecodeError, ValueError):
@@ -494,7 +492,7 @@ class ContextSynchronizer:
         
         self.last_sync_time = time.time()
     
-    def get_sync_statistics(self) -> Dict[str, Any]:
+    def get_sync_statistics(self) -> dict[str, Any]:
         """Get synchronization performance statistics."""
         total = self.sync_stats['total_syncs']
         successful = self.sync_stats['successful_syncs']
@@ -509,13 +507,13 @@ class ContextSynchronizer:
 
 
 # Factory function and convenience wrappers
-def create_context_synchronizer(config: Optional[SynchronizationConfig] = None) -> ContextSynchronizer:
+def create_context_synchronizer(config: SynchronizationConfig | None = None) -> ContextSynchronizer:
     """Create a context synchronizer instance."""
     return ContextSynchronizer(config)
 
 
 # Global synchronizer instance for hook usage
-_global_synchronizer: Optional[ContextSynchronizer] = None
+_global_synchronizer: ContextSynchronizer | None = None
 
 def get_global_synchronizer() -> ContextSynchronizer:
     """Get the global context synchronizer instance."""
@@ -529,7 +527,7 @@ def sync_context_change(source: str,
                        operation: str,
                        context_type: str,
                        context_id: str,
-                       changes: Dict[str, Any],
+                       changes: dict[str, Any],
                        priority: int = 1) -> bool:
     """
     Synchronous wrapper for adding and syncing a single context change.

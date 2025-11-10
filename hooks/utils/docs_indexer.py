@@ -4,11 +4,12 @@ Documentation indexer for ai_docs.
 Generates and maintains index.json with all documentation files.
 """
 
+import hashlib
 import json
 import os
-from pathlib import Path
 from datetime import datetime
-import hashlib
+from pathlib import Path
+
 
 def get_file_hash(file_path):
     """Calculate MD5 hash of a file for change detection."""

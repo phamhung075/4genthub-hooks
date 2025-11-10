@@ -20,13 +20,11 @@ Usage:
     python3 .claude/validate_installation.py --detailed
 """
 
-import sys
-import os
 import json
 import subprocess
-import shutil
+import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, Optional
 
 # Ensure we can import our utilities
 script_dir = Path(__file__).parent
@@ -40,8 +38,8 @@ if utils_dir.exists():
     sys.path.insert(0, str(utils_dir))
 
 try:
-    from environment_detector import EnvironmentDetector
     from dependency_manager import DependencyManager, setup_default_fallbacks
+    from environment_detector import EnvironmentDetector
     UTILS_AVAILABLE = True
 except ImportError:
     UTILS_AVAILABLE = False
@@ -50,7 +48,7 @@ except ImportError:
 class InstallationValidator:
     """Validates Claude Code hooks installation."""
 
-    def __init__(self, project_root: Optional[Path] = None, verbose: bool = False):
+    def __init__(self, project_root: Path | None = None, verbose: bool = False):
         """
         Initialize the validator.
 
@@ -80,7 +78,7 @@ class InstallationValidator:
             'repair_suggestions': []
         }
 
-    def validate(self) -> Dict[str, Any]:
+    def validate(self) -> dict[str, Any]:
         """
         Run comprehensive validation.
 
@@ -229,7 +227,7 @@ class InstallationValidator:
 
         # Validate settings.json content
         try:
-            with open(settings_file, 'r') as f:
+            with open(settings_file) as f:
                 settings = json.load(f)
 
             # Check required sections
@@ -265,7 +263,7 @@ class InstallationValidator:
         # Check project configuration files
         self._validate_project_config_files()
 
-    def _validate_hook_commands(self, settings: Dict[str, Any]):
+    def _validate_hook_commands(self, settings: dict[str, Any]):
         """Validate hook commands in settings."""
         hooks = settings.get('hooks', {})
 
@@ -319,7 +317,7 @@ class InstallationValidator:
     def _validate_mcp_json(self, mcp_file: Path):
         """Validate .mcp.json configuration."""
         try:
-            with open(mcp_file, 'r') as f:
+            with open(mcp_file) as f:
                 mcp_config = json.load(f)
 
             # Check for API token placeholder
@@ -378,7 +376,7 @@ class InstallationValidator:
             self._add_success("environment", "git_available", "Git is available")
 
             if git['is_git_repo']:
-                self._add_success("environment", "git_repo", f"Git repository detected")
+                self._add_success("environment", "git_repo", "Git repository detected")
 
                 if git['is_submodule']:
                     self._add_success("environment", "git_submodule",
@@ -495,7 +493,7 @@ class InstallationValidator:
             gitignore_file = self.project_root / '.gitignore'
             if gitignore_file.exists():
                 try:
-                    with open(gitignore_file, 'r') as f:
+                    with open(gitignore_file) as f:
                         gitignore_content = f.read()
 
                     if '.claude/settings.json' in gitignore_content:
@@ -566,7 +564,7 @@ class InstallationValidator:
         warning_count = len(self.validation_results['warnings'])
         success_count = sum(len(tests) for tests in self.validation_results['tests'].values())
 
-        print(f"\n📊 Summary:")
+        print("\n📊 Summary:")
         print(f"   ✅ Successful tests: {success_count}")
         print(f"   ⚠️  Warnings: {warning_count}")
         print(f"   ❌ Errors: {error_count}")
@@ -589,13 +587,13 @@ class InstallationValidator:
 
         # Repair suggestions
         if self.validation_results['repair_suggestions']:
-            print(f"\n🔧 Repair Suggestions:")
+            print("\n🔧 Repair Suggestions:")
             for suggestion in self.validation_results['repair_suggestions']:
                 print(f"   • {suggestion['description']}")
 
         # Detailed test results if verbose
         if self.verbose:
-            print(f"\n📋 Detailed Test Results:")
+            print("\n📋 Detailed Test Results:")
             for category, tests in self.validation_results['tests'].items():
                 print(f"\n   {category.replace('_', ' ').title()}:")
                 for test_name, result in tests.items():
@@ -687,7 +685,7 @@ class InstallationValidator:
         except Exception:
             return False
 
-    def _find_project_root(self) -> Optional[Path]:
+    def _find_project_root(self) -> Path | None:
         """Find the project root directory."""
         # Marker files that indicate project root (ordered by priority)
         markers = [

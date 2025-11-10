@@ -8,19 +8,17 @@ Architecture Reference: Section 15.2 in mcp-auto-injection-architecture.md
 Task ID: bd70c110-c43b-4ec9-b5bc-61cdb03a0833
 """
 
-import os
 import json
-import time
 import logging
-from datetime import datetime, timedelta
+import os
+import sys
+import time
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-import sys
-import os
-from pathlib import Path
 
 # Add the hooks directory to the path for importing
 hooks_dir = Path(__file__).parent.parent
@@ -54,7 +52,7 @@ class TokenManager:
 
         return token
     
-    def _get_mcp_json_token(self) -> Optional[str]:
+    def _get_mcp_json_token(self) -> str | None:
         """Extract Bearer token from .mcp.json file if available with comprehensive debug logging."""
         # Set up debug logging (conditional on APP_LOG_LEVEL=DEBUG)
         DEBUG_ENABLED = os.getenv('APP_LOG_LEVEL', '').upper() == 'DEBUG'
@@ -125,7 +123,7 @@ class TokenManager:
                 debug_logger.debug(f"Reading .mcp.json from: {mcp_json_path}")
 
             if mcp_json_path.exists():
-                with open(mcp_json_path, 'r') as f:
+                with open(mcp_json_path) as f:
                     mcp_config = json.load(f)
 
                 if debug_logger:
@@ -237,7 +235,7 @@ class MCPHTTPClient:
             "User-Agent": "Claude-Hooks-MCP-Client/1.0"
         })
 
-    def _get_mcp_url(self) -> Optional[str]:
+    def _get_mcp_url(self) -> str | None:
         """Extract MCP server URL from .mcp.json file if available."""
         try:
             # Look for .mcp.json in project root
@@ -256,7 +254,7 @@ class MCPHTTPClient:
                         break
 
             if mcp_json_path.exists():
-                with open(mcp_json_path, 'r') as f:
+                with open(mcp_json_path) as f:
                     mcp_config = json.load(f)
 
                 # Extract URL from agenthub_http configuration
@@ -288,7 +286,7 @@ class MCPHTTPClient:
             logger.error(f"Authentication failed: {e}")
             return False
     
-    def query_pending_tasks(self, limit: int = 5, user_id: Optional[str] = None) -> Optional[List[Dict]]:
+    def query_pending_tasks(self, limit: int = 5, user_id: str | None = None) -> list[dict] | None:
         """Query MCP server for pending tasks via MCP protocol over HTTP."""
         try:
             # Prepare MCP JSON-RPC request
@@ -350,7 +348,7 @@ class MCPHTTPClient:
         
         return None
     
-    def query_project_context(self, project_id: Optional[str] = None) -> Optional[Dict]:
+    def query_project_context(self, project_id: str | None = None) -> dict | None:
         """Query project context via MCP protocol."""
         if not self.authenticate():
             return None
@@ -400,7 +398,7 @@ class MCPHTTPClient:
         
         return None
     
-    def query_git_branch_info(self) -> Optional[Dict]:
+    def query_git_branch_info(self) -> dict | None:
         """Query git branch information via MCP protocol."""
         if not self.authenticate():
             return None
@@ -447,7 +445,7 @@ class MCPHTTPClient:
         
         return None
     
-    def get_next_recommended_task(self, git_branch_id: str, user_id: Optional[str] = None) -> Optional[Dict]:
+    def get_next_recommended_task(self, git_branch_id: str, user_id: str | None = None) -> dict | None:
         """Get next recommended task via MCP protocol."""
         if not self.authenticate():
             return None
@@ -506,7 +504,7 @@ class MCPHTTPClient:
         
         return None
     
-    def _execute_with_retry(self, func, *args, **kwargs) -> Optional[Any]:
+    def _execute_with_retry(self, func, *args, **kwargs) -> Any | None:
         """Execute a function with retry logic for resilience."""
         last_error = None
         
@@ -537,7 +535,7 @@ class MCPHTTPClient:
         logger.error(f"All retries exhausted. Last error: {last_error}")
         return None
     
-    def make_request(self, endpoint: str, payload: dict) -> Optional[dict]:
+    def make_request(self, endpoint: str, payload: dict) -> dict | None:
         """Make authenticated HTTP request to MCP server with retry."""
         if not self.authenticate():
             return None
@@ -580,11 +578,11 @@ class ResilientMCPClient(MCPHTTPClient):
     def __init__(self):
         super().__init__()
     
-    def query_pending_tasks(self, limit: int = 5, user_id: Optional[str] = None) -> Optional[List[Dict]]:
+    def query_pending_tasks(self, limit: int = 5, user_id: str | None = None) -> list[dict] | None:
         """Query pending tasks via hook endpoint."""
         return super().query_pending_tasks(limit=limit, user_id=user_id)
     
-    def get_next_recommended_task(self, git_branch_id: str, user_id: Optional[str] = None) -> Optional[Dict]:
+    def get_next_recommended_task(self, git_branch_id: str, user_id: str | None = None) -> dict | None:
         """Get next recommended task via hook endpoint."""
         return super().get_next_recommended_task(git_branch_id=git_branch_id, user_id=user_id)
 
@@ -617,7 +615,7 @@ class OptimizedMCPClient(ResilientMCPClient):
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
     
-    def make_request(self, endpoint: str, payload: dict) -> Optional[dict]:
+    def make_request(self, endpoint: str, payload: dict) -> dict | None:
         """Make rate-limited request with connection pooling."""
         
         # Check rate limit

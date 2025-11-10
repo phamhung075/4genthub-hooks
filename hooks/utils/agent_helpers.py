@@ -3,7 +3,11 @@
 Agent Helper Functions - Simple functions for runtime agent management
 """
 
-from .agent_context_manager import switch_to_agent, clear_agent_context, get_current_agent
+from .agent_context_manager import (
+    clear_agent_context,
+    get_current_agent,
+    switch_to_agent,
+)
 
 
 def switch_to_debugger():

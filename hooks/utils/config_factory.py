@@ -7,12 +7,12 @@ and settings across the entire hook system using a consistent YAML-based
 configuration approach with intelligent caching and fallback mechanisms.
 """
 
-import yaml
-import json
-from pathlib import Path
-from typing import Dict, Any, Optional, Union
-from datetime import datetime
 import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import yaml
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class ConfigFactory:
         current_time = datetime.now()
         return (current_time - cache_time).total_seconds() < self._cache_ttl
 
-    def _load_yaml_file(self, file_path: Path) -> Optional[Dict[str, Any]]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any] | None:
         """
         Load a YAML file with error handling.
 
@@ -63,7 +63,7 @@ class ConfigFactory:
             return None
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 data = yaml.safe_load(f)
                 logger.debug(f"Loaded configuration: {file_path.name}")
                 return data
@@ -74,7 +74,7 @@ class ConfigFactory:
             logger.error(f"Error loading {file_path}: {e}")
             return None
 
-    def _get_config(self, config_name: str, use_cache: bool = True) -> Optional[Dict[str, Any]]:
+    def _get_config(self, config_name: str, use_cache: bool = True) -> dict[str, Any] | None:
         """
         Get configuration data with caching.
 
@@ -100,43 +100,43 @@ class ConfigFactory:
 
         return data
 
-    def get_error_messages(self) -> Dict[str, Any]:
+    def get_error_messages(self) -> dict[str, Any]:
         """Get all error messages configuration."""
         return self._get_config('error_messages') or {}
 
-    def get_warning_messages(self) -> Dict[str, Any]:
+    def get_warning_messages(self) -> dict[str, Any]:
         """Get all warning messages configuration."""
         return self._get_config('warning_messages') or {}
 
-    def get_info_messages(self) -> Dict[str, Any]:
+    def get_info_messages(self) -> dict[str, Any]:
         """Get all info messages configuration."""
         return self._get_config('info_messages') or {}
 
-    def get_hint_messages(self) -> Dict[str, Any]:
+    def get_hint_messages(self) -> dict[str, Any]:
         """Get all hint messages configuration."""
         return self._get_config('hint_messages') or {}
 
-    def get_session_messages(self) -> Dict[str, Any]:
+    def get_session_messages(self) -> dict[str, Any]:
         """Get session-related messages configuration."""
         return self._get_config('session_messages') or {}
 
-    def get_system_config(self) -> Dict[str, Any]:
+    def get_system_config(self) -> dict[str, Any]:
         """Get system-wide configuration settings."""
         return self._get_config('system_config') or {}
 
-    def get_pre_tool_messages(self) -> Dict[str, Any]:
+    def get_pre_tool_messages(self) -> dict[str, Any]:
         """Get pre-tool hook messages configuration."""
         return self._get_config('pre_tool_messages') or {}
 
-    def get_post_tool_messages(self) -> Dict[str, Any]:
+    def get_post_tool_messages(self) -> dict[str, Any]:
         """Get post-tool hook messages configuration."""
         return self._get_config('post_tool_messages') or {}
 
-    def get_docs_messages(self) -> Dict[str, Any]:
+    def get_docs_messages(self) -> dict[str, Any]:
         """Get documentation indexer messages configuration."""
         return self._get_config('docs_messages') or {}
 
-    def get_status_line_messages(self) -> Dict[str, Any]:
+    def get_status_line_messages(self) -> dict[str, Any]:
         """Get status line messages configuration."""
         return self._get_config('status_line_messages') or {}
 
@@ -256,7 +256,7 @@ class ConfigFactory:
         self._cache_timestamps.clear()
         logger.debug("Configuration cache cleared")
 
-    def reload_config(self, config_name: str) -> Optional[Dict[str, Any]]:
+    def reload_config(self, config_name: str) -> dict[str, Any] | None:
         """
         Force reload a specific configuration, bypassing cache.
 

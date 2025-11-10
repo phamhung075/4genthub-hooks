@@ -6,14 +6,15 @@ Automatically tracks MCP task operations and agent state changes
 
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Any
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict
+
+# Import agent state manager
+from .agent_state_manager import set_current_agent
 
 # Import task tracker
 from .task_tracker import track_task_from_mcp
-# Import agent state manager
-from .agent_state_manager import set_current_agent
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class MCPTaskInterceptor:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.data_dir / "mcp_task_operations.json"
 
-    def intercept_task_operation(self, tool_name: str, parameters: Dict[str, Any],
+    def intercept_task_operation(self, tool_name: str, parameters: dict[str, Any],
                                  session_id: str = None) -> bool:
         """
         Intercept MCP task operations and track them.
@@ -103,12 +104,12 @@ class MCPTaskInterceptor:
 
         return False
 
-    def _log_operation(self, tool_name: str, parameters: Dict[str, Any], session_id: str):
+    def _log_operation(self, tool_name: str, parameters: dict[str, Any], session_id: str):
         """Log the operation for debugging and audit."""
         try:
             # Load existing log
             if self.log_file.exists():
-                with open(self.log_file, 'r') as f:
+                with open(self.log_file) as f:
                     log_data = json.load(f)
             else:
                 log_data = []
@@ -138,7 +139,7 @@ class MCPTaskInterceptor:
         import uuid
         return str(uuid.uuid4())[:8]
 
-    def _handle_call_agent(self, parameters: Dict[str, Any], session_id: str) -> bool:
+    def _handle_call_agent(self, parameters: dict[str, Any], session_id: str) -> bool:
         """
         Handle call_agent operation to update active agent.
 
@@ -168,7 +169,7 @@ class MCPTaskInterceptor:
         return False
 
     def intercept_from_response(self, tool_name: str, response: Any,
-                               original_params: Dict[str, Any], session_id: str = None) -> bool:
+                               original_params: dict[str, Any], session_id: str = None) -> bool:
         """
         Intercept task operations from tool response.
 

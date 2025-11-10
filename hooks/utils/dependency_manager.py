@@ -14,25 +14,26 @@ Features:
 - Cross-platform compatibility
 """
 
-import sys
-import os
-import subprocess
-import shutil
 import importlib
-import pkg_resources
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any, Callable
+import shutil
+import subprocess
+import sys
+from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import pkg_resources
 
 
 @dataclass
 class Dependency:
     """Represents a package dependency with installation and fallback options."""
     name: str
-    import_name: Optional[str] = None
-    min_version: Optional[str] = None
-    pip_name: Optional[str] = None
-    conda_name: Optional[str] = None
+    import_name: str | None = None
+    min_version: str | None = None
+    pip_name: str | None = None
+    conda_name: str | None = None
     required: bool = True
     fallback_available: bool = False
     fallback_message: str = ""
@@ -42,7 +43,7 @@ class Dependency:
 class DependencyManager:
     """Manages dependencies for Claude Code hooks."""
 
-    def __init__(self, project_root: Optional[Path] = None):
+    def __init__(self, project_root: Path | None = None):
         """
         Initialize dependency manager.
 
@@ -95,7 +96,7 @@ class DependencyManager:
             )
         ]
 
-    def check_dependencies(self, dependencies: Optional[List[Dependency]] = None) -> Dict[str, Any]:
+    def check_dependencies(self, dependencies: list[Dependency] | None = None) -> dict[str, Any]:
         """
         Check the availability of dependencies.
 
@@ -147,8 +148,8 @@ class DependencyManager:
 
         return result
 
-    def install_missing_dependencies(self, dependencies: Optional[List[Dependency]] = None,
-                                   interactive: bool = True, dry_run: bool = False) -> Dict[str, Any]:
+    def install_missing_dependencies(self, dependencies: list[Dependency] | None = None,
+                                   interactive: bool = True, dry_run: bool = False) -> dict[str, Any]:
         """
         Attempt to install missing dependencies.
 
@@ -197,7 +198,7 @@ class DependencyManager:
 
         return result
 
-    def get_fallback_handlers(self) -> Dict[str, Callable]:
+    def get_fallback_handlers(self) -> dict[str, Callable]:
         """Get registered fallback handlers for missing packages."""
         return self._fallback_handlers.copy()
 
@@ -211,7 +212,7 @@ class DependencyManager:
         """
         self._fallback_handlers[package_name] = handler
 
-    def safe_import(self, package_name: str, fallback_handler: Optional[Callable] = None):
+    def safe_import(self, package_name: str, fallback_handler: Callable | None = None):
         """
         Safely import a package with fallback handling.
 
@@ -232,7 +233,7 @@ class DependencyManager:
             else:
                 return None
 
-    def generate_dependency_report(self, dependencies: Optional[List[Dependency]] = None) -> str:
+    def generate_dependency_report(self, dependencies: list[Dependency] | None = None) -> str:
         """Generate a comprehensive dependency report."""
         if dependencies is None:
             dependencies = self.common_dependencies
@@ -283,12 +284,12 @@ class DependencyManager:
         # Installation commands
         install_commands = dep_status['install_commands']
         if install_commands:
-            report.append(f"\n🔧 Installation Commands:")
+            report.append("\n🔧 Installation Commands:")
             for name, cmd in install_commands.items():
                 report.append(f"   {name}: {cmd}")
 
         # Package manager detection
-        report.append(f"\n🛠️  Package Manager Information:")
+        report.append("\n🛠️  Package Manager Information:")
         managers = self._detect_package_managers()
         for manager, info in managers.items():
             status = "Available" if info['available'] else "Not found"
@@ -312,7 +313,7 @@ class DependencyManager:
             self._available_packages[package_name] = False
             return False
 
-    def _get_package_version(self, package_name: str) -> Optional[str]:
+    def _get_package_version(self, package_name: str) -> str | None:
         """Get the version of an installed package."""
         try:
             # Try pkg_resources first
@@ -353,7 +354,7 @@ class DependencyManager:
 
             return current_parts >= min_parts
 
-    def _generate_install_command(self, dependency: Dependency) -> Optional[str]:
+    def _generate_install_command(self, dependency: Dependency) -> str | None:
         """Generate installation command for a dependency."""
         managers = self._detect_package_managers()
 
@@ -382,7 +383,7 @@ class DependencyManager:
         except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
             return False
 
-    def _detect_package_managers(self) -> Dict[str, Dict[str, Any]]:
+    def _detect_package_managers(self) -> dict[str, dict[str, Any]]:
         """Detect available package managers."""
         managers = {
             'pip': {'available': False, 'version': None},
@@ -418,10 +419,10 @@ class FallbackImplementations:
     @staticmethod
     def requests_fallback():
         """Fallback for requests library using urllib."""
-        import urllib.request
-        import urllib.parse
-        import urllib.error
         import json
+        import urllib.error
+        import urllib.parse
+        import urllib.request
 
         class FallbackRequests:
             @staticmethod
@@ -569,20 +570,20 @@ def setup_default_fallbacks(manager: DependencyManager):
 
 
 # Convenience functions
-def check_dependencies(dependencies: Optional[List[Dependency]] = None) -> Dict[str, Any]:
+def check_dependencies(dependencies: list[Dependency] | None = None) -> dict[str, Any]:
     """Quick function to check dependencies."""
     manager = DependencyManager()
     return manager.check_dependencies(dependencies)
 
 
-def install_missing_dependencies(dependencies: Optional[List[Dependency]] = None,
-                                interactive: bool = True, dry_run: bool = False) -> Dict[str, Any]:
+def install_missing_dependencies(dependencies: list[Dependency] | None = None,
+                                interactive: bool = True, dry_run: bool = False) -> dict[str, Any]:
     """Quick function to install missing dependencies."""
     manager = DependencyManager()
     return manager.install_missing_dependencies(dependencies, interactive, dry_run)
 
 
-def generate_dependency_report(dependencies: Optional[List[Dependency]] = None) -> str:
+def generate_dependency_report(dependencies: list[Dependency] | None = None) -> str:
     """Quick function to generate dependency report."""
     manager = DependencyManager()
     return manager.generate_dependency_report(dependencies)
