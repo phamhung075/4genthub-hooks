@@ -34,9 +34,9 @@ class ConditionalMCPProvider(ContextProvider):
         """Check MCP availability without loading full context."""
 
         # Check if MCP tools were used in recent conversation
-        conversation = input_data.get('conversation_history', [])
+        conversation = input_data.get("conversation_history", [])
         mcp_needed = any(
-            'mcp__' in str(msg.get('content', ''))
+            "mcp__" in str(msg.get("content", ""))
             for msg in conversation[-5:]  # Check last 5 messages
         )
 
@@ -44,23 +44,21 @@ class ConditionalMCPProvider(ContextProvider):
             # Just verify connection availability
             try:
                 from utils.mcp_client import MCPHTTPClient
+
                 client = MCPHTTPClient()
 
                 # Quick authentication check
                 if client.authenticate():
                     return {
-                        'status': 'ready',
-                        'details_available': True,
-                        'mode': 'compact',
-                        'message': '💡 Use /mcp_status for details'
+                        "status": "ready",
+                        "details_available": True,
+                        "mode": "compact",
+                        "message": "💡 Use /mcp_status for details",
                     }
             except Exception:
                 pass
 
-            return {
-                'status': 'unavailable',
-                'mode': 'compact'
-            }
+            return {"status": "unavailable", "mode": "compact"}
 
         # Full MCP context only when tools were recently used
         return self._load_full_mcp_context(input_data)
@@ -74,18 +72,26 @@ class ConditionalMCPProvider(ContextProvider):
             client = MCPHTTPClient()
 
             if not client.authenticate():
-                return {'status': 'auth_failed', 'mode': 'full'}
+                return {"status": "auth_failed", "mode": "full"}
 
             project_root = get_project_root()
 
             # Get project context
             try:
                 import subprocess
+
                 remote_result = subprocess.run(
-                    ['git', 'config', '--get', 'remote.origin.url'],
-                    capture_output=True, text=True, timeout=2, cwd=project_root
+                    ["git", "config", "--get", "remote.origin.url"],
+                    capture_output=True,
+                    text=True,
+                    timeout=2,
+                    cwd=project_root,
                 )
-                remote_url = remote_result.stdout.strip() if remote_result.returncode == 0 else None
+                remote_url = (
+                    remote_result.stdout.strip()
+                    if remote_result.returncode == 0
+                    else None
+                )
             except:
                 remote_url = None
 
@@ -96,8 +102,7 @@ class ConditionalMCPProvider(ContextProvider):
                     # Match by name or description
                     project_name = project_root.name
                     project_info = next(
-                        (p for p in projects if p.get('name') == project_name),
-                        None
+                        (p for p in projects if p.get("name") == project_name), None
                     )
 
             # Get branch and task info if project found
@@ -107,38 +112,46 @@ class ConditionalMCPProvider(ContextProvider):
             if project_info:
                 try:
                     branch_result = subprocess.run(
-                        ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-                        capture_output=True, text=True, timeout=2, cwd=project_root
+                        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                        capture_output=True,
+                        text=True,
+                        timeout=2,
+                        cwd=project_root,
                     )
-                    current_branch = branch_result.stdout.strip() if branch_result.returncode == 0 else None
+                    current_branch = (
+                        branch_result.stdout.strip()
+                        if branch_result.returncode == 0
+                        else None
+                    )
 
                     if current_branch:
-                        branches = client.list_git_branches(project_info['id'])
+                        branches = client.list_git_branches(project_info["id"])
                         branch_info = next(
-                            (b for b in branches if b.get('git_branch_name') == current_branch),
-                            None
+                            (
+                                b
+                                for b in branches
+                                if b.get("git_branch_name") == current_branch
+                            ),
+                            None,
                         )
 
                         if branch_info:
-                            tasks = client.list_tasks(branch_info['id'])
+                            tasks = client.list_tasks(branch_info["id"])
                             active_tasks = [
-                                t for t in tasks
-                                if t.get('status') in ['todo', 'in_progress']
+                                t
+                                for t in tasks
+                                if t.get("status") in ["todo", "in_progress"]
                             ]
                 except:
                     pass
 
             return {
-                'status': 'connected',
-                'mode': 'full',
-                'project': project_info,
-                'branch': branch_info,
-                'active_tasks': active_tasks
+                "status": "connected",
+                "mode": "full",
+                "project": project_info,
+                "branch": branch_info,
+                "active_tasks": active_tasks,
             }
 
         except Exception as e:
-            return {
-                'status': 'error',
-                'mode': 'full',
-                'error': str(e)
-            }
+            return {"status": "error", "mode": "full", "error": str(e)}

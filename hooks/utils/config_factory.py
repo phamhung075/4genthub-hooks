@@ -17,6 +17,7 @@ import yaml
 # Set up logging
 logger = logging.getLogger(__name__)
 
+
 class ConfigFactory:
     """
     Centralized configuration factory for the entire hook system.
@@ -31,7 +32,7 @@ class ConfigFactory:
 
     def __init__(self):
         """Initialize the configuration factory."""
-        self.config_dir = Path(__file__).parent.parent / 'config'
+        self.config_dir = Path(__file__).parent.parent / "config"
         self._cache = {}
         self._cache_timestamps = {}
         self._cache_ttl = 300  # 5 minutes cache TTL
@@ -63,7 +64,7 @@ class ConfigFactory:
             return None
 
         try:
-            with open(file_path, encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
                 logger.debug(f"Loaded configuration: {file_path.name}")
                 return data
@@ -74,7 +75,9 @@ class ConfigFactory:
             logger.error(f"Error loading {file_path}: {e}")
             return None
 
-    def _get_config(self, config_name: str, use_cache: bool = True) -> dict[str, Any] | None:
+    def _get_config(
+        self, config_name: str, use_cache: bool = True
+    ) -> dict[str, Any] | None:
         """
         Get configuration data with caching.
 
@@ -86,7 +89,11 @@ class ConfigFactory:
             Configuration dictionary or None if not found
         """
         # Check cache first
-        if use_cache and config_name in self._cache and self._is_cache_valid(config_name):
+        if (
+            use_cache
+            and config_name in self._cache
+            and self._is_cache_valid(config_name)
+        ):
             return self._cache[config_name]
 
         # Load from file
@@ -102,43 +109,43 @@ class ConfigFactory:
 
     def get_error_messages(self) -> dict[str, Any]:
         """Get all error messages configuration."""
-        return self._get_config('error_messages') or {}
+        return self._get_config("error_messages") or {}
 
     def get_warning_messages(self) -> dict[str, Any]:
         """Get all warning messages configuration."""
-        return self._get_config('warning_messages') or {}
+        return self._get_config("warning_messages") or {}
 
     def get_info_messages(self) -> dict[str, Any]:
         """Get all info messages configuration."""
-        return self._get_config('info_messages') or {}
+        return self._get_config("info_messages") or {}
 
     def get_hint_messages(self) -> dict[str, Any]:
         """Get all hint messages configuration."""
-        return self._get_config('hint_messages') or {}
+        return self._get_config("hint_messages") or {}
 
     def get_session_messages(self) -> dict[str, Any]:
         """Get session-related messages configuration."""
-        return self._get_config('session_messages') or {}
+        return self._get_config("session_messages") or {}
 
     def get_system_config(self) -> dict[str, Any]:
         """Get system-wide configuration settings."""
-        return self._get_config('system_config') or {}
+        return self._get_config("system_config") or {}
 
     def get_pre_tool_messages(self) -> dict[str, Any]:
         """Get pre-tool hook messages configuration."""
-        return self._get_config('pre_tool_messages') or {}
+        return self._get_config("pre_tool_messages") or {}
 
     def get_post_tool_messages(self) -> dict[str, Any]:
         """Get post-tool hook messages configuration."""
-        return self._get_config('post_tool_messages') or {}
+        return self._get_config("post_tool_messages") or {}
 
     def get_docs_messages(self) -> dict[str, Any]:
         """Get documentation indexer messages configuration."""
-        return self._get_config('docs_messages') or {}
+        return self._get_config("docs_messages") or {}
 
     def get_status_line_messages(self) -> dict[str, Any]:
         """Get status line messages configuration."""
-        return self._get_config('status_line_messages') or {}
+        return self._get_config("status_line_messages") or {}
 
     def format_message(self, message_category: str, message_key: str, **kwargs) -> str:
         """
@@ -154,15 +161,15 @@ class ConfigFactory:
         """
         # Get the appropriate message collection
         message_collections = {
-            'error': self.get_error_messages(),
-            'warning': self.get_warning_messages(),
-            'info': self.get_info_messages(),
-            'hint': self.get_hint_messages(),
-            'session': self.get_session_messages(),
-            'pre_tool': self.get_pre_tool_messages(),
-            'post_tool': self.get_post_tool_messages(),
-            'docs': self.get_docs_messages(),
-            'status_line': self.get_status_line_messages()
+            "error": self.get_error_messages(),
+            "warning": self.get_warning_messages(),
+            "info": self.get_info_messages(),
+            "hint": self.get_hint_messages(),
+            "session": self.get_session_messages(),
+            "pre_tool": self.get_pre_tool_messages(),
+            "post_tool": self.get_post_tool_messages(),
+            "docs": self.get_docs_messages(),
+            "status_line": self.get_status_line_messages(),
         }
 
         messages = message_collections.get(message_category, {})
@@ -178,7 +185,9 @@ class ConfigFactory:
             try:
                 return message_config.format(**kwargs)
             except KeyError as e:
-                logger.error(f"Missing parameter {e} for message {message_category}.{message_key}")
+                logger.error(
+                    f"Missing parameter {e} for message {message_category}.{message_key}"
+                )
                 return message_config
 
         # Handle complex message objects
@@ -186,26 +195,33 @@ class ConfigFactory:
             result = []
 
             # Format main message
-            if 'message' in message_config:
+            if "message" in message_config:
                 try:
-                    main_message = message_config['message'].format(**kwargs)
+                    main_message = message_config["message"].format(**kwargs)
                     result.append(main_message)
                 except KeyError as e:
-                    logger.error(f"Missing parameter {e} for message {message_category}.{message_key}")
-                    result.append(message_config['message'])
+                    logger.error(
+                        f"Missing parameter {e} for message {message_category}.{message_key}"
+                    )
+                    result.append(message_config["message"])
 
             # Add hint if present
-            if 'hint' in message_config:
+            if "hint" in message_config:
                 try:
-                    hint = message_config['hint'].format(**kwargs)
+                    hint = message_config["hint"].format(**kwargs)
                     result.append(hint)
                 except KeyError:
-                    result.append(message_config['hint'])
+                    result.append(message_config["hint"])
 
             # Add examples if present
-            for field in ['examples', 'valid_examples', 'invalid_examples', 'valid_paths']:
+            for field in [
+                "examples",
+                "valid_examples",
+                "invalid_examples",
+                "valid_paths",
+            ]:
                 if field in message_config:
-                    field_label = field.replace('_', ' ').title()
+                    field_label = field.replace("_", " ").title()
                     items = message_config[field]
                     if isinstance(items, list):
                         result.append(f"{field_label}: " + ", ".join(items))
@@ -213,12 +229,12 @@ class ConfigFactory:
                         result.append(f"{field_label}: {items}")
 
             # Add action if present
-            if 'action' in message_config:
+            if "action" in message_config:
                 try:
-                    action = message_config['action'].format(**kwargs)
+                    action = message_config["action"].format(**kwargs)
                     result.append(action)
                 except KeyError:
-                    result.append(message_config['action'])
+                    result.append(message_config["action"])
 
             return "\n".join(result)
 
@@ -239,7 +255,7 @@ class ConfigFactory:
         config = self.get_system_config()
 
         # Support dot notation for nested settings (e.g., "cache.ttl")
-        keys = setting_key.split('.')
+        keys = setting_key.split(".")
         current = config
 
         try:
@@ -247,7 +263,9 @@ class ConfigFactory:
                 current = current[key]
             return current
         except (KeyError, TypeError):
-            logger.debug(f"Setting not found: {setting_key}, using default: {default_value}")
+            logger.debug(
+                f"Setting not found: {setting_key}, using default: {default_value}"
+            )
             return default_value
 
     def clear_cache(self):
@@ -268,8 +286,10 @@ class ConfigFactory:
         """
         return self._get_config(config_name, use_cache=False)
 
+
 # Global factory instance
 _config_factory = None
+
 
 def get_config_factory() -> ConfigFactory:
     """
@@ -283,26 +303,31 @@ def get_config_factory() -> ConfigFactory:
         _config_factory = ConfigFactory()
     return _config_factory
 
+
 # Convenience functions for common operations
 def get_error_message(message_key: str, **kwargs) -> str:
     """Get formatted error message."""
     factory = get_config_factory()
-    return factory.format_message('error', message_key, **kwargs)
+    return factory.format_message("error", message_key, **kwargs)
+
 
 def get_warning_message(message_key: str, **kwargs) -> str:
     """Get formatted warning message."""
     factory = get_config_factory()
-    return factory.format_message('warning', message_key, **kwargs)
+    return factory.format_message("warning", message_key, **kwargs)
+
 
 def get_info_message(message_key: str, **kwargs) -> str:
     """Get formatted info message."""
     factory = get_config_factory()
-    return factory.format_message('info', message_key, **kwargs)
+    return factory.format_message("info", message_key, **kwargs)
+
 
 def get_hint_message(message_key: str, **kwargs) -> str:
     """Get formatted hint message."""
     factory = get_config_factory()
-    return factory.format_message('hint', message_key, **kwargs)
+    return factory.format_message("hint", message_key, **kwargs)
+
 
 def get_system_setting(setting_key: str, default_value: Any = None) -> Any:
     """Get system setting with default fallback."""

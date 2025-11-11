@@ -61,7 +61,9 @@ class PostActionHintProvider(HintProvider):
     """Provides hints after MCP operations are completed."""
 
     def __init__(self, config_loader=None):
-        self.config_loader = config_loader or (get_config_factory() if get_config_factory else None)
+        self.config_loader = config_loader or (
+            get_config_factory() if get_config_factory else None
+        )
         self.load_config()
 
     def load_config(self):
@@ -69,19 +71,27 @@ class PostActionHintProvider(HintProvider):
         self.config = {}
         if self.config_loader:
             try:
-                self.config = self.config_loader.load_config('mcp_post_action_hints') or {}
+                self.config = (
+                    self.config_loader.load_config("mcp_post_action_hints") or {}
+                )
             except Exception:
                 pass
 
         # Default configuration if loading fails
         if not self.config:
             self.config = {
-                'task_operations': {
-                    'create': ['Remember to track progress', 'Consider breaking into subtasks'],
-                    'update': ['Document changes made', 'Update status if needed'],
-                    'complete': ['Verify all requirements met', 'Update related tasks']
+                "task_operations": {
+                    "create": [
+                        "Remember to track progress",
+                        "Consider breaking into subtasks",
+                    ],
+                    "update": ["Document changes made", "Update status if needed"],
+                    "complete": ["Verify all requirements met", "Update related tasks"],
                 },
-                'general_reminders': ['Keep documentation updated', 'Test changes thoroughly']
+                "general_reminders": [
+                    "Keep documentation updated",
+                    "Test changes thoroughly",
+                ],
             }
 
     def generate_hints(self, context: dict[str, Any]) -> list[str]:
@@ -89,20 +99,20 @@ class PostActionHintProvider(HintProvider):
         hints = []
 
         # Extract operation details
-        tool_name = context.get('tool_name', '')
-        tool_input = context.get('tool_input', {})
+        tool_name = context.get("tool_name", "")
+        tool_input = context.get("tool_input", {})
 
         # MCP task operation hints
-        if 'manage_task' in tool_name:
-            action = tool_input.get('action', '')
-            hints.extend(self.config.get('task_operations', {}).get(action, []))
+        if "manage_task" in tool_name:
+            action = tool_input.get("action", "")
+            hints.extend(self.config.get("task_operations", {}).get(action, []))
 
         # File operation hints
-        if tool_name in ['Write', 'Edit', 'MultiEdit']:
-            hints.append('Consider updating related documentation')
+        if tool_name in ["Write", "Edit", "MultiEdit"]:
+            hints.append("Consider updating related documentation")
 
         # Add general reminders
-        hints.extend(self.config.get('general_reminders', []))
+        hints.extend(self.config.get("general_reminders", []))
 
         return hints[:3]  # Limit to 3 most relevant hints
 
@@ -114,7 +124,9 @@ class PreActionHintProvider(HintProvider):
     """Provides hints before tool usage."""
 
     def __init__(self, config_loader=None):
-        self.config_loader = config_loader or (get_config_factory() if get_config_factory else None)
+        self.config_loader = config_loader or (
+            get_config_factory() if get_config_factory else None
+        )
         self.load_config()
 
     def load_config(self):
@@ -122,17 +134,25 @@ class PreActionHintProvider(HintProvider):
         self.config = {}
         if self.config_loader:
             try:
-                self.config = self.config_loader.load_config('mcp_hint_matrix_config') or {}
+                self.config = (
+                    self.config_loader.load_config("mcp_hint_matrix_config") or {}
+                )
             except Exception:
                 pass
 
         # Default configuration
         if not self.config:
             self.config = {
-                'tool_patterns': {
-                    'Write': ['Check if file already exists', 'Consider using Edit instead'],
-                    'Edit': ['Ensure file has been read first', 'Backup important changes'],
-                    'Bash': ['Verify command safety', 'Check current directory']
+                "tool_patterns": {
+                    "Write": [
+                        "Check if file already exists",
+                        "Consider using Edit instead",
+                    ],
+                    "Edit": [
+                        "Ensure file has been read first",
+                        "Backup important changes",
+                    ],
+                    "Bash": ["Verify command safety", "Check current directory"],
                 }
             }
 
@@ -140,18 +160,18 @@ class PreActionHintProvider(HintProvider):
         """Generate pre-action hints based on context."""
         hints = []
 
-        tool_name = context.get('tool_name', '')
-        tool_input = context.get('tool_input', {})
+        tool_name = context.get("tool_name", "")
+        tool_input = context.get("tool_input", {})
 
         # Tool-specific hints
-        hints.extend(self.config.get('tool_patterns', {}).get(tool_name, []))
+        hints.extend(self.config.get("tool_patterns", {}).get(tool_name, []))
 
         # Agent role-specific hints
-        agent_role = context.get('agent_role', 'unknown')
-        if agent_role == 'master-orchestrator-agent':
-            hints.append('Consider delegating to specialized agent')
-        elif agent_role in ['coding-agent', 'debugger-agent']:
-            hints.append('Test changes after implementation')
+        agent_role = context.get("agent_role", "unknown")
+        if agent_role == "master-orchestrator-agent":
+            hints.append("Consider delegating to specialized agent")
+        elif agent_role in ["coding-agent", "debugger-agent"]:
+            hints.append("Test changes after implementation")
 
         return hints[:2]  # Limit to 2 most relevant hints
 
@@ -164,10 +184,10 @@ class PatternAnalysisHintProvider(HintProvider):
 
     def __init__(self):
         self.patterns = {
-            'mcp_task_creation': r'manage_task.*action.*create',
-            'file_modification': r'(Write|Edit|MultiEdit)',
-            'batch_operations': r'(parallel|multiple|batch)',
-            'testing_operations': r'(test|pytest|coverage)'
+            "mcp_task_creation": r"manage_task.*action.*create",
+            "file_modification": r"(Write|Edit|MultiEdit)",
+            "batch_operations": r"(parallel|multiple|batch)",
+            "testing_operations": r"(test|pytest|coverage)",
         }
 
     def generate_hints(self, context: dict[str, Any]) -> list[str]:
@@ -175,18 +195,18 @@ class PatternAnalysisHintProvider(HintProvider):
         hints = []
 
         # Analyze recent tool usage
-        recent_tools = context.get('recent_tools', [])
-        text_context = ' '.join(str(tool) for tool in recent_tools)
+        recent_tools = context.get("recent_tools", [])
+        text_context = " ".join(str(tool) for tool in recent_tools)
 
         # Pattern-based hints
-        if re.search(self.patterns['mcp_task_creation'], text_context, re.IGNORECASE):
-            hints.append('Consider creating subtasks for complex work')
+        if re.search(self.patterns["mcp_task_creation"], text_context, re.IGNORECASE):
+            hints.append("Consider creating subtasks for complex work")
 
-        if re.search(self.patterns['file_modification'], text_context, re.IGNORECASE):
-            hints.append('Update relevant tests and documentation')
+        if re.search(self.patterns["file_modification"], text_context, re.IGNORECASE):
+            hints.append("Update relevant tests and documentation")
 
-        if re.search(self.patterns['batch_operations'], text_context, re.IGNORECASE):
-            hints.append('Monitor performance for batch operations')
+        if re.search(self.patterns["batch_operations"], text_context, re.IGNORECASE):
+            hints.append("Monitor performance for batch operations")
 
         return hints
 
@@ -199,12 +219,15 @@ class HintBridge:
 
     def __init__(self):
         from env_loader import get_project_root
+
         project_root = get_project_root()
-        self.hint_storage_file = project_root / '.claude' / 'hooks' / 'data' / 'pending_hints.json'
+        self.hint_storage_file = (
+            project_root / ".claude" / "hooks" / "data" / "pending_hints.json"
+        )
         self.hint_storage_file.parent.mkdir(parents=True, exist_ok=True)
         self.time_window = 300  # 5 minutes
 
-    def store_hint(self, hint: str, category: str = 'general') -> None:
+    def store_hint(self, hint: str, category: str = "general") -> None:
         """Store a hint for later retrieval."""
         try:
             # Load existing hints
@@ -212,20 +235,22 @@ class HintBridge:
 
             # Add new hint
             new_hint = {
-                'content': hint,
-                'category': category,
-                'timestamp': datetime.now().isoformat(),
-                'retrieved': False
+                "content": hint,
+                "category": category,
+                "timestamp": datetime.now().isoformat(),
+                "retrieved": False,
             }
 
             hints.append(new_hint)
 
             # Clean old hints (older than time window)
             cutoff_time = datetime.now() - timedelta(seconds=self.time_window)
-            hints = [h for h in hints if datetime.fromisoformat(h['timestamp']) > cutoff_time]
+            hints = [
+                h for h in hints if datetime.fromisoformat(h["timestamp"]) > cutoff_time
+            ]
 
             # Save hints
-            with open(self.hint_storage_file, 'w') as f:
+            with open(self.hint_storage_file, "w") as f:
                 json.dump(hints, f, indent=2)
 
         except Exception:
@@ -238,17 +263,19 @@ class HintBridge:
 
             # Filter by category if specified
             if category:
-                hints = [h for h in hints if h['category'] == category]
+                hints = [h for h in hints if h["category"] == category]
 
             # Get unread hints
-            unread_hints = [h['content'] for h in hints if not h.get('retrieved', False)]
+            unread_hints = [
+                h["content"] for h in hints if not h.get("retrieved", False)
+            ]
 
             # Mark as retrieved
             for hint in hints:
-                hint['retrieved'] = True
+                hint["retrieved"] = True
 
             # Save updated hints
-            with open(self.hint_storage_file, 'w') as f:
+            with open(self.hint_storage_file, "w") as f:
                 json.dump(hints, f, indent=2)
 
             return unread_hints
@@ -275,57 +302,66 @@ class UnifiedHintSystem:
         self.providers = [
             PostActionHintProvider(),
             PreActionHintProvider(),
-            PatternAnalysisHintProvider()
+            PatternAnalysisHintProvider(),
         ]
         self.hint_bridge = HintBridge()
 
-    def generate_post_action_hints(self, tool_name: str, tool_input: dict, tool_result: Any = None) -> list[str]:
+    def generate_post_action_hints(
+        self, tool_name: str, tool_input: dict, tool_result: Any = None
+    ) -> list[str]:
         """Generate hints after a tool action."""
         context = {
-            'tool_name': tool_name,
-            'tool_input': tool_input,
-            'tool_result': tool_result,
-            'timestamp': datetime.now().isoformat(),
-            'agent_role': self._get_current_agent_role()
+            "tool_name": tool_name,
+            "tool_input": tool_input,
+            "tool_result": tool_result,
+            "timestamp": datetime.now().isoformat(),
+            "agent_role": self._get_current_agent_role(),
         }
 
         all_hints = []
 
         # Get hints from post-action provider
-        post_provider = next((p for p in self.providers if isinstance(p, PostActionHintProvider)), None)
+        post_provider = next(
+            (p for p in self.providers if isinstance(p, PostActionHintProvider)), None
+        )
         if post_provider:
             all_hints.extend(post_provider.generate_hints(context))
 
         # Get pattern-based hints
-        pattern_provider = next((p for p in self.providers if isinstance(p, PatternAnalysisHintProvider)), None)
+        pattern_provider = next(
+            (p for p in self.providers if isinstance(p, PatternAnalysisHintProvider)),
+            None,
+        )
         if pattern_provider:
             all_hints.extend(pattern_provider.generate_hints(context))
 
         # Store hints for potential retrieval
         for hint in all_hints[:2]:  # Store top 2 hints
-            self.hint_bridge.store_hint(hint, 'post_action')
+            self.hint_bridge.store_hint(hint, "post_action")
 
         return self._deduplicate_hints(all_hints)
 
     def generate_pre_action_hints(self, tool_name: str, tool_input: dict) -> list[str]:
         """Generate hints before a tool action."""
         context = {
-            'tool_name': tool_name,
-            'tool_input': tool_input,
-            'timestamp': datetime.now().isoformat(),
-            'agent_role': self._get_current_agent_role(),
-            'recent_tools': self._get_recent_tool_usage()
+            "tool_name": tool_name,
+            "tool_input": tool_input,
+            "timestamp": datetime.now().isoformat(),
+            "agent_role": self._get_current_agent_role(),
+            "recent_tools": self._get_recent_tool_usage(),
         }
 
         all_hints = []
 
         # Get hints from pre-action provider
-        pre_provider = next((p for p in self.providers if isinstance(p, PreActionHintProvider)), None)
+        pre_provider = next(
+            (p for p in self.providers if isinstance(p, PreActionHintProvider)), None
+        )
         if pre_provider:
             all_hints.extend(pre_provider.generate_hints(context))
 
         # Retrieve any stored hints
-        stored_hints = self.hint_bridge.retrieve_hints('pre_action')
+        stored_hints = self.hint_bridge.retrieve_hints("pre_action")
         all_hints.extend(stored_hints)
 
         return self._deduplicate_hints(all_hints)
@@ -337,7 +373,7 @@ class UnifiedHintSystem:
                 return get_current_agent()
             except Exception:
                 pass
-        return 'unknown'
+        return "unknown"
 
     def _get_recent_tool_usage(self) -> list[str]:
         """Get recent tool usage for pattern analysis."""
@@ -361,11 +397,14 @@ class UnifiedHintSystem:
 
     def remove_provider(self, provider_name: str) -> None:
         """Remove a hint provider by name."""
-        self.providers = [p for p in self.providers if p.get_provider_name() != provider_name]
+        self.providers = [
+            p for p in self.providers if p.get_provider_name() != provider_name
+        ]
 
 
 # Global instance
 _hint_system = None
+
 
 def get_hint_system() -> UnifiedHintSystem:
     """Get the global hint system instance."""
@@ -376,9 +415,13 @@ def get_hint_system() -> UnifiedHintSystem:
 
 
 # Convenience functions for backward compatibility
-def generate_post_action_hints(tool_name: str, tool_input: dict, tool_result: Any = None) -> list[str]:
+def generate_post_action_hints(
+    tool_name: str, tool_input: dict, tool_result: Any = None
+) -> list[str]:
     """Generate post-action hints (backward compatibility)."""
-    return get_hint_system().generate_post_action_hints(tool_name, tool_input, tool_result)
+    return get_hint_system().generate_post_action_hints(
+        tool_name, tool_input, tool_result
+    )
 
 
 def generate_pre_action_hints(tool_name: str, tool_input: dict) -> list[str]:
@@ -386,7 +429,7 @@ def generate_pre_action_hints(tool_name: str, tool_input: dict) -> list[str]:
     return get_hint_system().generate_pre_action_hints(tool_name, tool_input)
 
 
-def store_hint_for_later(hint: str, category: str = 'general') -> None:
+def store_hint_for_later(hint: str, category: str = "general") -> None:
     """Store a hint for later retrieval (backward compatibility)."""
     get_hint_system().hint_bridge.store_hint(hint, category)
 
@@ -397,14 +440,12 @@ if __name__ == "__main__":
 
     # Test post-action hints
     post_hints = system.generate_post_action_hints(
-        'manage_task',
-        {'action': 'create', 'title': 'Test task'}
+        "manage_task", {"action": "create", "title": "Test task"}
     )
     print("Post-action hints:", post_hints)
 
     # Test pre-action hints
     pre_hints = system.generate_pre_action_hints(
-        'Write',
-        {'file_path': '/test/file.py'}
+        "Write", {"file_path": "/test/file.py"}
     )
     print("Pre-action hints:", pre_hints)

@@ -11,6 +11,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+
 class ConfigLoader:
     """Centralized configuration loader for hook system."""
 
@@ -19,7 +20,9 @@ class ConfigLoader:
         self.config_dir = Path(__file__).parent
         self._cache = {}
 
-    def load_config(self, config_name: str, use_cache: bool = True) -> dict[str, Any] | None:
+    def load_config(
+        self, config_name: str, use_cache: bool = True
+    ) -> dict[str, Any] | None:
         """
         Load a configuration file from the config directory.
 
@@ -40,7 +43,7 @@ class ConfigLoader:
             return None
 
         try:
-            with open(config_path, encoding='utf-8') as f:
+            with open(config_path, encoding="utf-8") as f:
                 config_data = yaml.safe_load(f)
 
             if use_cache:
@@ -93,8 +96,10 @@ class ConfigLoader:
         """
         return self.load_config(config_name, use_cache=False)
 
+
 # Global instance
 _config_loader = None
+
 
 def get_config_loader() -> ConfigLoader:
     """Get the global configuration loader instance."""
@@ -103,15 +108,18 @@ def get_config_loader() -> ConfigLoader:
         _config_loader = ConfigLoader()
     return _config_loader
 
+
 def load_mcp_hints_config() -> dict[str, Any] | None:
     """Convenience function to load MCP post-action hints configuration."""
     loader = get_config_loader()
     return loader.get_mcp_post_hints_config()
 
+
 def load_session_messages_config() -> dict[str, Any] | None:
     """Convenience function to load session start messages configuration."""
     loader = get_config_loader()
     return loader.get_session_start_config()
+
 
 def load_hint_messages_config(message_type: str) -> dict[str, Any] | None:
     """Convenience function to load hint message configuration."""

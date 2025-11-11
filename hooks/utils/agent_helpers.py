@@ -16,7 +16,7 @@ def switch_to_debugger():
 
 
 def switch_to_coding():
-    """Quick switch to coding agent."""  
+    """Quick switch to coding agent."""
     return switch_to_agent("coding-agent")
 
 

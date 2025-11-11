@@ -45,6 +45,7 @@ if not PROJECT_ROOT:
 # Abstract Base Classes
 # ============================================================================
 
+
 class Component(ABC):
     """Base component interface."""
 
@@ -67,6 +68,7 @@ class Logger(ABC):
 # Component Implementations
 # ============================================================================
 
+
 class FileLogger(Logger):
     """File-based logger implementation."""
 
@@ -79,10 +81,10 @@ class FileLogger(Logger):
     def log(self, level: str, message: str, data: dict | None = None):
         """Log to JSON file."""
         entry = {
-            'timestamp': datetime.now().isoformat(),
-            'level': level,
-            'message': message,
-            'data': data
+            "timestamp": datetime.now().isoformat(),
+            "level": level,
+            "message": message,
+            "data": data,
         }
 
         # Load existing log
@@ -101,7 +103,7 @@ class FileLogger(Logger):
         if len(log_data) > 100:
             log_data = log_data[-100:]
 
-        with open(self.log_path, 'w') as f:
+        with open(self.log_path, "w") as f:
             json.dump(log_data, f, indent=2)
 
 
@@ -115,29 +117,30 @@ class DocumentationUpdater(Component):
         """Update documentation index if needed."""
         modified_file = self._get_modified_file(tool_name, tool_input)
 
-        if modified_file and 'ai_docs' in Path(modified_file).parts:
+        if modified_file and "ai_docs" in Path(modified_file).parts:
             try:
                 # Import docs indexer dynamically
                 from utils.docs_indexer import update_index
+
                 update_index(self.ai_docs_path)
-                return {'updated': True, 'path': modified_file}
+                return {"updated": True, "path": modified_file}
             except Exception as e:
-                return {'updated': False, 'error': str(e)}
+                return {"updated": False, "error": str(e)}
 
         return None
 
     def _get_modified_file(self, tool_name: str, tool_input: dict) -> str | None:
         """Extract the file path that was modified."""
-        if tool_name in ['Write', 'Edit', 'MultiEdit']:
-            return tool_input.get('file_path')
-        elif tool_name == 'NotebookEdit':
-            return tool_input.get('notebook_path')
-        elif tool_name == 'Bash':
-            command = tool_input.get('command', '')
-            if 'mv ' in command or 'rm ' in command or 'touch ' in command:
+        if tool_name in ["Write", "Edit", "MultiEdit"]:
+            return tool_input.get("file_path")
+        elif tool_name == "NotebookEdit":
+            return tool_input.get("notebook_path")
+        elif tool_name == "Bash":
+            command = tool_input.get("command", "")
+            if "mv " in command or "rm " in command or "touch " in command:
                 parts = command.split()
                 for i, part in enumerate(parts):
-                    if part in ['mv', 'rm', 'touch'] and i + 1 < len(parts):
+                    if part in ["mv", "rm", "touch"] and i + 1 < len(parts):
                         return parts[i + 1]
         return None
 
@@ -150,7 +153,7 @@ class HintGenerator(Component):
 
     def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
         """Generate hints based on tool execution."""
-        if not tool_name.startswith('mcp__agenthub_http'):
+        if not tool_name.startswith("mcp__agenthub_http"):
             return None
 
         try:
@@ -161,19 +164,23 @@ class HintGenerator(Component):
             hints = generate_post_action_hints(tool_name, tool_input, tool_result)
 
             if hints:
-                action = tool_input.get('action', 'default')
+                action = tool_input.get("action", "default")
                 store_hint(hints, tool_name, action)
 
-                self.logger.log('info', 'Hints generated', {
-                    'tool': tool_name,
-                    'action': action,
-                    'hint_preview': hints[:100] if hints else None
-                })
+                self.logger.log(
+                    "info",
+                    "Hints generated",
+                    {
+                        "tool": tool_name,
+                        "action": action,
+                        "hint_preview": hints[:100] if hints else None,
+                    },
+                )
 
-                return {'hints_generated': True, 'hints': hints}
+                return {"hints_generated": True, "hints": hints}
 
         except Exception as e:
-            self.logger.log('error', f'Hint generation failed: {e}')
+            self.logger.log("error", f"Hint generation failed: {e}")
 
         return None
 
@@ -186,10 +193,10 @@ class AgentStateTracker(Component):
 
     def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
         """Update agent state if call_agent was used."""
-        if tool_name != 'mcp__agenthub_http__call_agent':
+        if tool_name != "mcp__agenthub_http__call_agent":
             return None
 
-        agent_name = tool_input.get('name_agent', '')
+        agent_name = tool_input.get("name_agent", "")
         if not agent_name:
             return None
 
@@ -198,14 +205,14 @@ class AgentStateTracker(Component):
             from utils.agent_state_manager import update_agent_state_from_call_agent
 
             # Use default session if not provided
-            session_id = 'default_session'
+            session_id = "default_session"
             update_agent_state_from_call_agent(session_id, tool_input)
 
-            self.logger.log('info', f'Agent state updated: {agent_name}')
-            return {'agent_state_updated': True, 'agent': agent_name}
+            self.logger.log("info", f"Agent state updated: {agent_name}")
+            return {"agent_state_updated": True, "agent": agent_name}
 
         except Exception as e:
-            self.logger.log('error', f'Agent state update failed: {e}')
+            self.logger.log("error", f"Agent state update failed: {e}")
 
         return None
 
@@ -223,11 +230,11 @@ class ContextSynchronizer(Component):
             from utils.context_updater import update_context_sync
 
             if update_context_sync(tool_name, tool_input):
-                self.logger.log('info', 'Context synchronized')
-                return {'context_synced': True}
+                self.logger.log("info", "Context synchronized")
+                return {"context_synced": True}
 
         except Exception as e:
-            self.logger.log('error', f'Context sync failed: {e}')
+            self.logger.log("error", f"Context sync failed: {e}")
 
         return None
 
@@ -236,11 +243,12 @@ class ContextSynchronizer(Component):
 # Component Factory
 # ============================================================================
 
+
 class ComponentFactory:
     """Factory for creating hook components."""
 
     @staticmethod
-    def create_logger(log_dir: Path, log_name: str = 'post_tool_use') -> Logger:
+    def create_logger(log_dir: Path, log_name: str = "post_tool_use") -> Logger:
         """Create a logger instance."""
         return FileLogger(log_dir, log_name)
 
@@ -269,6 +277,7 @@ class ComponentFactory:
 # Main Hook Class
 # ============================================================================
 
+
 class PostToolUseHook:
     """Main post-tool use hook with clean architecture."""
 
@@ -278,7 +287,7 @@ class PostToolUseHook:
         from utils.env_loader import get_ai_data_path
 
         self.log_dir = get_ai_data_path()
-        self.ai_docs_path = PROJECT_ROOT / 'ai_docs'
+        self.ai_docs_path = PROJECT_ROOT / "ai_docs"
 
         # Create components using factory
         self.factory = ComponentFactory()
@@ -289,31 +298,34 @@ class PostToolUseHook:
             self.factory.create_documentation_updater(self.ai_docs_path),
             self.factory.create_hint_generator(self.logger),
             self.factory.create_agent_tracker(self.logger),
-            self.factory.create_context_synchronizer(self.logger)
+            self.factory.create_context_synchronizer(self.logger),
         ]
 
     def execute(self, data: dict[str, Any]) -> int:
         """Execute the post-tool use hook."""
-        tool_name = data.get('tool_name', '')
-        tool_input = data.get('tool_input', {})
-        tool_result = data.get('tool_result', None)
+        tool_name = data.get("tool_name", "")
+        tool_input = data.get("tool_input", {})
+        tool_result = data.get("tool_result", None)
 
         # Log the execution
-        self.logger.log('info', f'Post-processing: {tool_name}')
+        self.logger.log("info", f"Post-processing: {tool_name}")
 
         # Check for MCP post-action hints
         output_parts = []
-        if tool_name.startswith('mcp__agenthub_http') and tool_result:
+        if tool_name.startswith("mcp__agenthub_http") and tool_result:
             try:
                 from utils.unified_hint_system import get_hint_system
+
                 hint_system = get_hint_system()
                 # Generate post-action contextual hints based on result
-                hints = hint_system.generate_post_action_hints(tool_name, tool_input, tool_result)
+                hints = hint_system.generate_post_action_hints(
+                    tool_name, tool_input, tool_result
+                )
                 if hints:
                     # hints is a list of strings, extend output_parts instead of append
                     output_parts.extend(hints)
             except Exception as e:
-                self.logger.log('error', f'MCP post-action hint matrix failed: {e}')
+                self.logger.log("error", f"MCP post-action hint matrix failed: {e}")
 
         # Process through all components
         results = {}
@@ -323,7 +335,7 @@ class PostToolUseHook:
                 if result:
                     results[component.__class__.__name__] = result
             except Exception as e:
-                self.logger.log('error', f'{component.__class__.__name__} failed: {e}')
+                self.logger.log("error", f"{component.__class__.__name__} failed: {e}")
 
         # Output any post-action hints
         if output_parts:
@@ -332,7 +344,7 @@ class PostToolUseHook:
 
         # Log overall results
         if results:
-            self.logger.log('info', 'Post-processing completed', results)
+            self.logger.log("info", "Post-processing completed", results)
 
         return 0
 
@@ -340,6 +352,7 @@ class PostToolUseHook:
 # ============================================================================
 # Main Entry Point
 # ============================================================================
+
 
 def main():
     """Main entry point for the hook."""
@@ -364,14 +377,15 @@ def main():
         # Log error but exit cleanly
         try:
             from utils.env_loader import get_ai_data_path
+
             log_dir = get_ai_data_path()
-            error_log = log_dir / 'post_tool_use_errors.log'
-            with open(error_log, 'a') as f:
+            error_log = log_dir / "post_tool_use_errors.log"
+            with open(error_log, "a") as f:
                 f.write(f"{datetime.now().isoformat()} - Fatal error: {e}\n")
         except:
             pass
         sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

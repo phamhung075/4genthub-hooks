@@ -4,7 +4,10 @@ MCP Post Action Hints Module
 This module provides post-action hints for MCP tools to improve user experience.
 """
 
-def generate_post_action_hints(tool_name: str, tool_input: dict, result: dict = None) -> str:
+
+def generate_post_action_hints(
+    tool_name: str, tool_input: dict, result: dict = None
+) -> str:
     """
     Generate helpful hints after a tool action is completed.
 

@@ -39,15 +39,15 @@ class PathResolver:
 
     # Marker files that indicate project root (ordered by priority)
     MARKER_FILES = [
-        'CLAUDE.md',        # Most specific to Claude projects
-        '.env.dev',         # Development environment marker
-        '.env.claude',      # Claude-specific environment
-        'CLAUDE.local.md',  # Local Claude configuration
-        '.git',             # Git repository root
-        'package.json',     # Node.js project
-        'pyproject.toml',   # Python project
-        'docker-compose.yml', # Docker project
-        '.env',             # General environment file
+        "CLAUDE.md",  # Most specific to Claude projects
+        ".env.dev",  # Development environment marker
+        ".env.claude",  # Claude-specific environment
+        "CLAUDE.local.md",  # Local Claude configuration
+        ".git",  # Git repository root
+        "package.json",  # Node.js project
+        "pyproject.toml",  # Python project
+        "docker-compose.yml",  # Docker project
+        ".env",  # General environment file
     ]
 
     def __init__(self, debug: bool = False):
@@ -59,7 +59,11 @@ class PathResolver:
         """
         self._project_root = None
         self._original_cwd = os.getcwd()
-        self._debug = debug or os.getenv('CLAUDE_HOOK_DEBUG', '').lower() in ('1', 'true', 'yes')
+        self._debug = debug or os.getenv("CLAUDE_HOOK_DEBUG", "").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
 
         # Automatically find project root on initialization
         self._find_project_root()
@@ -83,22 +87,26 @@ class PathResolver:
         start_paths = []
 
         # Try to determine starting point from the calling script
-        if hasattr(sys, '_getframe'):
+        if hasattr(sys, "_getframe"):
             try:
                 # Get the caller's filename
                 caller_frame = sys._getframe(1)
-                caller_file = caller_frame.f_globals.get('__file__')
+                caller_file = caller_frame.f_globals.get("__file__")
                 if caller_file:
                     start_paths.append(Path(caller_file).parent)
             except (AttributeError, ValueError):
                 pass
 
         # Add additional starting points
-        start_paths.extend([
-            Path(__file__).parent.parent.parent,  # From utils -> hooks -> .claude -> project
-            Path.cwd(),
-            Path(__file__).parent.parent if __file__ else Path.cwd()
-        ])
+        start_paths.extend(
+            [
+                Path(
+                    __file__
+                ).parent.parent.parent,  # From utils -> hooks -> .claude -> project
+                Path.cwd(),
+                Path(__file__).parent.parent if __file__ else Path.cwd(),
+            ]
+        )
 
         self._log_debug(f"Starting search from paths: {start_paths}")
 
@@ -118,13 +126,17 @@ class PathResolver:
                             self._log_debug(f"Found marker: {marker_path}")
 
                             # Verify it's a Claude project by checking for .claude/hooks
-                            claude_hooks = current / '.claude' / 'hooks'
+                            claude_hooks = current / ".claude" / "hooks"
                             if claude_hooks.exists():
-                                self._log_debug(f"Confirmed Claude project root: {current}")
+                                self._log_debug(
+                                    f"Confirmed Claude project root: {current}"
+                                )
                                 self._project_root = current
                                 return self._project_root
                             else:
-                                self._log_debug(f"Found {marker} but no .claude/hooks directory")
+                                self._log_debug(
+                                    f"Found {marker} but no .claude/hooks directory"
+                                )
 
                     current = current.parent
 
@@ -153,7 +165,7 @@ class PathResolver:
         """
         if not self._project_root:
             return None
-        return self._project_root / '.claude' / 'hooks'
+        return self._project_root / ".claude" / "hooks"
 
     def get_utils_dir(self) -> Path | None:
         """
@@ -165,7 +177,7 @@ class PathResolver:
         hooks_dir = self.get_hooks_dir()
         if not hooks_dir:
             return None
-        return hooks_dir / 'utils'
+        return hooks_dir / "utils"
 
     def get_claude_dir(self) -> Path | None:
         """
@@ -176,7 +188,7 @@ class PathResolver:
         """
         if not self._project_root:
             return None
-        return self._project_root / '.claude'
+        return self._project_root / ".claude"
 
     def resolve_path(self, relative_path: str) -> Path | None:
         """
@@ -193,13 +205,13 @@ class PathResolver:
 
         # Clean up the relative path
         path_str = str(relative_path)
-        if path_str.startswith('./'):
+        if path_str.startswith("./"):
             path_str = path_str[2:]
-        elif path_str.startswith('.\\'):  # Windows
+        elif path_str.startswith(".\\"):  # Windows
             path_str = path_str[2:]
 
         # Remove any leading slashes
-        path_str = path_str.lstrip('/').lstrip('\\')
+        path_str = path_str.lstrip("/").lstrip("\\")
 
         # Construct absolute path
         absolute_path = self._project_root / path_str
@@ -218,7 +230,9 @@ class PathResolver:
 
         current_cwd = Path.cwd()
         if current_cwd != self._project_root:
-            self._log_debug(f"Changing working directory from {current_cwd} to {self._project_root}")
+            self._log_debug(
+                f"Changing working directory from {current_cwd} to {self._project_root}"
+            )
             os.chdir(self._project_root)
         else:
             self._log_debug(f"Already in correct working directory: {current_cwd}")
@@ -252,13 +266,13 @@ class PathResolver:
             Dictionary with project paths and status
         """
         info = {
-            'project_root': str(self._project_root) if self._project_root else None,
-            'hooks_dir': str(self.get_hooks_dir()) if self.get_hooks_dir() else None,
-            'utils_dir': str(self.get_utils_dir()) if self.get_utils_dir() else None,
-            'claude_dir': str(self.get_claude_dir()) if self.get_claude_dir() else None,
-            'original_cwd': self._original_cwd,
-            'current_cwd': os.getcwd(),
-            'project_found': self._project_root is not None
+            "project_root": str(self._project_root) if self._project_root else None,
+            "hooks_dir": str(self.get_hooks_dir()) if self.get_hooks_dir() else None,
+            "utils_dir": str(self.get_utils_dir()) if self.get_utils_dir() else None,
+            "claude_dir": str(self.get_claude_dir()) if self.get_claude_dir() else None,
+            "original_cwd": self._original_cwd,
+            "current_cwd": os.getcwd(),
+            "project_found": self._project_root is not None,
         }
         return info
 
@@ -324,7 +338,7 @@ if __name__ == "__main__":
         test_paths = [
             "./.claude/hooks/session_start.py",
             "ai_docs/index.json",
-            ".env.dev"
+            ".env.dev",
         ]
 
         for path in test_paths:

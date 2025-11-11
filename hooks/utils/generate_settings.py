@@ -25,8 +25,8 @@ def generate_settings():
         sys.exit(1)
 
     # Get hooks directory
-    hooks_dir = project_root / '.claude' / 'hooks'
-    status_dir = project_root / '.claude' / 'status_lines'
+    hooks_dir = project_root / ".claude" / "hooks"
+    status_dir = project_root / ".claude" / "status_lines"
 
     if not hooks_dir.exists():
         print(f"Error: Hooks directory not found: {hooks_dir}", file=sys.stderr)
@@ -47,14 +47,14 @@ def generate_settings():
                 "Write",
                 "Edit",
                 "Bash(chmod:*)",
-                "Bash(touch:*)"
+                "Bash(touch:*)",
             ],
-            "deny": []
+            "deny": [],
         },
         "statusLine": {
             "type": "command",
             "command": f"python3 {hooks_dir / 'execute_hook.py'} status_line_mcp.py",
-            "padding": 0
+            "padding": 0,
         },
         "includeCoAuthoredBy": False,
         "hooks": {
@@ -64,9 +64,9 @@ def generate_settings():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"python3 {hooks_dir / 'execute_hook.py'} pre_tool_use.py"
+                            "command": f"python3 {hooks_dir / 'execute_hook.py'} pre_tool_use.py",
                         }
-                    ]
+                    ],
                 }
             ],
             "PostToolUse": [
@@ -75,9 +75,9 @@ def generate_settings():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"python3 {hooks_dir / 'execute_hook.py'} post_tool_use.py"
+                            "command": f"python3 {hooks_dir / 'execute_hook.py'} post_tool_use.py",
                         }
-                    ]
+                    ],
                 }
             ],
             "Notification": [
@@ -86,9 +86,9 @@ def generate_settings():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"python3 {hooks_dir / 'execute_hook.py'} notification.py --notify"
+                            "command": f"python3 {hooks_dir / 'execute_hook.py'} notification.py --notify",
                         }
-                    ]
+                    ],
                 }
             ],
             "Stop": [
@@ -97,9 +97,9 @@ def generate_settings():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"python3 {hooks_dir / 'execute_hook.py'} stop.py --chat"
+                            "command": f"python3 {hooks_dir / 'execute_hook.py'} stop.py --chat",
                         }
-                    ]
+                    ],
                 }
             ],
             "SubagentStop": [
@@ -108,9 +108,9 @@ def generate_settings():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"python3 {hooks_dir / 'execute_hook.py'} subagent_stop.py --notify"
+                            "command": f"python3 {hooks_dir / 'execute_hook.py'} subagent_stop.py --notify",
                         }
-                    ]
+                    ],
                 }
             ],
             "UserPromptSubmit": [
@@ -118,7 +118,7 @@ def generate_settings():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"python3 {hooks_dir / 'execute_hook.py'} user_prompt_submit.py --log-only --store-last-prompt --name-agent"
+                            "command": f"python3 {hooks_dir / 'execute_hook.py'} user_prompt_submit.py --log-only --store-last-prompt --name-agent",
                         }
                     ]
                 }
@@ -129,9 +129,9 @@ def generate_settings():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"python3 {hooks_dir / 'execute_hook.py'} pre_compact.py"
+                            "command": f"python3 {hooks_dir / 'execute_hook.py'} pre_compact.py",
                         }
-                    ]
+                    ],
                 }
             ],
             "SessionStart": [
@@ -140,12 +140,12 @@ def generate_settings():
                     "hooks": [
                         {
                             "type": "command",
-                            "command": f"python3 {hooks_dir / 'execute_hook.py'} session_start.py"
+                            "command": f"python3 {hooks_dir / 'execute_hook.py'} session_start.py",
                         }
-                    ]
+                    ],
                 }
-            ]
-        }
+            ],
+        },
     }
 
     return settings, project_root
@@ -158,25 +158,27 @@ def main():
         settings, project_root = generate_settings()
 
         # Determine output path
-        if '--stdout' in sys.argv:
+        if "--stdout" in sys.argv:
             # Print to stdout
             print(json.dumps(settings, indent=2))
         else:
             # Write to settings.json
-            settings_path = project_root / '.claude' / 'settings.json'
+            settings_path = project_root / ".claude" / "settings.json"
 
             # Backup existing settings
             if settings_path.exists():
-                backup_path = settings_path.with_suffix('.json.backup')
+                backup_path = settings_path.with_suffix(".json.backup")
                 backup_path.write_text(settings_path.read_text())
                 print(f"Backed up existing settings to: {backup_path}")
 
             # Write new settings
-            with open(settings_path, 'w') as f:
+            with open(settings_path, "w") as f:
                 json.dump(settings, f, indent=2)
 
             print(f"Generated new settings.json with wrapper approach: {settings_path}")
-            print("Settings.json now uses execute_hook.py wrapper for robust path resolution!")
+            print(
+                "Settings.json now uses execute_hook.py wrapper for robust path resolution!"
+            )
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

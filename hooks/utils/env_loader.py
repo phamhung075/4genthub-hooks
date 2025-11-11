@@ -9,12 +9,14 @@ from dotenv import load_dotenv
 # Import our robust project root finder
 try:
     from utils.find_project_root import ProjectRootFinder
+
     root_finder = ProjectRootFinder()
     PROJECT_ROOT = root_finder.find_project_root()
 except ImportError:
     # Try without utils prefix (for different import contexts)
     try:
         from find_project_root import ProjectRootFinder
+
         root_finder = ProjectRootFinder()
         PROJECT_ROOT = root_finder.find_project_root()
     except ImportError:
@@ -26,7 +28,7 @@ except ImportError:
 
             # Walk up the directory tree looking for .env.claude or .git
             for parent in [current] + list(current.parents):
-                if (parent / '.env.claude').exists() or (parent / '.git').exists():
+                if (parent / ".env.claude").exists() or (parent / ".git").exists():
                     return parent
 
             # Use the calculated path if no markers found
@@ -38,15 +40,16 @@ except ImportError:
 if PROJECT_ROOT is None:
     # Use the file's location to find project root (4 levels up from utils/env_loader.py)
     PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-ENV_CLAUDE_PATH = PROJECT_ROOT / '.env.claude'
+ENV_CLAUDE_PATH = PROJECT_ROOT / ".env.claude"
 
 if ENV_CLAUDE_PATH.exists():
     load_dotenv(ENV_CLAUDE_PATH)
 else:
     # Fallback to .env if .env.claude doesn't exist
-    env_path = PROJECT_ROOT / '.env'
+    env_path = PROJECT_ROOT / ".env"
     if env_path.exists():
         load_dotenv(env_path)
+
 
 def get_ai_data_path():
     """
@@ -54,20 +57,21 @@ def get_ai_data_path():
     Falls back to 'logs' if not set.
     Always relative to project root, not current working directory.
     """
-    
+
     # Get AI_DATA from environment, default to 'logs'
-    ai_data_path = os.getenv('AI_DATA', 'logs')
-    
+    ai_data_path = os.getenv("AI_DATA", "logs")
+
     # Convert to Path object and ensure it's absolute
     if not os.path.isabs(ai_data_path):
         ai_data_path = PROJECT_ROOT / ai_data_path
     else:
         ai_data_path = Path(ai_data_path)
-    
+
     # Ensure the directory exists
     ai_data_path.mkdir(parents=True, exist_ok=True)
-    
+
     return ai_data_path
+
 
 def get_ai_docs_path():
     """
@@ -76,18 +80,19 @@ def get_ai_docs_path():
     Always relative to project root, not current working directory.
     """
     # Get AI_DOCS from environment, default to 'ai_docs'
-    ai_docs_path = os.getenv('AI_DOCS', 'ai_docs')
-    
+    ai_docs_path = os.getenv("AI_DOCS", "ai_docs")
+
     # Convert to Path object and ensure it's absolute
     if not os.path.isabs(ai_docs_path):
         ai_docs_path = PROJECT_ROOT / ai_docs_path
     else:
         ai_docs_path = Path(ai_docs_path)
-    
+
     # Ensure the directory exists
     ai_docs_path.mkdir(parents=True, exist_ok=True)
-    
+
     return ai_docs_path
+
 
 def get_log_path():
     """
@@ -96,18 +101,19 @@ def get_log_path():
     Always relative to project root, not current working directory.
     """
     # Get LOG_PATH from environment, default to 'logs'
-    log_path = os.getenv('LOG_PATH', 'logs')
-    
+    log_path = os.getenv("LOG_PATH", "logs")
+
     # Convert to Path object and ensure it's absolute
     if not os.path.isabs(log_path):
         log_path = PROJECT_ROOT / log_path
     else:
         log_path = Path(log_path)
-    
+
     # Ensure the directory exists
     log_path.mkdir(parents=True, exist_ok=True)
-    
+
     return log_path
+
 
 def get_all_paths():
     """
@@ -115,18 +121,20 @@ def get_all_paths():
     Returns dict with 'ai_data', 'ai_docs', and 'log_path' keys.
     """
     return {
-        'ai_data': get_ai_data_path(),
-        'ai_docs': get_ai_docs_path(),
-        'log_path': get_log_path()
+        "ai_data": get_ai_data_path(),
+        "ai_docs": get_ai_docs_path(),
+        "log_path": get_log_path(),
     }
+
 
 def is_claude_edit_enabled():
     """
     Check if editing .claude files is enabled.
     Returns True if ENABLE_CLAUDE_EDIT is 'true', '1', 'yes', or 'on'.
     """
-    enable_edit = os.getenv('ENABLE_CLAUDE_EDIT', 'false').lower()
-    return enable_edit in ['true', '1', 'yes', 'on']
+    enable_edit = os.getenv("ENABLE_CLAUDE_EDIT", "false").lower()
+    return enable_edit in ["true", "1", "yes", "on"]
+
 
 def get_project_root():
     """

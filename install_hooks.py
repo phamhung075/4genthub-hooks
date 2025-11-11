@@ -51,6 +51,7 @@ try:
         setup_default_fallbacks,
     )
     from environment_detector import EnvironmentDetector, generate_environment_report
+
     UTILS_AVAILABLE = True
 except ImportError:
     print("⚠️  Warning: Hook utilities not found. Using basic installation mode.")
@@ -71,8 +72,8 @@ class ClaudeHooksInstaller:
         self.force_reinstall = force_reinstall
         self.verbose = verbose
         self.project_root = self._find_project_root()
-        self.claude_dir = self.project_root / '.claude' if self.project_root else None
-        self.hooks_dir = self.claude_dir / 'hooks' if self.claude_dir else None
+        self.claude_dir = self.project_root / ".claude" if self.project_root else None
+        self.hooks_dir = self.claude_dir / "hooks" if self.claude_dir else None
 
         # Initialize components if utilities are available
         if UTILS_AVAILABLE and self.project_root:
@@ -154,12 +155,16 @@ class ClaudeHooksInstaller:
                 print("\n📊 Environment Details:")
                 env_info = self.env_detector.get_environment_info()
                 print(f"   • Platform: {env_info['platform']['system']}")
-                print(f"   • Python: {env_info['python']['version_info']['major']}.{env_info['python']['version_info']['minor']}")
-                if env_info['virtual_env']['is_virtual_env']:
-                    print(f"   • Virtual Env: {env_info['virtual_env']['type']} ({env_info['virtual_env']['name']})")
-                if env_info['git']['is_git_repo']:
+                print(
+                    f"   • Python: {env_info['python']['version_info']['major']}.{env_info['python']['version_info']['minor']}"
+                )
+                if env_info["virtual_env"]["is_virtual_env"]:
+                    print(
+                        f"   • Virtual Env: {env_info['virtual_env']['type']} ({env_info['virtual_env']['name']})"
+                    )
+                if env_info["git"]["is_git_repo"]:
                     print(f"   • Git: {env_info['git']['current_branch']}")
-                    if env_info['git']['is_submodule']:
+                    if env_info["git"]["is_submodule"]:
                         print("   • .claude is a git submodule")
 
         return True
@@ -170,19 +175,19 @@ class ClaudeHooksInstaller:
         print("-" * 35)
 
         # Check if already installed
-        settings_file = self.claude_dir / 'settings.json'
+        settings_file = self.claude_dir / "settings.json"
         if settings_file.exists() and not self.force_reinstall:
             print("ℹ️  Claude hooks appear to be already configured")
             answer = input("Do you want to reconfigure? [y/N]: ")
-            if answer.lower() not in ['y', 'yes']:
+            if answer.lower() not in ["y", "yes"]:
                 print("Skipping installation. Use --force to force reinstallation.")
                 return False
 
         # Check for required files
         required_files = [
-            'settings.json.sample',
-            'hooks/setup_hooks.py',
-            'hooks/execute_hook.py'
+            "settings.json.sample",
+            "hooks/setup_hooks.py",
+            "hooks/execute_hook.py",
         ]
 
         missing_files = []
@@ -210,7 +215,9 @@ class ClaudeHooksInstaller:
             print("⚠️  Warning: Python 3.7+ is recommended")
             print(f"Current version: {sys.version_info.major}.{sys.version_info.minor}")
 
-        print(f"✅ Python version: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+        print(
+            f"✅ Python version: {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        )
 
         return True
 
@@ -227,15 +234,17 @@ class ClaudeHooksInstaller:
         # Check dependencies
         dep_status = self.dep_manager.check_dependencies()
 
-        available_count = sum(1 for status in dep_status['available'].values() if status)
-        missing_count = len(dep_status['missing'])
+        available_count = sum(
+            1 for status in dep_status["available"].values() if status
+        )
+        missing_count = len(dep_status["missing"])
 
         print(f"✅ Available packages: {available_count}")
         if missing_count > 0:
             print(f"⚠️  Missing packages: {missing_count}")
 
             # Show missing packages
-            for name, reason in dep_status['missing'].items():
+            for name, reason in dep_status["missing"].items():
                 print(f"   • {name}: {reason}")
 
         # Handle missing dependencies
@@ -243,37 +252,47 @@ class ClaudeHooksInstaller:
             print("\n🔧 Handling Missing Dependencies:")
 
             # Check which ones have fallbacks
-            has_fallbacks = [name for name in dep_status['missing'].keys()
-                           if dep_status['fallbacks_available'].get(name, False)]
+            has_fallbacks = [
+                name
+                for name in dep_status["missing"].keys()
+                if dep_status["fallbacks_available"].get(name, False)
+            ]
 
             if has_fallbacks:
                 print(f"✅ {len(has_fallbacks)} packages have fallback implementations")
 
             # Offer to install missing packages
-            installable = [name for name in dep_status['missing'].keys()
-                         if name in dep_status['install_commands']]
+            installable = [
+                name
+                for name in dep_status["missing"].keys()
+                if name in dep_status["install_commands"]
+            ]
 
             if installable:
-                print(f"\n📥 {len(installable)} packages can be installed automatically:")
+                print(
+                    f"\n📥 {len(installable)} packages can be installed automatically:"
+                )
                 for name in installable:
-                    cmd = dep_status['install_commands'][name]
+                    cmd = dep_status["install_commands"][name]
                     print(f"   • {name}: {cmd}")
 
                 answer = input("\nInstall missing packages? [y/N]: ")
-                if answer.lower() in ['y', 'yes']:
+                if answer.lower() in ["y", "yes"]:
                     print("\n🔄 Installing packages...")
                     install_result = self.dep_manager.install_missing_dependencies(
                         interactive=False, dry_run=False
                     )
 
-                    for package in install_result['successful']:
+                    for package in install_result["successful"]:
                         print(f"✅ Installed: {package}")
 
-                    for package in install_result['failed']:
+                    for package in install_result["failed"]:
                         print(f"❌ Failed to install: {package}")
 
-                    if install_result['failed']:
-                        print("⚠️  Some packages failed to install, but fallbacks are available")
+                    if install_result["failed"]:
+                        print(
+                            "⚠️  Some packages failed to install, but fallbacks are available"
+                        )
 
         print("✅ Dependency management completed")
         return True
@@ -284,7 +303,7 @@ class ClaudeHooksInstaller:
         print("-" * 30)
 
         # Run setup_hooks.py
-        setup_script = self.hooks_dir / 'setup_hooks.py'
+        setup_script = self.hooks_dir / "setup_hooks.py"
         if not setup_script.exists():
             print("❌ Error: setup_hooks.py not found")
             return False
@@ -292,22 +311,26 @@ class ClaudeHooksInstaller:
         print("🔄 Running setup_hooks.py...")
         try:
             # Run setup_hooks.py as a subprocess
-            result = subprocess.run([
-                sys.executable, str(setup_script)
-            ], capture_output=True, text=True, cwd=self.project_root, timeout=60)
+            result = subprocess.run(
+                [sys.executable, str(setup_script)],
+                capture_output=True,
+                text=True,
+                cwd=self.project_root,
+                timeout=60,
+            )
 
             if result.returncode == 0:
                 print("✅ Configuration setup completed")
                 if self.verbose and result.stdout:
                     print("Output:")
-                    for line in result.stdout.split('\n'):
+                    for line in result.stdout.split("\n"):
                         if line.strip():
                             print(f"   {line}")
             else:
                 print("❌ Configuration setup failed")
                 if result.stderr:
                     print("Error output:")
-                    for line in result.stderr.split('\n'):
+                    for line in result.stderr.split("\n"):
                         if line.strip():
                             print(f"   {line}")
                 return False
@@ -329,7 +352,7 @@ class ClaudeHooksInstaller:
         validation_passed = True
 
         # Check if settings.json was created
-        settings_file = self.claude_dir / 'settings.json'
+        settings_file = self.claude_dir / "settings.json"
         if settings_file.exists():
             print("✅ settings.json created")
         else:
@@ -340,11 +363,12 @@ class ClaudeHooksInstaller:
         if settings_file.exists():
             try:
                 import json
+
                 with open(settings_file) as f:
                     settings = json.load(f)
 
                 # Validate structure
-                required_sections = ['hooks', 'statusLine']
+                required_sections = ["hooks", "statusLine"]
                 for section in required_sections:
                     if section in settings:
                         print(f"✅ settings.json has {section} section")
@@ -354,7 +378,7 @@ class ClaudeHooksInstaller:
 
                 # Check for PROJECT_ROOT placeholder replacement
                 settings_str = json.dumps(settings)
-                if '{{PROJECT_ROOT}}' in settings_str:
+                if "{{PROJECT_ROOT}}" in settings_str:
                     print("❌ PROJECT_ROOT placeholder not replaced in settings.json")
                     validation_passed = False
                 else:
@@ -368,13 +392,16 @@ class ClaudeHooksInstaller:
                 validation_passed = False
 
         # Test hook execution
-        execute_hook = self.hooks_dir / 'execute_hook.py'
+        execute_hook = self.hooks_dir / "execute_hook.py"
         if execute_hook.exists():
             print("🔄 Testing hook execution...")
             try:
-                result = subprocess.run([
-                    sys.executable, str(execute_hook), '--help'
-                ], capture_output=True, text=True, timeout=10)
+                result = subprocess.run(
+                    [sys.executable, str(execute_hook), "--help"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
 
                 if result.returncode == 0:
                     print("✅ Hook execution test passed")
@@ -408,17 +435,19 @@ class ClaudeHooksInstaller:
         # Check for configuration files that need to be set up
         project_files_needed = []
 
-        claude_md = self.project_root / 'CLAUDE.md'
+        claude_md = self.project_root / "CLAUDE.md"
         if not claude_md.exists():
-            project_files_needed.append(('CLAUDE.md', 'Team AI instructions'))
+            project_files_needed.append(("CLAUDE.md", "Team AI instructions"))
 
-        claude_local_md = self.project_root / 'CLAUDE.local.md'
+        claude_local_md = self.project_root / "CLAUDE.local.md"
         if not claude_local_md.exists():
-            project_files_needed.append(('CLAUDE.local.md', 'Your personal AI settings'))
+            project_files_needed.append(
+                ("CLAUDE.local.md", "Your personal AI settings")
+            )
 
-        mcp_json = self.project_root / '.mcp.json'
+        mcp_json = self.project_root / ".mcp.json"
         if not mcp_json.exists():
-            project_files_needed.append(('.mcp.json', 'API configuration'))
+            project_files_needed.append((".mcp.json", "API configuration"))
 
         if project_files_needed:
             print("📄 Configuration files to set up:")
@@ -428,7 +457,9 @@ class ClaudeHooksInstaller:
             # Check for sample files
             sample_files = []
             for filename, description in project_files_needed:
-                sample_path = self.claude_dir / f"copy-to-root-project-rename-to:{filename}"
+                sample_path = (
+                    self.claude_dir / f"copy-to-root-project-rename-to:{filename}"
+                )
                 if sample_path.exists():
                     sample_files.append((filename, str(sample_path)))
 
@@ -438,16 +469,16 @@ class ClaudeHooksInstaller:
                     print(f"   cp '{sample_path}' './{filename}'")
 
         # Check hook protection files
-        config_dir = self.hooks_dir / 'config'
+        config_dir = self.hooks_dir / "config"
         protection_files_needed = []
 
-        allowed_files = config_dir / '__claude_hook__allowed_root_files'
+        allowed_files = config_dir / "__claude_hook__allowed_root_files"
         if not allowed_files.exists():
-            protection_files_needed.append('__claude_hook__allowed_root_files')
+            protection_files_needed.append("__claude_hook__allowed_root_files")
 
-        valid_paths = config_dir / '__claude_hook__valid_test_paths'
+        valid_paths = config_dir / "__claude_hook__valid_test_paths"
         if not valid_paths.exists():
-            protection_files_needed.append('__claude_hook__valid_test_paths')
+            protection_files_needed.append("__claude_hook__valid_test_paths")
 
         if protection_files_needed:
             print("\n🛡️  Hook protection files to configure:")
@@ -478,21 +509,21 @@ class ClaudeHooksInstaller:
         """Find the project root directory."""
         # Marker files that indicate project root (ordered by priority)
         markers = [
-            'CLAUDE.md',        # Most specific to Claude projects
-            '.env.dev',         # Development environment marker
-            '.env.claude',      # Claude-specific environment
-            'CLAUDE.local.md',  # Local Claude configuration
-            '.git',             # Git repository root
-            'package.json',     # Node.js project
-            'pyproject.toml',   # Python project
-            'docker-compose.yml', # Docker project
-            '.env',             # General environment file
+            "CLAUDE.md",  # Most specific to Claude projects
+            ".env.dev",  # Development environment marker
+            ".env.claude",  # Claude-specific environment
+            "CLAUDE.local.md",  # Local Claude configuration
+            ".git",  # Git repository root
+            "package.json",  # Node.js project
+            "pyproject.toml",  # Python project
+            "docker-compose.yml",  # Docker project
+            ".env",  # General environment file
         ]
 
         # Start from current directory and this script's location
         start_paths = [
             Path.cwd(),
-            Path(__file__).parent.parent if __file__ else Path.cwd()
+            Path(__file__).parent.parent if __file__ else Path.cwd(),
         ]
 
         for start in start_paths:
@@ -506,7 +537,7 @@ class ClaudeHooksInstaller:
                         marker_path = current / marker
                         if marker_path.exists():
                             # Verify it's a Claude project by checking for .claude directory
-                            claude_dir = current / '.claude'
+                            claude_dir = current / ".claude"
                             if claude_dir.exists():
                                 return current
 
@@ -530,31 +561,32 @@ Examples:
     python3 .claude/install_hooks.py
     python3 .claude/install_hooks.py --verbose
     python3 .claude/install_hooks.py --force
-        """
+        """,
     )
 
     parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Force reinstallation even if already configured'
+        "--force",
+        action="store_true",
+        help="Force reinstallation even if already configured",
     )
 
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Show detailed output and environment information'
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Show detailed output and environment information",
     )
 
     parser.add_argument(
-        '--environment-report',
-        action='store_true',
-        help='Generate detailed environment report without installing'
+        "--environment-report",
+        action="store_true",
+        help="Generate detailed environment report without installing",
     )
 
     parser.add_argument(
-        '--dependency-report',
-        action='store_true',
-        help='Generate dependency report without installing'
+        "--dependency-report",
+        action="store_true",
+        help="Generate dependency report without installing",
     )
 
     args = parser.parse_args()
@@ -575,10 +607,7 @@ Examples:
         return
 
     # Run installer
-    installer = ClaudeHooksInstaller(
-        force_reinstall=args.force,
-        verbose=args.verbose
-    )
+    installer = ClaudeHooksInstaller(force_reinstall=args.force, verbose=args.verbose)
 
     success = installer.install()
     sys.exit(0 if success else 1)

@@ -15,14 +15,14 @@ class ProjectRootFinder:
 
     # Marker files that indicate project root
     MARKER_FILES = [
-        '.git',
-        'package.json',
-        'CLAUDE.md',
-        '.env',
-        'docker-compose.yml',
-        'pyproject.toml',
-        'setup.py',
-        'requirements.txt'
+        ".git",
+        "package.json",
+        "CLAUDE.md",
+        ".env",
+        "docker-compose.yml",
+        "pyproject.toml",
+        "setup.py",
+        "requirements.txt",
     ]
 
     def __init__(self, start_path: str | None = None):
@@ -52,7 +52,7 @@ class ProjectRootFinder:
         # Search upward and collect all potential roots
         while current_dir != current_dir.parent:
             # Check for CLAUDE.md first (most specific marker)
-            if (current_dir / 'CLAUDE.md').exists():
+            if (current_dir / "CLAUDE.md").exists():
                 found_roots.append(current_dir)
 
             # Check for other marker files
@@ -68,7 +68,7 @@ class ProjectRootFinder:
 
         # Prefer the root with CLAUDE.md file
         for root in found_roots:
-            if (root / 'CLAUDE.md').exists() and (root / '.env.dev').exists():
+            if (root / "CLAUDE.md").exists() and (root / ".env.dev").exists():
                 self._project_root = root
                 return self._project_root
 
@@ -94,7 +94,7 @@ class ProjectRootFinder:
             return None
 
         # Remove leading slash if present
-        relative_path = relative_path.lstrip('/')
+        relative_path = relative_path.lstrip("/")
         return root / relative_path
 
     def get_project_paths(self) -> dict:
@@ -109,17 +109,17 @@ class ProjectRootFinder:
             return {}
 
         paths = {
-            'root': root,
-            'hooks': root / '.claude' / 'hooks',
-            'scripts': root / 'scripts',
-            'docker': root / 'docker-system',
-            'ai_docs': root / 'ai_docs',
-            'backend': root / 'agenthub_main',
-            'frontend': root / 'agenthub-frontend',
-            'tests': root / 'agenthub_main' / 'src' / 'tests',
-            'env_file': root / '.env',
-            'claude_md': root / 'CLAUDE.md',
-            'claude_local': root / 'CLAUDE.local.md'
+            "root": root,
+            "hooks": root / ".claude" / "hooks",
+            "scripts": root / "scripts",
+            "docker": root / "docker-system",
+            "ai_docs": root / "ai_docs",
+            "backend": root / "agenthub_main",
+            "frontend": root / "agenthub-frontend",
+            "tests": root / "agenthub_main" / "src" / "tests",
+            "env_file": root / ".env",
+            "claude_md": root / "CLAUDE.md",
+            "claude_local": root / "CLAUDE.local.md",
         }
 
         # Only include paths that exist
@@ -156,7 +156,7 @@ def main():
         print(f"ai_docs/index.json: {example_path}")
 
     # Export as environment variables if requested
-    if '--export' in sys.argv:
+    if "--export" in sys.argv:
         print("-" * 50)
         print("Export commands (copy and run in shell):")
         for name, path in paths.items():

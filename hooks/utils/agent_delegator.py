@@ -15,10 +15,10 @@ from typing import Any, Dict, Optional
 
 class AgentDelegator:
     """Helper class for direct agent delegation without Task tool limitations."""
-    
+
     AVAILABLE_AGENTS = [
         "analytics-setup-agent",
-        "branding-agent", 
+        "branding-agent",
         "code-reviewer-agent",
         "coding-agent",
         "community-strategy-agent",
@@ -48,32 +48,32 @@ class AgentDelegator:
         "technology-advisor-agent",
         "test-orchestrator-agent",
         "uat-coordinator-agent",
-        "ui-specialist-agent"
+        "ui-specialist-agent",
     ]
-    
+
     def __init__(self):
         self.current_agent = None
-    
+
     def delegate_to_agent(self, agent_name: str, context: str = "") -> dict[str, Any]:
         """
         Delegate directly to a specific agent, bypassing Task tool limitations.
-        
+
         Args:
             agent_name: Name of the agent to call (without @ prefix)
             context: Optional context or task description
-            
+
         Returns:
             Dict with delegation results
         """
-        
+
         # Validate agent name
         if agent_name not in self.AVAILABLE_AGENTS:
             return {
                 "success": False,
                 "error": f"Agent '{agent_name}' not available",
-                "available_agents": self.AVAILABLE_AGENTS
+                "available_agents": self.AVAILABLE_AGENTS,
             }
-        
+
         # For now, return instructions since we can't directly call MCP from here
         return {
             "success": True,
@@ -81,23 +81,23 @@ class AgentDelegator:
             "context": context,
             "delegation_method": "direct_call",
             "instruction": f"Use: mcp__agenthub_http__call_agent('{agent_name}')",
-            "note": "This bypasses the Task tool's master-orchestrator routing"
+            "note": "This bypasses the Task tool's master-orchestrator routing",
         }
-    
+
     def get_agent_by_specialization(self, task_type: str) -> str | None:
         """
         Get the best agent for a specific task type.
-        
+
         Args:
             task_type: Type of work needed
-            
+
         Returns:
             Agent name or None if no match
         """
-        
+
         specializations = {
             "debug": "debugger-agent",
-            "fix": "debugger-agent", 
+            "fix": "debugger-agent",
             "troubleshoot": "debugger-agent",
             "code": "coding-agent",
             "implement": "coding-agent",
@@ -115,9 +115,9 @@ class AgentDelegator:
             "design": "design-system-agent",
             "architecture": "system-architect-agent",
             "research": "deep-research-agent",
-            "analyze": "deep-research-agent"
+            "analyze": "deep-research-agent",
         }
-        
+
         return specializations.get(task_type.lower())
 
 
@@ -145,9 +145,9 @@ def call_direct_agent(agent_name: str) -> str:
         The MCP command string to call the agent directly
     """
     # Remove @ prefix if present
-    clean_name = agent_name.replace('@', '').replace('-agent', '') + '-agent'
+    clean_name = agent_name.replace("@", "").replace("-agent", "") + "-agent"
     if clean_name not in AgentDelegator.AVAILABLE_AGENTS:
-        available = ', '.join(AgentDelegator.AVAILABLE_AGENTS)
+        available = ", ".join(AgentDelegator.AVAILABLE_AGENTS)
         return f"❌ ERROR: '{clean_name}' not found. Available: {available}"
 
     return f"mcp__agenthub_http__call_agent('{clean_name}')"
@@ -166,24 +166,33 @@ def quick_agent_help(task_description: str) -> str:
     task_lower = task_description.lower()
 
     # Enhanced task type detection
-    if any(word in task_lower for word in ['debug', 'fix', 'error', 'bug', 'crash', 'fail']):
-        agent = 'debugger-agent'
-    elif any(word in task_lower for word in ['code', 'implement', 'build', 'create', 'develop']):
-        agent = 'coding-agent'
-    elif any(word in task_lower for word in ['test', 'qa', 'verify', 'validate']):
-        agent = 'test-orchestrator-agent'
-    elif any(word in task_lower for word in ['security', 'audit', 'vulnerability', 'secure']):
-        agent = 'security-auditor-agent'
-    elif any(word in task_lower for word in ['ui', 'frontend', 'interface', 'design']):
-        agent = 'ui-specialist-agent'
-    elif any(word in task_lower for word in ['deploy', 'infrastructure', 'devops', 'ci/cd']):
-        agent = 'devops-agent'
-    elif any(word in task_lower for word in ['document', 'docs', 'guide', 'readme']):
-        agent = 'documentation-agent'
-    elif any(word in task_lower for word in ['research', 'analyze', 'investigate']):
-        agent = 'deep-research-agent'
+    if any(
+        word in task_lower for word in ["debug", "fix", "error", "bug", "crash", "fail"]
+    ):
+        agent = "debugger-agent"
+    elif any(
+        word in task_lower
+        for word in ["code", "implement", "build", "create", "develop"]
+    ):
+        agent = "coding-agent"
+    elif any(word in task_lower for word in ["test", "qa", "verify", "validate"]):
+        agent = "test-orchestrator-agent"
+    elif any(
+        word in task_lower for word in ["security", "audit", "vulnerability", "secure"]
+    ):
+        agent = "security-auditor-agent"
+    elif any(word in task_lower for word in ["ui", "frontend", "interface", "design"]):
+        agent = "ui-specialist-agent"
+    elif any(
+        word in task_lower for word in ["deploy", "infrastructure", "devops", "ci/cd"]
+    ):
+        agent = "devops-agent"
+    elif any(word in task_lower for word in ["document", "docs", "guide", "readme"]):
+        agent = "documentation-agent"
+    elif any(word in task_lower for word in ["research", "analyze", "investigate"]):
+        agent = "deep-research-agent"
     else:
-        agent = 'master-orchestrator-agent'
+        agent = "master-orchestrator-agent"
 
     command = call_direct_agent(agent)
     return f"💡 Recommended: {agent}\n📞 Command: {command}"

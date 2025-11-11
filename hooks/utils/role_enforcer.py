@@ -55,7 +55,9 @@ class RoleEnforcer:
             print(f"Error loading {file_path}: {e}")
             return {"enabled": False}
 
-    def check_tool_permission(self, tool_name: str, parameters: dict[str, Any]) -> tuple[bool, str]:
+    def check_tool_permission(
+        self, tool_name: str, parameters: dict[str, Any]
+    ) -> tuple[bool, str]:
         """
         Check if the current role is allowed to use this tool.
 
@@ -80,18 +82,29 @@ class RoleEnforcer:
             # All tools blocked except explicitly allowed
             allowed_tools = role_def.get("allowed_tools", [])
             if tool_name not in allowed_tools:
-                return (False, self._get_violation_message(current_role, tool_name, "not_allowed"))
+                return (
+                    False,
+                    self._get_violation_message(current_role, tool_name, "not_allowed"),
+                )
         elif tool_name in blocked_tools:
-            return (False, self._get_violation_message(current_role, tool_name, "blocked"))
+            return (
+                False,
+                self._get_violation_message(current_role, tool_name, "blocked"),
+            )
 
         # Check if tool is in allowed list (if defined)
         allowed_tools = role_def.get("allowed_tools", [])
         if allowed_tools and tool_name not in allowed_tools:
-            return (False, self._get_violation_message(current_role, tool_name, "not_allowed"))
+            return (
+                False,
+                self._get_violation_message(current_role, tool_name, "not_allowed"),
+            )
 
         # Check path restrictions for write operations
         if tool_name in ["Write", "Edit", "MultiEdit", "NotebookEdit"]:
-            path_allowed, path_msg = self._check_path_restrictions(current_role, tool_name, parameters)
+            path_allowed, path_msg = self._check_path_restrictions(
+                current_role, tool_name, parameters
+            )
             if not path_allowed:
                 return (False, path_msg)
 
@@ -134,10 +147,12 @@ class RoleEnforcer:
             "name": "uninitialized",
             "allowed_tools": ["mcp__agenthub_http__call_agent", "Read", "Grep", "Glob"],
             "blocked_tools": "*",
-            "warning": "[NO ROLE] Must call mcp__agenthub_http__call_agent first!"
+            "warning": "[NO ROLE] Must call mcp__agenthub_http__call_agent first!",
         }
 
-    def _check_path_restrictions(self, role: str, tool_name: str, parameters: dict[str, Any]) -> tuple[bool, str]:
+    def _check_path_restrictions(
+        self, role: str, tool_name: str, parameters: dict[str, Any]
+    ) -> tuple[bool, str]:
         """Check path restrictions for write operations."""
         role_def = self._get_role_definition(role)
         if not role_def:
@@ -163,12 +178,16 @@ class RoleEnforcer:
 
             if not path_allowed:
                 warnings = role_def.get("warnings", {})
-                msg = warnings.get("wrong_path", f"[ROLE VIOLATION] {role} cannot write to {file_path}")
+                msg = warnings.get(
+                    "wrong_path", f"[ROLE VIOLATION] {role} cannot write to {file_path}"
+                )
                 return (False, msg)
 
         return (True, "")
 
-    def _get_violation_message(self, role: str, tool_name: str, violation_type: str) -> str:
+    def _get_violation_message(
+        self, role: str, tool_name: str, violation_type: str
+    ) -> str:
         """Get appropriate violation message."""
         role_def = self._get_role_definition(role)
         if not role_def:
@@ -182,7 +201,7 @@ class RoleEnforcer:
             "Edit": "edit_attempt",
             "MultiEdit": "edit_attempt",
             "Task": "delegation_attempt",
-            "Bash": "execution_attempt"
+            "Bash": "execution_attempt",
         }
 
         warning_key = warning_map.get(tool_name, "modification_attempt")
@@ -193,8 +212,12 @@ class RoleEnforcer:
         # Default messages using centralized config
         if violation_type == "blocked" or violation_type == "not_allowed":
             allowed_tools = role_def.get("allowed_tools", [])
-            violation_msg = get_info_message("role_violation", tool=tool_name, agent=role)
-            tools_msg = get_info_message("available_tools", tools=", ".join(allowed_tools))
+            violation_msg = get_info_message(
+                "role_violation", tool=tool_name, agent=role
+            )
+            tools_msg = get_info_message(
+                "available_tools", tools=", ".join(allowed_tools)
+            )
             return f"{violation_msg}\n{tools_msg}"
 
         return get_info_message("role_violation", tool=tool_name, agent=role)
@@ -213,7 +236,7 @@ class RoleEnforcer:
             "role": role,
             "tool": tool_name,
             "allowed": allowed,
-            "session_id": self.session_id
+            "session_id": self.session_id,
         }
 
         # Track in memory
@@ -245,7 +268,7 @@ class RoleEnforcer:
 
             # Write back
             try:
-                with open(log_path, 'w') as f:
+                with open(log_path, "w") as f:
                     json.dump(log_data, f, indent=2)
             except:
                 pass  # Don't fail on log write errors
@@ -264,7 +287,7 @@ class RoleEnforcer:
             "description": role_def.get("description", ""),
             "allowed_tools": role_def.get("allowed_tools", []),
             "blocked_tools": role_def.get("blocked_tools", []),
-            "path_restrictions": role_def.get("path_restrictions", {})
+            "path_restrictions": role_def.get("path_restrictions", {}),
         }
 
     def suggest_delegation(self, tool_name: str) -> str:
@@ -274,7 +297,7 @@ class RoleEnforcer:
             "Edit": "coding-agent or debugger-agent",
             "MultiEdit": "coding-agent or debugger-agent",
             "Bash": "coding-agent or test-orchestrator-agent",
-            "NotebookEdit": "coding-agent"
+            "NotebookEdit": "coding-agent",
         }
 
         agent = suggestions.get(tool_name, "appropriate specialized agent")
@@ -285,16 +308,20 @@ class RoleEnforcer:
 # Singleton instance
 _enforcer_instance = None
 
+
 def get_role_enforcer(session_id: str = None) -> RoleEnforcer:
     """Get or create role enforcer instance."""
     global _enforcer_instance
-    if _enforcer_instance is None or (session_id and _enforcer_instance.session_id != session_id):
+    if _enforcer_instance is None or (
+        session_id and _enforcer_instance.session_id != session_id
+    ):
         _enforcer_instance = RoleEnforcer(session_id)
     return _enforcer_instance
 
 
-def check_tool_permission(tool_name: str, parameters: dict[str, Any],
-                         session_id: str = None) -> tuple[bool, str]:
+def check_tool_permission(
+    tool_name: str, parameters: dict[str, Any], session_id: str = None
+) -> tuple[bool, str]:
     """Convenience function to check tool permission."""
     enforcer = get_role_enforcer(session_id)
     return enforcer.check_tool_permission(tool_name, parameters)

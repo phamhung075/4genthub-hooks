@@ -125,12 +125,15 @@ def get_mcp_connection_status():
     # Cache the result
     try:
         cache_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(cache_file, 'w') as f:
-            json.dump({
-                "status": status,
-                "timestamp": datetime.now().isoformat(),
-                "server_url": server_url
-            }, f)
+        with open(cache_file, "w") as f:
+            json.dump(
+                {
+                    "status": status,
+                    "timestamp": datetime.now().isoformat(),
+                    "server_url": server_url,
+                },
+                f,
+            )
     except Exception:
         pass  # Ignore cache write errors
 
@@ -148,23 +151,25 @@ def _test_mcp_connection(server_url, timeout):
         retry_strategy = Retry(
             total=1,  # Only 1 retry for fast status checks
             status_forcelist=[429, 500, 502, 503, 504],
-            backoff_factor=0.1
+            backoff_factor=0.1,
         )
         adapter = HTTPAdapter(max_retries=retry_strategy)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
 
         # Set headers
-        session.headers.update({
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "User-Agent": "Status-Line-MCP-Check/1.0"
-        })
+        session.headers.update(
+            {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "Status-Line-MCP-Check/1.0",
+            }
+        )
 
         # Determine base URL for health check
         # If the URL ends with /mcp, use the base URL for /health
         # Otherwise append /health to the URL
-        if server_url.endswith('/mcp'):
+        if server_url.endswith("/mcp"):
             base_url = server_url[:-4]  # Remove '/mcp' suffix
             health_url = f"{base_url}/health"
         else:
@@ -173,10 +178,7 @@ def _test_mcp_connection(server_url, timeout):
         # First try health endpoint (fast and reliable)
         start_time = time.time()
 
-        response = session.get(
-            health_url,
-            timeout=timeout
-        )
+        response = session.get(health_url, timeout=timeout)
 
         response_time = int((time.time() - start_time) * 1000)  # ms
 
@@ -253,10 +255,10 @@ def get_project_name():
     try:
         # Try git remote origin URL first
         result = subprocess.run(
-            ['git', 'remote', 'get-url', 'origin'],
+            ["git", "remote", "get-url", "origin"],
             capture_output=True,
             text=True,
-            timeout=2
+            timeout=2,
         )
         if result.returncode == 0:
             url = result.stdout.strip()
@@ -264,8 +266,8 @@ def get_project_name():
                 # Extract project name from URL (handle both SSH and HTTPS)
                 # Examples: git@github.com:user/repo.git -> repo
                 #          https://github.com/user/repo.git -> repo
-                project_name = Path(url).stem.replace('.git', '')
-                if project_name and project_name != 'origin':
+                project_name = Path(url).stem.replace(".git", "")
+                if project_name and project_name != "origin":
                     return project_name
 
         # Fallback to project root directory name
@@ -279,10 +281,10 @@ def get_git_branch():
     """Get current git branch if in a git repository."""
     try:
         result = subprocess.run(
-            ['git', 'branch', '--show-current'],
+            ["git", "branch", "--show-current"],
             capture_output=True,
             text=True,
-            timeout=2
+            timeout=2,
         )
         if result.returncode == 0:
             branch = result.stdout.strip()
@@ -291,10 +293,10 @@ def get_git_branch():
             else:
                 # Handle detached HEAD state
                 result = subprocess.run(
-                    ['git', 'rev-parse', '--short', 'HEAD'],
+                    ["git", "rev-parse", "--short", "HEAD"],
                     capture_output=True,
                     text=True,
-                    timeout=2
+                    timeout=2,
                 )
                 if result.returncode == 0:
                     return f"detached:{result.stdout.strip()}"
@@ -308,15 +310,12 @@ def get_git_status():
     try:
         # Check if there are uncommitted changes
         result = subprocess.run(
-            ['git', 'status', '--porcelain'],
-            capture_output=True,
-            text=True,
-            timeout=2
+            ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=2
         )
         if result.returncode == 0:
             changes = result.stdout.strip()
             if changes:
-                lines = changes.split('\n')
+                lines = changes.split("\n")
                 return f"±{len(lines)}"
     except Exception:
         pass
@@ -406,7 +405,7 @@ def format_extras(extras):
     """Format extras dictionary into a compact string."""
     if not extras:
         return None
-    
+
     # Format each key-value pair
     pairs = []
     for key, value in extras.items():
@@ -415,7 +414,7 @@ def format_extras(extras):
         if len(str_value) > 20:
             str_value = str_value[:17] + "..."
         pairs.append(f"{key}:{str_value}")
-    
+
     return " ".join(pairs)
 
 
@@ -429,9 +428,24 @@ def generate_status_line(input_data):
     model_name = model_info.get("display_name", "Claude")
 
     # Configuration options from environment variables
-    show_project = os.getenv('STATUS_SHOW_PROJECT', 'true').lower() in ('true', '1', 'yes', 'on')
-    show_branch = os.getenv('STATUS_SHOW_BRANCH', 'true').lower() in ('true', '1', 'yes', 'on')
-    short_project_name = os.getenv('STATUS_SHORT_PROJECT_NAME', 'false').lower() in ('true', '1', 'yes', 'on')
+    show_project = os.getenv("STATUS_SHOW_PROJECT", "true").lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    )
+    show_branch = os.getenv("STATUS_SHOW_BRANCH", "true").lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    )
+    short_project_name = os.getenv("STATUS_SHORT_PROJECT_NAME", "false").lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    )
 
     # Check MCP authentication status first for fallback
     auth_valid, auth_error = check_mcp_authentication()
@@ -439,7 +453,9 @@ def generate_status_line(input_data):
     # If authentication failed, show prominent error (fallback behavior)
     if not auth_valid:
         error_status = f"\033[91m🔐 MCP AUTH ERROR:\033[0m \033[93m{auth_error}\033[0m \033[90m| Fix .mcp.json configuration\033[0m"
-        log_status_line(input_data, error_status, f"MCP Authentication Error: {auth_error}")
+        log_status_line(
+            input_data, error_status, f"MCP Authentication Error: {auth_error}"
+        )
         return error_status
 
     # Get session data
@@ -458,7 +474,9 @@ def generate_status_line(input_data):
             # Option to show short project name (just the name without path info)
             if short_project_name and len(project_name) > 20:
                 project_name = project_name[:17] + "..."
-            parts.append(f"\033[1;94m📁 {project_name}\033[0m")  # Bold blue with folder icon
+            parts.append(
+                f"\033[1;94m📁 {project_name}\033[0m"
+            )  # Bold blue with folder icon
 
     # Git branch with enhanced display and status
     if show_branch:
@@ -481,12 +499,12 @@ def generate_status_line(input_data):
 
             if git_status:
                 # Modified files indicator
-                parts.append(f"{branch_color}🌿 {git_branch}\033[0m \033[93m{git_status}\033[0m")
+                parts.append(
+                    f"{branch_color}🌿 {git_branch}\033[0m \033[93m{git_status}\033[0m"
+                )
             else:
                 # Clean state
                 parts.append(f"{branch_color}🌿 {git_branch}\033[0m")
-
-
 
     # Get real-time MCP connection status
     try:
@@ -506,32 +524,37 @@ def generate_status_line(input_data):
         # Error/Disconnected - Red
         parts.append(f"\033[91m🔗 MCP: {mcp_status}\033[0m")
 
-
     # Get current agent from session state for consistent display
-    current_agent = get_current_agent(session_id) if session_id else 'master-orchestrator-agent'
+    current_agent = (
+        get_current_agent(session_id) if session_id else "master-orchestrator-agent"
+    )
 
     # Active agent display - use current_agent from session state
-    parts.append(f"\033[92m🎯 Active: {current_agent}\033[0m")  # Green text showing active role
+    parts.append(
+        f"\033[92m🎯 Active: {current_agent}\033[0m"
+    )  # Green text showing active role
 
     # Dynamic agent role display - Based on session state
-    agent_role = get_agent_role_from_session(session_id) if session_id else 'Assistant'
+    agent_role = get_agent_role_from_session(session_id) if session_id else "Assistant"
 
-    if agent_role and agent_role != 'Assistant':
+    if agent_role and agent_role != "Assistant":
         # Show dynamic agent role format: [Agent] [Role]
-        parts.append(f"\033[94m[Agent] [{agent_role}]\033[0m")  # Blue text for agent role
+        parts.append(
+            f"\033[94m[Agent] [{agent_role}]\033[0m"
+        )  # Blue text for agent role
 
     # Cost information display - compact format with icons
-    cost_data = input_data.get('cost', {})
+    cost_data = input_data.get("cost", {})
     if cost_data:
         cost_parts = []
 
         # Total cost in USD
-        total_cost = cost_data.get('total_cost_usd', 0)
+        total_cost = cost_data.get("total_cost_usd", 0)
         if total_cost > 0:
             cost_parts.append(f"💰${total_cost:.2f}")
 
         # Total duration (convert ms to minutes/seconds)
-        total_duration_ms = cost_data.get('total_duration_ms', 0)
+        total_duration_ms = cost_data.get("total_duration_ms", 0)
         if total_duration_ms > 0:
             if total_duration_ms >= 60000:  # >= 1 minute
                 minutes = total_duration_ms // 60000
@@ -542,14 +565,14 @@ def generate_status_line(input_data):
                 cost_parts.append(f"⏱️{seconds}s")
 
         # API duration (convert ms to seconds)
-        api_duration_ms = cost_data.get('total_api_duration_ms', 0)
+        api_duration_ms = cost_data.get("total_api_duration_ms", 0)
         if api_duration_ms > 0:
             api_seconds = api_duration_ms // 1000
             cost_parts.append(f"🔄{api_seconds}s")
 
         # Lines added/removed
-        lines_added = cost_data.get('total_lines_added', 0)
-        lines_removed = cost_data.get('total_lines_removed', 0)
+        lines_added = cost_data.get("total_lines_added", 0)
+        lines_removed = cost_data.get("total_lines_removed", 0)
         if lines_added > 0 or lines_removed > 0:
             cost_parts.append(f"➕{lines_added} ➖{lines_removed}")
 
@@ -560,14 +583,16 @@ def generate_status_line(input_data):
 
         # Last prompt display - should be at the end
     if session_data:
-        prompts = session_data.get('prompts', [])
+        prompts = session_data.get("prompts", [])
         if prompts and len(prompts) > 0:
             # Get the most recent prompt
             last_prompt = prompts[-1] if isinstance(prompts, list) else str(prompts)
             if last_prompt:
                 prompt_icon = get_prompt_icon(last_prompt)
                 truncated_prompt = truncate_prompt(last_prompt, 75)
-                parts.append(f"\033[96m{prompt_icon} {truncated_prompt}\033[0m")  # Cyan for prompt
+                parts.append(
+                    f"\033[96m{prompt_icon} {truncated_prompt}\033[0m"
+                )  # Cyan for prompt
 
     # Join with separator (using bullet separator for cleaner look)
     status_line = " • ".join(parts)

@@ -16,39 +16,42 @@ class AgentContextManager:
 
     def __init__(self):
         from .env_loader import get_project_root
+
         self.context_file = get_project_root() / ".claude/runtime_agent_context.json"
         self.context_file.parent.mkdir(parents=True, exist_ok=True)
-        
-    def set_agent_context(self, agent_name: str, context_data: dict[str, Any] = None) -> dict[str, Any]:
+
+    def set_agent_context(
+        self, agent_name: str, context_data: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """
         Set the current agent context for runtime switching.
-        
+
         Args:
             agent_name: Name of the agent to switch to
             context_data: Additional context data from agent loading
-            
+
         Returns:
             Context instructions for the agent
         """
-        
+
         # Create agent context
         agent_context = {
             "current_agent": agent_name,
             "timestamp": datetime.now().isoformat(),
             "context_data": context_data or {},
-            "session_type": "runtime_switched"
+            "session_type": "runtime_switched",
         }
-        
+
         # Save to runtime context file
         try:
-            with open(self.context_file, 'w') as f:
+            with open(self.context_file, "w") as f:
                 json.dump(agent_context, f, indent=2)
         except Exception as e:
             print(f"Warning: Could not save agent context: {e}")
-        
+
         # Return appropriate context instructions
         return self._get_agent_instructions(agent_name)
-    
+
     def get_current_agent_context(self) -> dict[str, Any] | None:
         """Get the current agent context if any."""
         try:
@@ -58,7 +61,7 @@ class AgentContextManager:
         except Exception:
             pass
         return None
-    
+
     def clear_agent_context(self):
         """Clear the current agent context (return to master orchestrator)."""
         try:
@@ -66,10 +69,10 @@ class AgentContextManager:
                 self.context_file.unlink()
         except Exception:
             pass
-    
+
     def _get_agent_instructions(self, agent_name: str) -> dict[str, Any]:
         """Get specific instructions for an agent."""
-        
+
         # Base instructions for all sub-agents
         base_instructions = {
             "session_type": "sub-agent",
@@ -87,10 +90,10 @@ class AgentContextManager:
                 "",
                 f"**Agent Role**: {agent_name}",
                 "**Session Mode**: Runtime-switched sub-agent",
-                ""
-            ]
+                "",
+            ],
         }
-        
+
         # Agent-specific instructions
         agent_specific = {
             "debugger-agent": [
@@ -98,64 +101,66 @@ class AgentContextManager:
                 "- Analyze bugs and errors systematically",
                 "- Use debugging tools and techniques",
                 "- Fix issues and create tests",
-                "- Document your findings"
+                "- Document your findings",
             ],
             "coding-agent": [
                 "💻 **CODING SPECIALIST**:",
                 "- Implement features and functionality",
                 "- Write clean, efficient code",
                 "- Follow best practices and patterns",
-                "- Create comprehensive tests"
+                "- Create comprehensive tests",
             ],
             "test-orchestrator-agent": [
                 "🧪 **TESTING SPECIALIST**:",
                 "- Design and implement test strategies",
                 "- Create unit, integration, and E2E tests",
                 "- Ensure code quality and coverage",
-                "- Validate functionality thoroughly"
+                "- Validate functionality thoroughly",
             ],
             "security-auditor-agent": [
                 "🔒 **SECURITY SPECIALIST**:",
                 "- Conduct security audits and reviews",
                 "- Identify vulnerabilities and risks",
                 "- Implement security best practices",
-                "- Ensure compliance with standards"
+                "- Ensure compliance with standards",
             ],
             "documentation-agent": [
                 "📚 **DOCUMENTATION SPECIALIST**:",
                 "- Create comprehensive documentation",
                 "- Write clear technical guides",
                 "- Update API documentation",
-                "- Maintain knowledge bases"
+                "- Maintain knowledge bases",
             ],
             "ui-specialist-agent": [
                 "🎨 **UI/UX SPECIALIST**:",
                 "- Design user interfaces and experiences",
                 "- Implement frontend components",
                 "- Ensure responsive and accessible design",
-                "- Optimize user interactions"
+                "- Optimize user interactions",
             ],
             "devops-agent": [
                 "⚙️ **DEVOPS SPECIALIST**:",
                 "- Manage deployment and infrastructure",
                 "- Configure CI/CD pipelines",
                 "- Monitor system performance",
-                "- Handle operational concerns"
-            ]
+                "- Handle operational concerns",
+            ],
         }
-        
+
         # Add agent-specific instructions
         if agent_name in agent_specific:
             base_instructions["instructions"].extend(agent_specific[agent_name])
-        
-        base_instructions["instructions"].extend([
-            "",
-            "**To return to master orchestrator mode**:",
-            "Use: clear_agent_context() or switch back manually"
-        ])
-        
+
+        base_instructions["instructions"].extend(
+            [
+                "",
+                "**To return to master orchestrator mode**:",
+                "Use: clear_agent_context() or switch back manually",
+            ]
+        )
+
         return base_instructions
-    
+
     def format_context_for_claude(self, agent_context: dict[str, Any]) -> str:
         """Format agent context for Claude's consumption."""
         instructions = agent_context.get("instructions", [])
@@ -197,17 +202,17 @@ if __name__ == "__main__":
     # Test the agent context manager
     print("🤖 Agent Context Manager Test")
     print("=" * 40)
-    
+
     # Test switching to debugger agent
     print("\n1. Switching to debugger-agent:")
     context = switch_to_agent("debugger-agent")
     print(context)
-    
+
     # Test getting current agent
     print(f"\n2. Current agent: {get_current_agent()}")
-    
+
     # Test clearing context
     print("\n3. Clearing context:")
     print(clear_agent_context())
-    
+
     print(f"\n4. Current agent after clear: {get_current_agent()}")

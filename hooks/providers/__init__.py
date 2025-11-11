@@ -7,8 +7,8 @@ through on-demand slash commands.
 """
 
 __all__ = [
-    'LazyGitContextProvider',
-    'ConditionalMCPProvider',
-    'CompactEnvironmentProvider',
-    'SimpleFormatter',
+    "LazyGitContextProvider",
+    "ConditionalMCPProvider",
+    "CompactEnvironmentProvider",
+    "SimpleFormatter",
 ]

@@ -28,8 +28,9 @@ class MCPTaskInterceptor:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.data_dir / "mcp_task_operations.json"
 
-    def intercept_task_operation(self, tool_name: str, parameters: dict[str, Any],
-                                 session_id: str = None) -> bool:
+    def intercept_task_operation(
+        self, tool_name: str, parameters: dict[str, Any], session_id: str = None
+    ) -> bool:
         """
         Intercept MCP task operations and track them.
 
@@ -50,7 +51,7 @@ class MCPTaskInterceptor:
             return False
 
         try:
-            action = parameters.get('action', '')
+            action = parameters.get("action", "")
 
             # Log the operation
             self._log_operation(tool_name, parameters, session_id)
@@ -59,12 +60,12 @@ class MCPTaskInterceptor:
             if action == "create":
                 # Prepare task data for tracking
                 task_data = {
-                    'id': parameters.get('task_id') or self._generate_task_id(),
-                    'title': parameters.get('title', 'Untitled Task'),
-                    'status': parameters.get('status', 'pending'),
-                    'assignees': parameters.get('assignees', []),
-                    'details': parameters.get('details', ''),
-                    'priority': parameters.get('priority', 0)
+                    "id": parameters.get("task_id") or self._generate_task_id(),
+                    "title": parameters.get("title", "Untitled Task"),
+                    "status": parameters.get("status", "pending"),
+                    "assignees": parameters.get("assignees", []),
+                    "details": parameters.get("details", ""),
+                    "priority": parameters.get("priority", 0),
                 }
                 track_task_from_mcp("create", task_data, session_id)
                 logger.info(f"Tracked new task: {task_data['title']}")
@@ -72,29 +73,27 @@ class MCPTaskInterceptor:
 
             elif action == "update":
                 task_data = {
-                    'id': parameters.get('task_id', ''),
-                    'status': parameters.get('status'),
-                    'title': parameters.get('title'),
-                    'progress_percentage': parameters.get('progress_percentage')
+                    "id": parameters.get("task_id", ""),
+                    "status": parameters.get("status"),
+                    "title": parameters.get("title"),
+                    "progress_percentage": parameters.get("progress_percentage"),
                 }
                 track_task_from_mcp("update", task_data, session_id)
                 logger.info(f"Updated task: {task_data['id']}")
                 return True
 
             elif action == "complete":
-                task_data = {
-                    'id': parameters.get('task_id', '')
-                }
+                task_data = {"id": parameters.get("task_id", "")}
                 track_task_from_mcp("complete", task_data, session_id)
                 logger.info(f"Completed task: {task_data['id']}")
                 return True
 
             elif action == "delete" or action == "cancel":
                 # Also remove from tracking
-                task_data = {
-                    'id': parameters.get('task_id', '')
-                }
-                track_task_from_mcp("complete", task_data, session_id)  # Use complete to remove
+                task_data = {"id": parameters.get("task_id", "")}
+                track_task_from_mcp(
+                    "complete", task_data, session_id
+                )  # Use complete to remove
                 logger.info(f"Removed task: {task_data['id']}")
                 return True
 
@@ -104,7 +103,9 @@ class MCPTaskInterceptor:
 
         return False
 
-    def _log_operation(self, tool_name: str, parameters: dict[str, Any], session_id: str):
+    def _log_operation(
+        self, tool_name: str, parameters: dict[str, Any], session_id: str
+    ):
         """Log the operation for debugging and audit."""
         try:
             # Load existing log
@@ -116,10 +117,10 @@ class MCPTaskInterceptor:
 
             # Add new entry
             log_entry = {
-                'timestamp': datetime.now().isoformat(),
-                'tool_name': tool_name,
-                'parameters': parameters,
-                'session_id': session_id
+                "timestamp": datetime.now().isoformat(),
+                "tool_name": tool_name,
+                "parameters": parameters,
+                "session_id": session_id,
             }
             log_data.append(log_entry)
 
@@ -128,7 +129,7 @@ class MCPTaskInterceptor:
                 log_data = log_data[-500:]
 
             # Save log
-            with open(self.log_file, 'w') as f:
+            with open(self.log_file, "w") as f:
                 json.dump(log_data, f, indent=2, default=str)
 
         except Exception as e:
@@ -137,6 +138,7 @@ class MCPTaskInterceptor:
     def _generate_task_id(self) -> str:
         """Generate a unique task ID if not provided."""
         import uuid
+
         return str(uuid.uuid4())[:8]
 
     def _handle_call_agent(self, parameters: dict[str, Any], session_id: str) -> bool:
@@ -152,10 +154,10 @@ class MCPTaskInterceptor:
         """
         try:
             # Extract agent name from parameters
-            agent_name = parameters.get('name_agent', '')
+            agent_name = parameters.get("name_agent", "")
             if not agent_name:
                 # Try alternative parameter names
-                agent_name = parameters.get('agent_name', parameters.get('agent', ''))
+                agent_name = parameters.get("agent_name", parameters.get("agent", ""))
 
             if agent_name and session_id:
                 # Update the current agent state
@@ -168,8 +170,13 @@ class MCPTaskInterceptor:
 
         return False
 
-    def intercept_from_response(self, tool_name: str, response: Any,
-                               original_params: dict[str, Any], session_id: str = None) -> bool:
+    def intercept_from_response(
+        self,
+        tool_name: str,
+        response: Any,
+        original_params: dict[str, Any],
+        session_id: str = None,
+    ) -> bool:
         """
         Intercept task operations from tool response.
 
@@ -189,19 +196,19 @@ class MCPTaskInterceptor:
 
             # Extract task data from response
             if isinstance(response, dict):
-                task = response.get('task', response.get('data', {}))
+                task = response.get("task", response.get("data", {}))
 
                 if task and isinstance(task, dict):
-                    action = original_params.get('action', '')
+                    action = original_params.get("action", "")
 
                     # Update tracking with actual data from response
                     task_data = {
-                        'id': task.get('id', ''),
-                        'title': task.get('title', ''),
-                        'status': task.get('status', ''),
-                        'assignees': task.get('assignees', []),
-                        'details': task.get('details', ''),
-                        'priority': task.get('priority', 0)
+                        "id": task.get("id", ""),
+                        "title": task.get("title", ""),
+                        "status": task.get("status", ""),
+                        "assignees": task.get("assignees", []),
+                        "details": task.get("details", ""),
+                        "priority": task.get("priority", 0),
                     }
 
                     if action == "create":
@@ -221,6 +228,7 @@ class MCPTaskInterceptor:
 
 # Singleton instance
 _interceptor_instance = None
+
 
 def get_mcp_interceptor() -> MCPTaskInterceptor:
     """Get or create the MCP task interceptor instance."""

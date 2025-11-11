@@ -35,13 +35,14 @@ from typing import Any, Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Recursion prevention guard - prevent infinite loops
-_RECURSION_GUARD = os.environ.get('CLAUDE_PRE_TOOL_HOOK_ACTIVE', '0')
-if _RECURSION_GUARD == '1':
+_RECURSION_GUARD = os.environ.get("CLAUDE_PRE_TOOL_HOOK_ACTIVE", "0")
+if _RECURSION_GUARD == "1":
     # We're already in a hook execution, exit immediately to prevent loop
     sys.exit(0)
 
 # Mark that we're entering hook execution
-os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '1'
+os.environ["CLAUDE_PRE_TOOL_HOOK_ACTIVE"] = "1"
+
 
 # Find project root and hook directory dynamically
 def find_project_root():
@@ -52,37 +53,41 @@ def find_project_root():
     project_root = hook_file.parent.parent.parent
     return project_root
 
+
 def get_hook_dir():
     """Get the directory where this hook script is located."""
     return Path(__file__).resolve().parent
 
+
 PROJECT_ROOT = find_project_root()
 HOOK_DIR = get_hook_dir()
-CONFIG_DIR = HOOK_DIR / 'config'
+CONFIG_DIR = HOOK_DIR / "config"
 
 
 # ============================================================================
 # Recursion Helper Functions
 # ============================================================================
 
+
 def _is_recursive_call() -> bool:
     """Check if we're in a recursive call to prevent infinite loops."""
-    return os.environ.get('CLAUDE_HINT_RECURSION_GUARD', '0') == '1'
+    return os.environ.get("CLAUDE_HINT_RECURSION_GUARD", "0") == "1"
 
 
 def _enter_recursion():
     """Mark that we're entering a recursive section."""
-    os.environ['CLAUDE_HINT_RECURSION_GUARD'] = '1'
+    os.environ["CLAUDE_HINT_RECURSION_GUARD"] = "1"
 
 
 def _exit_recursion():
     """Mark that we're exiting a recursive section."""
-    os.environ['CLAUDE_HINT_RECURSION_GUARD'] = '0'
+    os.environ["CLAUDE_HINT_RECURSION_GUARD"] = "0"
 
 
 # ============================================================================
 # Abstract Base Classes
 # ============================================================================
+
 
 class Validator(ABC):
     """Base validator interface."""
@@ -125,6 +130,7 @@ class Logger(ABC):
 # Component Implementations
 # ============================================================================
 
+
 class FileLogger(Logger):
     """File-based logger implementation."""
 
@@ -137,10 +143,10 @@ class FileLogger(Logger):
     def log(self, level: str, message: str, data: dict | None = None):
         """Log to JSON file."""
         entry = {
-            'timestamp': datetime.now().isoformat(),
-            'level': level,
-            'message': message,
-            'data': data
+            "timestamp": datetime.now().isoformat(),
+            "level": level,
+            "message": message,
+            "data": data,
         }
 
         # Load existing log
@@ -159,7 +165,7 @@ class FileLogger(Logger):
         if len(log_data) > 100:
             log_data = log_data[-100:]
 
-        with open(self.log_path, 'w') as f:
+        with open(self.log_path, "w") as f:
             json.dump(log_data, f, indent=2)
 
 
@@ -171,22 +177,38 @@ class RootFileValidator(Validator):
 
     def _load_allowed_files(self) -> list[str]:
         """Load allowed root files from configuration."""
-        config_path = CONFIG_DIR / '__claude_hook__allowed_root_files'
+        config_path = CONFIG_DIR / "__claude_hook__allowed_root_files"
 
         default_allowed = [
-            'README.md', 'CHANGELOG.md', 'TEST-CHANGELOG.md',
-            'CLAUDE.md', 'CLAUDE.local.md', '.gitignore',
-            'package.json', 'package-lock.json', 'requirements.txt',
-            'pyproject.toml', 'poetry.lock', 'Pipfile', 'Pipfile.lock',
-            'docker-compose.yml', 'Dockerfile', '.dockerignore',
-            'Makefile', 'setup.py', 'setup.cfg'
+            "README.md",
+            "CHANGELOG.md",
+            "TEST-CHANGELOG.md",
+            "CLAUDE.md",
+            "CLAUDE.local.md",
+            ".gitignore",
+            "package.json",
+            "package-lock.json",
+            "requirements.txt",
+            "pyproject.toml",
+            "poetry.lock",
+            "Pipfile",
+            "Pipfile.lock",
+            "docker-compose.yml",
+            "Dockerfile",
+            ".dockerignore",
+            "Makefile",
+            "setup.py",
+            "setup.cfg",
         ]
 
         if config_path.exists():
             try:
                 with open(config_path) as f:
-                    lines = [line.strip() for line in f.readlines()
-                            if line.strip() and not line.startswith('#')]
+                    lines = [
+                        line.strip()
+                        for line in f.readlines()
+                        if line.strip() and not line.startswith("#")
+                    ]
                 return lines if lines else default_allowed
             except:
                 return default_allowed
@@ -195,10 +217,10 @@ class RootFileValidator(Validator):
 
     def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate file creation in root directory."""
-        if tool_name not in ['Write', 'Edit', 'MultiEdit', 'NotebookEdit']:
+        if tool_name not in ["Write", "Edit", "MultiEdit", "NotebookEdit"]:
             return True, None
 
-        file_path = tool_input.get('file_path') or tool_input.get('notebook_path', '')
+        file_path = tool_input.get("file_path") or tool_input.get("notebook_path", "")
         if not file_path:
             return True, None
 
@@ -218,9 +240,11 @@ class RootFileValidator(Validator):
                     for allowed_file in sorted(self.allowed_files):
                         allowed_files_formatted += f"       • {allowed_file}\n"
 
-                    return False, get_error_message('root_file_blocked',
-                                                  filename=filename,
-                                                  allowed_files=allowed_files_formatted.rstrip())
+                    return False, get_error_message(
+                        "root_file_blocked",
+                        filename=filename,
+                        allowed_files=allowed_files_formatted.rstrip(),
+                    )
         except ValueError:
             # Path is outside project root
             pass
@@ -236,21 +260,24 @@ class TestPathValidator(Validator):
 
     def _load_valid_test_paths(self) -> list[str]:
         """Load valid test paths from configuration."""
-        config_path = CONFIG_DIR / '__claude_hook__valid_test_paths'
+        config_path = CONFIG_DIR / "__claude_hook__valid_test_paths"
 
         # Default valid test paths for this project
         default_test_paths = [
-            'agenthub_main/src/tests',
-            'agenthub-frontend/src/tests',
-            'agenthub-frontend/src/__tests__',
-            '.claude/hooks/tests'
+            "agenthub_main/src/tests",
+            "agenthub-frontend/src/tests",
+            "agenthub-frontend/src/__tests__",
+            ".claude/hooks/tests",
         ]
 
         if config_path.exists():
             try:
                 with open(config_path) as f:
-                    lines = [line.strip() for line in f.readlines()
-                            if line.strip() and not line.startswith('#')]
+                    lines = [
+                        line.strip()
+                        for line in f.readlines()
+                        if line.strip() and not line.startswith("#")
+                    ]
                 return lines if lines else default_test_paths
             except:
                 return default_test_paths
@@ -261,17 +288,19 @@ class TestPathValidator(Validator):
         """Check if file is a test file based on naming patterns."""
         # Exclude CI/CD configuration directories
         excluded_dirs = [
-            '.github/workflows',
-            '.github/actions',
-            '.gitlab-ci',
-            'ci',
-            'scripts'
+            ".github/workflows",
+            ".github/actions",
+            ".gitlab-ci",
+            "ci",
+            "scripts",
         ]
 
         # Check if file is in excluded directory
-        file_path_str = str(file_path).replace('\\', '/')
+        file_path_str = str(file_path).replace("\\", "/")
         for excluded_dir in excluded_dirs:
-            if f'/{excluded_dir}/' in file_path_str or file_path_str.startswith(excluded_dir + '/'):
+            if f"/{excluded_dir}/" in file_path_str or file_path_str.startswith(
+                excluded_dir + "/"
+            ):
                 return False
 
         filename = file_path.name.lower()
@@ -280,31 +309,31 @@ class TestPathValidator(Validator):
         # Common test file patterns - more specific patterns
         test_patterns = [
             # Explicit test file extensions
-            filename.endswith('.test.js'),
-            filename.endswith('.test.ts'),
-            filename.endswith('.test.jsx'),
-            filename.endswith('.test.tsx'),
-            filename.endswith('.test.py'),
-            filename.endswith('.spec.js'),
-            filename.endswith('.spec.ts'),
-            filename.endswith('.spec.jsx'),
-            filename.endswith('.spec.tsx'),
-            filename.endswith('.spec.py'),
+            filename.endswith(".test.js"),
+            filename.endswith(".test.ts"),
+            filename.endswith(".test.jsx"),
+            filename.endswith(".test.tsx"),
+            filename.endswith(".test.py"),
+            filename.endswith(".spec.js"),
+            filename.endswith(".spec.ts"),
+            filename.endswith(".spec.jsx"),
+            filename.endswith(".spec.tsx"),
+            filename.endswith(".spec.py"),
             # Python test naming conventions
-            stem.startswith('test_'),
-            stem.endswith('_test'),
+            stem.startswith("test_"),
+            stem.endswith("_test"),
             # Catch test*.py pattern but exclude config files
-            (stem.startswith('test') and filename.endswith('.py')),
+            (stem.startswith("test") and filename.endswith(".py")),
         ]
 
         return any(test_patterns)
 
     def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate test file creation in designated directories."""
-        if tool_name not in ['Write', 'Edit', 'MultiEdit', 'NotebookEdit']:
+        if tool_name not in ["Write", "Edit", "MultiEdit", "NotebookEdit"]:
             return True, None
 
-        file_path = tool_input.get('file_path') or tool_input.get('notebook_path', '')
+        file_path = tool_input.get("file_path") or tool_input.get("notebook_path", "")
         if not file_path:
             return True, None
 
@@ -324,8 +353,8 @@ class TestPathValidator(Validator):
             # Check if file is in any valid test path
             is_valid = False
             for valid_path in self.valid_test_paths:
-                valid_path = valid_path.strip('/')
-                if file_dir == valid_path or file_dir.startswith(valid_path + '/'):
+                valid_path = valid_path.strip("/")
+                if file_dir == valid_path or file_dir.startswith(valid_path + "/"):
                     is_valid = True
                     break
 
@@ -337,10 +366,12 @@ class TestPathValidator(Validator):
                 for valid_path in sorted(self.valid_test_paths):
                     valid_paths_formatted += f"       • {valid_path}\n"
 
-                return False, get_error_message('test_file_invalid_path',
-                                              filename=path_obj.name,
-                                              directory=file_dir,
-                                              valid_paths=valid_paths_formatted.rstrip())
+                return False, get_error_message(
+                    "test_file_invalid_path",
+                    filename=path_obj.name,
+                    directory=file_dir,
+                    valid_paths=valid_paths_formatted.rstrip(),
+                )
         except ValueError:
             # Path is outside project root
             pass
@@ -353,11 +384,11 @@ class EnvFileValidator(Validator):
 
     # List of allowed .env example file patterns (exact match only)
     ALLOWED_ENV_EXAMPLES = [
-        '.env.sample',
-        '.env.example',
-        '.env.template',
-        '.env.default',
-        '.env.dist'
+        ".env.sample",
+        ".env.example",
+        ".env.template",
+        ".env.default",
+        ".env.dist",
     ]
 
     def __init__(self):
@@ -365,7 +396,7 @@ class EnvFileValidator(Validator):
 
     def _load_valid_env_paths(self) -> list[str]:
         """Load valid paths for .env file creation from configuration."""
-        config_path = CONFIG_DIR / '__claude_hook__valid_env_paths'
+        config_path = CONFIG_DIR / "__claude_hook__valid_env_paths"
 
         # Default: empty list means only allow root when config is empty/missing
         valid_paths = []
@@ -373,8 +404,11 @@ class EnvFileValidator(Validator):
         if config_path.exists():
             try:
                 with open(config_path) as f:
-                    lines = [line.strip() for line in f.readlines()
-                            if line.strip() and not line.startswith('#')]
+                    lines = [
+                        line.strip()
+                        for line in f.readlines()
+                        if line.strip() and not line.startswith("#")
+                    ]
                     # If file has content, use those paths
                     if lines:
                         valid_paths = lines
@@ -388,10 +422,10 @@ class EnvFileValidator(Validator):
 
     def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate environment file access and creation."""
-        if tool_name not in ['Read', 'Write', 'Edit', 'MultiEdit']:
+        if tool_name not in ["Read", "Write", "Edit", "MultiEdit"]:
             return True, None
 
-        file_path = tool_input.get('file_path', '')
+        file_path = tool_input.get("file_path", "")
         if not file_path:
             return True, None
 
@@ -400,21 +434,27 @@ class EnvFileValidator(Validator):
         filename = path_obj.name.lower()
 
         # Block ALL .env* files (including .env, .env.dev, .env.prod, .env.local, etc.)
-        if filename.startswith('.env'):
+        if filename.startswith(".env"):
             # Only allow specific example/sample/template files (exact match)
             if filename in [e.lower() for e in self.ALLOWED_ENV_EXAMPLES]:
                 return True, None
 
             # For Write operations, check if path is valid for .env creation
-            if tool_name in ['Write', 'Edit', 'MultiEdit']:
+            if tool_name in ["Write", "Edit", "MultiEdit"]:
                 # Check if creation is allowed in this path
                 if not self._is_valid_env_path(path_obj):
                     from utils.config_factory import get_error_message
 
                     # Get relative path for error message
                     try:
-                        rel_path = path_obj.resolve().relative_to(PROJECT_ROOT.resolve())
-                        rel_dir = str(rel_path.parent) if rel_path.parent != Path('.') else 'root'
+                        rel_path = path_obj.resolve().relative_to(
+                            PROJECT_ROOT.resolve()
+                        )
+                        rel_dir = (
+                            str(rel_path.parent)
+                            if rel_path.parent != Path(".")
+                            else "root"
+                        )
                     except:
                         rel_dir = str(path_obj.parent)
 
@@ -422,19 +462,28 @@ class EnvFileValidator(Validator):
                     if self.valid_env_paths:
                         valid_paths_formatted = ""
                         for valid_path in self.valid_env_paths:
-                            valid_paths_formatted += f"       • {valid_path or 'root'}\n"
+                            valid_paths_formatted += (
+                                f"       • {valid_path or 'root'}\n"
+                            )
                     else:
-                        valid_paths_formatted = "       • root (project root directory ONLY)\n"
+                        valid_paths_formatted = (
+                            "       • root (project root directory ONLY)\n"
+                        )
 
-                    return False, get_error_message('env_file_invalid_path',
-                                                  filename=path_obj.name,
-                                                  directory=rel_dir,
-                                                  valid_paths=valid_paths_formatted.rstrip())
+                    return False, get_error_message(
+                        "env_file_invalid_path",
+                        filename=path_obj.name,
+                        directory=rel_dir,
+                        valid_paths=valid_paths_formatted.rstrip(),
+                    )
 
             # Block all read operations on .env files
-            if tool_name == 'Read':
+            if tool_name == "Read":
                 from utils.config_factory import get_error_message
-                return False, get_error_message('env_file_blocked', filename=path_obj.name)
+
+                return False, get_error_message(
+                    "env_file_blocked", filename=path_obj.name
+                )
 
         return True, None
 
@@ -452,16 +501,16 @@ class EnvFileValidator(Validator):
                 return len(rel_path.parts) == 1
 
             # Check if the file's directory matches any valid path
-            file_dir = str(rel_path.parent) if rel_path.parent != Path('.') else '.'
+            file_dir = str(rel_path.parent) if rel_path.parent != Path(".") else "."
 
             for valid_path in self.valid_env_paths:
                 # Normalize paths for comparison
-                valid_path = valid_path.strip('/')
-                if valid_path == '.' or valid_path == '':
+                valid_path = valid_path.strip("/")
+                if valid_path == "." or valid_path == "":
                     # Root directory
-                    if file_dir == '.':
+                    if file_dir == ".":
                         return True
-                elif file_dir == valid_path or file_dir.startswith(valid_path + '/'):
+                elif file_dir == valid_path or file_dir.startswith(valid_path + "/"):
                     return True
 
             return False
@@ -476,17 +525,18 @@ class CommandValidator(Validator):
 
     def validate(self, tool_name: str, tool_input: dict) -> tuple[bool, str | None]:
         """Validate bash commands for dangerous operations."""
-        if tool_name != 'Bash':
+        if tool_name != "Bash":
             return True, None
 
-        command = tool_input.get('command', '')
+        command = tool_input.get("command", "")
         if not command:
             return True, None
 
         # Check for various dangerous commands
         if self._is_dangerous_command(command):
             from utils.config_factory import get_error_message
-            return False, get_error_message('dangerous_rm_blocked', command=command)
+
+            return False, get_error_message("dangerous_rm_blocked", command=command)
 
         return True, None
 
@@ -494,20 +544,20 @@ class CommandValidator(Validator):
         """Check if command is a dangerous operation."""
         # Check for dangerous rm commands
         dangerous_rm_patterns = [
-            r'rm\s+-[rf]*r[rf]*\s+/',
-            r'rm\s+-[rf]*f[rf]*\s+/',
-            r'rm\s+/\w+',
-            r'rm\s+~',
-            r'rm\s+\*',
-            r'sudo\s+rm',  # Any rm with sudo
+            r"rm\s+-[rf]*r[rf]*\s+/",
+            r"rm\s+-[rf]*f[rf]*\s+/",
+            r"rm\s+/\w+",
+            r"rm\s+~",
+            r"rm\s+\*",
+            r"sudo\s+rm",  # Any rm with sudo
         ]
 
         # Check for other dangerous commands
         dangerous_system_patterns = [
-            r'mkfs',  # Format filesystem
-            r'dd\s+.*of=/dev',  # Direct disk writes
-            r'chmod\s+777\s+/etc',  # Dangerous permission changes
-            r'rm\s+-rf\s+/',  # Explicit check for rm -rf /
+            r"mkfs",  # Format filesystem
+            r"dd\s+.*of=/dev",  # Direct disk writes
+            r"chmod\s+777\s+/etc",  # Dangerous permission changes
+            r"rm\s+-rf\s+/",  # Explicit check for rm -rf /
         ]
 
         # Combine all patterns
@@ -544,7 +594,10 @@ class DocumentationValidator(Validator):
             if check_documentation_requirement(file_path):
                 if not is_file_in_session(file_path):
                     from utils.config_factory import get_warning_message
-                    return False, get_warning_message('documentation_required', filepath=file_path)
+
+                    return False, get_warning_message(
+                        "documentation_required", filepath=file_path
+                    )
 
         except Exception:
             # If documentation system fails, don't block
@@ -554,10 +607,10 @@ class DocumentationValidator(Validator):
 
     def _extract_file_path(self, tool_name: str, tool_input: dict) -> str | None:
         """Extract file path from tool input."""
-        if tool_name in ['Write', 'Edit', 'MultiEdit']:
-            return tool_input.get('file_path')
-        elif tool_name == 'NotebookEdit':
-            return tool_input.get('notebook_path')
+        if tool_name in ["Write", "Edit", "MultiEdit"]:
+            return tool_input.get("file_path")
+        elif tool_name == "NotebookEdit":
+            return tool_input.get("notebook_path")
         return None
 
 
@@ -626,9 +679,9 @@ class HintProcessor(Processor):
                 hint_system = None
             pending_hints = hint_system.hint_bridge.retrieve_hints()
             if pending_hints:
-                    hint_output.append("📋 Previous Action Insights:")
-                    hint_output.append(pending_hints)
-                    hint_output.append("")
+                hint_output.append("📋 Previous Action Insights:")
+                hint_output.append(pending_hints)
+                hint_output.append("")
 
         except Exception:
             pass
@@ -649,8 +702,8 @@ class HintProcessor(Processor):
                 hint_system = None
             new_hints = hint_system.generate_pre_action_hints(tool_name, tool_input)
             if new_hints:
-                    hint_output.append("💡 Workflow Guidance:")
-                    hint_output.extend(new_hints)
+                hint_output.append("💡 Workflow Guidance:")
+                hint_output.extend(new_hints)
 
         except Exception:
             pass
@@ -668,7 +721,7 @@ class MCPProcessor(Processor):
 
             if get_mcp_interceptor:
                 interceptor = get_mcp_interceptor()
-                if interceptor and hasattr(interceptor, 'intercept_pre_tool'):
+                if interceptor and hasattr(interceptor, "intercept_pre_tool"):
                     return interceptor.intercept_pre_tool(tool_name, tool_input)
 
         except Exception:
@@ -681,11 +734,12 @@ class MCPProcessor(Processor):
 # Component Factory
 # ============================================================================
 
+
 class ComponentFactory:
     """Factory for creating hook components."""
 
     @staticmethod
-    def create_logger(log_dir: Path, log_name: str = 'pre_tool_use') -> Logger:
+    def create_logger(log_dir: Path, log_name: str = "pre_tool_use") -> Logger:
         """Create a logger instance."""
         return FileLogger(log_dir, log_name)
 
@@ -698,22 +752,19 @@ class ComponentFactory:
             EnvFileValidator(),
             CommandValidator(),
             DocumentationValidator(),
-            PermissionValidator()
+            PermissionValidator(),
         ]
 
     @staticmethod
     def create_processors(logger: Logger) -> list[Processor]:
         """Create all processors."""
-        return [
-            ContextProcessor(),
-            HintProcessor(logger),
-            MCPProcessor()
-        ]
+        return [ContextProcessor(), HintProcessor(logger), MCPProcessor()]
 
 
 # ============================================================================
 # Main Hook Class
 # ============================================================================
+
 
 class PreToolUseHook:
     """Main pre-tool use hook with clean architecture."""
@@ -735,32 +786,39 @@ class PreToolUseHook:
 
     def execute(self, data: dict[str, Any]) -> int:
         """Execute the pre-tool use hook."""
-        tool_name = data.get('tool_name', '')
-        tool_input = data.get('tool_input', {})
+        tool_name = data.get("tool_name", "")
+        tool_input = data.get("tool_input", {})
 
         # Log the execution
-        self.logger.log('info', f'Pre-processing: {tool_name}')
+        self.logger.log("info", f"Pre-processing: {tool_name}")
 
         # Debug: Log the file being accessed
-        if tool_name in ['Read', 'Write', 'Edit', 'MultiEdit']:
-            file_path = tool_input.get('file_path', '')
+        if tool_name in ["Read", "Write", "Edit", "MultiEdit"]:
+            file_path = tool_input.get("file_path", "")
             if file_path:
-                self.logger.log('info', f'File access attempt: {file_path}')
+                self.logger.log("info", f"File access attempt: {file_path}")
                 # Immediate blocking for .env files
                 filename = Path(file_path).name.lower()
-                with open('/tmp/test_hook.txt', 'a') as f:
+                with open("/tmp/test_hook.txt", "a") as f:
                     f.write(f"Checking file: {filename}\n")
                     f.write(f"Starts with .env: {filename.startswith('.env')}\n")
-                if filename.startswith('.env') and filename not in ['.env.sample', '.env.example', '.env.template', '.env.default', '.env.dist']:
-                    with open('/tmp/test_hook.txt', 'a') as f:
+                if filename.startswith(".env") and filename not in [
+                    ".env.sample",
+                    ".env.example",
+                    ".env.template",
+                    ".env.default",
+                    ".env.dist",
+                ]:
+                    with open("/tmp/test_hook.txt", "a") as f:
                         f.write(f"BLOCKING {filename}!\n")
                     # Load error message from configuration
                     from config.config_loader import ConfigLoader
-                    config_loader = ConfigLoader()
-                    error_messages = config_loader.load_config('error_messages')
 
-                    if error_messages and 'env_file_blocked' in error_messages:
-                        error_config = error_messages['env_file_blocked']
+                    config_loader = ConfigLoader()
+                    error_messages = config_loader.load_config("error_messages")
+
+                    if error_messages and "env_file_blocked" in error_messages:
+                        error_config = error_messages["env_file_blocked"]
                         error_msg = f"\n⚠️  {error_config['message'].format(filename=Path(file_path).name)}\n"
                         error_msg += f"✅ {error_config['hint']}\n"
                     else:
@@ -778,19 +836,25 @@ class PreToolUseHook:
                 is_valid, error_message = validator.validate(tool_name, tool_input)
                 if not is_valid and error_message:
                     print(error_message, file=sys.stderr)
-                    self.logger.log('warning', f'Validation failed: {validator.__class__.__name__}',
-                                  {'tool': tool_name, 'error': error_message})
+                    self.logger.log(
+                        "warning",
+                        f"Validation failed: {validator.__class__.__name__}",
+                        {"tool": tool_name, "error": error_message},
+                    )
                     # Use exit code 2 for blocking (Claude Code respects this)
                     return 2
             except Exception as e:
-                self.logger.log('error', f'Validator {validator.__class__.__name__} failed: {e}')
+                self.logger.log(
+                    "error", f"Validator {validator.__class__.__name__} failed: {e}"
+                )
 
         # Check for MCP hint matrix hints FIRST (use factory)
         output_parts = []
-        if tool_name.startswith('mcp__agenthub_http'):
+        if tool_name.startswith("mcp__agenthub_http"):
             try:
                 # Using unified hint system instead of matrix factory
                 from utils.unified_hint_system import get_hint_system
+
                 if not _is_recursive_call():
                     if not _is_recursive_call():
                         hint_system = get_hint_system()
@@ -802,7 +866,7 @@ class PreToolUseHook:
                 if hints:
                     output_parts.append(hints)
             except Exception as e:
-                self.logger.log('error', f'MCP hint matrix factory failed: {e}')
+                self.logger.log("error", f"MCP hint matrix factory failed: {e}")
 
         # Run all processors for additional output
         for processor in self.processors:
@@ -811,14 +875,16 @@ class PreToolUseHook:
                 if output and output.strip():
                     output_parts.append(output)
             except Exception as e:
-                self.logger.log('error', f'Processor {processor.__class__.__name__} failed: {e}')
+                self.logger.log(
+                    "error", f"Processor {processor.__class__.__name__} failed: {e}"
+                )
 
         # Output any processor results
         if output_parts:
             combined_output = "\n\n".join(output_parts)
             print(combined_output)
 
-        self.logger.log('info', 'Pre-processing completed successfully')
+        self.logger.log("info", "Pre-processing completed successfully")
         return 0
 
 
@@ -826,10 +892,11 @@ class PreToolUseHook:
 # Main Entry Point
 # ============================================================================
 
+
 def main():
     """Main entry point for the hook."""
     # Debug: Write to file to confirm hook is running
-    with open('/tmp/test_hook.txt', 'a') as f:
+    with open("/tmp/test_hook.txt", "a") as f:
         f.write(f"Hook called at {datetime.now()}\n")
 
     try:
@@ -837,10 +904,12 @@ def main():
         input_data = json.load(sys.stdin)
 
         # Debug: Log the tool being called
-        with open('/tmp/test_hook.txt', 'a') as f:
+        with open("/tmp/test_hook.txt", "a") as f:
             f.write(f"Tool: {input_data.get('tool_name', 'unknown')}\n")
-            if input_data.get('tool_name') in ['Read', 'Write', 'Edit']:
-                f.write(f"File: {input_data.get('tool_input', {}).get('file_path', 'none')}\n")
+            if input_data.get("tool_name") in ["Read", "Write", "Edit"]:
+                f.write(
+                    f"File: {input_data.get('tool_input', {}).get('file_path', 'none')}\n"
+                )
 
         # Create and execute hook
         hook = PreToolUseHook()
@@ -851,26 +920,27 @@ def main():
             print("✅ Validated", flush=True)
 
         # Clear recursion guard before exiting
-        os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '0'
+        os.environ["CLAUDE_PRE_TOOL_HOOK_ACTIVE"] = "0"
         sys.exit(exit_code)
 
     except json.JSONDecodeError:
         # Handle JSON decode errors gracefully
-        os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '0'
+        os.environ["CLAUDE_PRE_TOOL_HOOK_ACTIVE"] = "0"
         sys.exit(0)
     except Exception as e:
         # Log error but exit cleanly
         try:
             from utils.env_loader import get_ai_data_path
+
             log_dir = get_ai_data_path()
-            error_log = log_dir / 'pre_tool_use_errors.log'
-            with open(error_log, 'a') as f:
+            error_log = log_dir / "pre_tool_use_errors.log"
+            with open(error_log, "a") as f:
                 f.write(f"{datetime.now().isoformat()} - Fatal error: {e}\n")
         except:
             pass
-        os.environ['CLAUDE_PRE_TOOL_HOOK_ACTIVE'] = '0'
+        os.environ["CLAUDE_PRE_TOOL_HOOK_ACTIVE"] = "0"
         sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

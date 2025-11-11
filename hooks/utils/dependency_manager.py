@@ -29,6 +29,7 @@ import pkg_resources
 @dataclass
 class Dependency:
     """Represents a package dependency with installation and fallback options."""
+
     name: str
     import_name: str | None = None
     min_version: str | None = None
@@ -64,7 +65,7 @@ class DependencyManager:
                 required=False,
                 fallback_available=True,
                 fallback_message="HTTP requests will use urllib instead of requests library",
-                install_instructions="pip install requests"
+                install_instructions="pip install requests",
             ),
             Dependency(
                 name="colorama",
@@ -73,7 +74,7 @@ class DependencyManager:
                 required=False,
                 fallback_available=True,
                 fallback_message="Console output will not be colored",
-                install_instructions="pip install colorama"
+                install_instructions="pip install colorama",
             ),
             Dependency(
                 name="rich",
@@ -82,7 +83,7 @@ class DependencyManager:
                 required=False,
                 fallback_available=True,
                 fallback_message="Console output will use basic formatting",
-                install_instructions="pip install rich"
+                install_instructions="pip install rich",
             ),
             Dependency(
                 name="gitpython",
@@ -92,11 +93,13 @@ class DependencyManager:
                 required=False,
                 fallback_available=True,
                 fallback_message="Git operations will use subprocess calls",
-                install_instructions="pip install GitPython"
-            )
+                install_instructions="pip install GitPython",
+            ),
         ]
 
-    def check_dependencies(self, dependencies: list[Dependency] | None = None) -> dict[str, Any]:
+    def check_dependencies(
+        self, dependencies: list[Dependency] | None = None
+    ) -> dict[str, Any]:
         """
         Check the availability of dependencies.
 
@@ -110,46 +113,52 @@ class DependencyManager:
             dependencies = self.common_dependencies
 
         result = {
-            'available': {},
-            'missing': {},
-            'versions': {},
-            'can_install': {},
-            'fallbacks_available': {},
-            'all_required_available': True,
-            'install_commands': {}
+            "available": {},
+            "missing": {},
+            "versions": {},
+            "can_install": {},
+            "fallbacks_available": {},
+            "all_required_available": True,
+            "install_commands": {},
         }
 
         for dep in dependencies:
             import_name = dep.import_name or dep.name
             is_available = self._check_package_availability(import_name)
 
-            result['available'][dep.name] = is_available
-            result['fallbacks_available'][dep.name] = dep.fallback_available
+            result["available"][dep.name] = is_available
+            result["fallbacks_available"][dep.name] = dep.fallback_available
 
             if is_available:
                 version = self._get_package_version(import_name)
-                result['versions'][dep.name] = version
+                result["versions"][dep.name] = version
 
                 # Check version compatibility if required
                 if dep.min_version and version:
                     if not self._is_version_compatible(version, dep.min_version):
-                        result['missing'][dep.name] = f"Version {version} < required {dep.min_version}"
+                        result["missing"][dep.name] = (
+                            f"Version {version} < required {dep.min_version}"
+                        )
                         if dep.required:
-                            result['all_required_available'] = False
+                            result["all_required_available"] = False
             else:
-                result['missing'][dep.name] = "Package not found"
+                result["missing"][dep.name] = "Package not found"
                 if dep.required and not dep.fallback_available:
-                    result['all_required_available'] = False
+                    result["all_required_available"] = False
 
             # Generate install commands
             install_cmd = self._generate_install_command(dep)
             if install_cmd:
-                result['install_commands'][dep.name] = install_cmd
+                result["install_commands"][dep.name] = install_cmd
 
         return result
 
-    def install_missing_dependencies(self, dependencies: list[Dependency] | None = None,
-                                   interactive: bool = True, dry_run: bool = False) -> dict[str, Any]:
+    def install_missing_dependencies(
+        self,
+        dependencies: list[Dependency] | None = None,
+        interactive: bool = True,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
         """
         Attempt to install missing dependencies.
 
@@ -165,36 +174,41 @@ class DependencyManager:
             dependencies = self.common_dependencies
 
         result = {
-            'attempted': [],
-            'successful': [],
-            'failed': [],
-            'skipped': [],
-            'commands_run': []
+            "attempted": [],
+            "successful": [],
+            "failed": [],
+            "skipped": [],
+            "commands_run": [],
         }
 
         dep_status = self.check_dependencies(dependencies)
 
         for dep in dependencies:
-            if dep.name in dep_status['missing'] and dep.name in dep_status['install_commands']:
+            if (
+                dep.name in dep_status["missing"]
+                and dep.name in dep_status["install_commands"]
+            ):
                 if interactive and not dry_run:
-                    answer = input(f"\nInstall {dep.name}? ({dep.install_instructions}) [y/N]: ")
-                    if answer.lower() not in ['y', 'yes']:
-                        result['skipped'].append(dep.name)
+                    answer = input(
+                        f"\nInstall {dep.name}? ({dep.install_instructions}) [y/N]: "
+                    )
+                    if answer.lower() not in ["y", "yes"]:
+                        result["skipped"].append(dep.name)
                         continue
 
-                install_cmd = dep_status['install_commands'][dep.name]
-                result['attempted'].append(dep.name)
-                result['commands_run'].append(install_cmd)
+                install_cmd = dep_status["install_commands"][dep.name]
+                result["attempted"].append(dep.name)
+                result["commands_run"].append(install_cmd)
 
                 if dry_run:
                     print(f"Would run: {install_cmd}")
-                    result['successful'].append(dep.name)
+                    result["successful"].append(dep.name)
                 else:
                     success = self._run_install_command(install_cmd)
                     if success:
-                        result['successful'].append(dep.name)
+                        result["successful"].append(dep.name)
                     else:
-                        result['failed'].append(dep.name)
+                        result["failed"].append(dep.name)
 
         return result
 
@@ -233,7 +247,9 @@ class DependencyManager:
             else:
                 return None
 
-    def generate_dependency_report(self, dependencies: list[Dependency] | None = None) -> str:
+    def generate_dependency_report(
+        self, dependencies: list[Dependency] | None = None
+    ) -> str:
         """Generate a comprehensive dependency report."""
         if dependencies is None:
             dependencies = self.common_dependencies
@@ -246,43 +262,49 @@ class DependencyManager:
         report.append("=" * 60)
 
         # Overall status
-        if dep_status['all_required_available']:
+        if dep_status["all_required_available"]:
             report.append("\n✅ All required dependencies are available")
         else:
             report.append("\n⚠️  Some required dependencies are missing")
 
         # Available packages
-        available = [name for name, status in dep_status['available'].items() if status]
+        available = [name for name, status in dep_status["available"].items() if status]
         if available:
             report.append(f"\n📦 Available Packages ({len(available)}):")
             for name in available:
-                version = dep_status['versions'].get(name, 'unknown')
+                version = dep_status["versions"].get(name, "unknown")
                 report.append(f"   ✅ {name} (version: {version})")
 
         # Missing packages
-        missing = list(dep_status['missing'].keys())
+        missing = list(dep_status["missing"].keys())
         if missing:
             report.append(f"\n❌ Missing Packages ({len(missing)}):")
             for name in missing:
                 dep = next((d for d in dependencies if d.name == name), None)
-                status_msg = dep_status['missing'][name]
+                status_msg = dep_status["missing"][name]
 
                 if dep:
                     required_text = "Required" if dep.required else "Optional"
-                    fallback_text = "Fallback available" if dep.fallback_available else "No fallback"
+                    fallback_text = (
+                        "Fallback available"
+                        if dep.fallback_available
+                        else "No fallback"
+                    )
                     report.append(f"   ❌ {name} ({required_text}, {fallback_text})")
                     report.append(f"      Status: {status_msg}")
 
                     if dep.fallback_available and dep.fallback_message:
                         report.append(f"      Fallback: {dep.fallback_message}")
 
-                    if name in dep_status['install_commands']:
-                        report.append(f"      Install: {dep_status['install_commands'][name]}")
+                    if name in dep_status["install_commands"]:
+                        report.append(
+                            f"      Install: {dep_status['install_commands'][name]}"
+                        )
                 else:
                     report.append(f"   ❌ {name}: {status_msg}")
 
         # Installation commands
-        install_commands = dep_status['install_commands']
+        install_commands = dep_status["install_commands"]
         if install_commands:
             report.append("\n🔧 Installation Commands:")
             for name, cmd in install_commands.items():
@@ -292,9 +314,9 @@ class DependencyManager:
         report.append("\n🛠️  Package Manager Information:")
         managers = self._detect_package_managers()
         for manager, info in managers.items():
-            status = "Available" if info['available'] else "Not found"
+            status = "Available" if info["available"] else "Not found"
             report.append(f"   • {manager}: {status}")
-            if info['available'] and info.get('version'):
+            if info["available"] and info.get("version"):
                 report.append(f"     Version: {info['version']}")
 
         report.append("\n" + "=" * 60)
@@ -323,6 +345,7 @@ class DependencyManager:
                 # Try importlib.metadata (Python 3.8+)
                 if sys.version_info >= (3, 8):
                     import importlib.metadata
+
                     return importlib.metadata.version(package_name)
             except Exception:
                 pass
@@ -330,7 +353,7 @@ class DependencyManager:
             try:
                 # Try importing and checking __version__
                 module = importlib.import_module(package_name)
-                if hasattr(module, '__version__'):
+                if hasattr(module, "__version__"):
                     return module.__version__
             except Exception:
                 pass
@@ -341,11 +364,12 @@ class DependencyManager:
         """Check if current version meets minimum requirement."""
         try:
             from packaging import version
+
             return version.parse(current_version) >= version.parse(min_version)
         except ImportError:
             # Fallback to simple string comparison
-            current_parts = [int(x) for x in current_version.split('.') if x.isdigit()]
-            min_parts = [int(x) for x in min_version.split('.') if x.isdigit()]
+            current_parts = [int(x) for x in current_version.split(".") if x.isdigit()]
+            min_parts = [int(x) for x in min_version.split(".") if x.isdigit()]
 
             # Pad shorter version with zeros
             max_len = max(len(current_parts), len(min_parts))
@@ -359,12 +383,12 @@ class DependencyManager:
         managers = self._detect_package_managers()
 
         # Prefer conda if available and conda_name is specified
-        if managers['conda']['available'] and dependency.conda_name:
+        if managers["conda"]["available"] and dependency.conda_name:
             return f"conda install {dependency.conda_name}"
 
         # Use pip if available
-        if managers['pip']['available'] or managers['pip3']['available']:
-            pip_cmd = 'pip3' if managers['pip3']['available'] else 'pip'
+        if managers["pip"]["available"] or managers["pip3"]["available"]:
+            pip_cmd = "pip3" if managers["pip3"]["available"] else "pip"
             package_name = dependency.pip_name or dependency.name
             return f"{pip_cmd} install {package_name}"
 
@@ -377,35 +401,39 @@ class DependencyManager:
                 command.split(),
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minute timeout
+                timeout=300,  # 5 minute timeout
             )
             return result.returncode == 0
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
+        except (
+            subprocess.TimeoutExpired,
+            subprocess.SubprocessError,
+            FileNotFoundError,
+        ):
             return False
 
     def _detect_package_managers(self) -> dict[str, dict[str, Any]]:
         """Detect available package managers."""
         managers = {
-            'pip': {'available': False, 'version': None},
-            'pip3': {'available': False, 'version': None},
-            'conda': {'available': False, 'version': None},
-            'pipenv': {'available': False, 'version': None}
+            "pip": {"available": False, "version": None},
+            "pip3": {"available": False, "version": None},
+            "conda": {"available": False, "version": None},
+            "pipenv": {"available": False, "version": None},
         }
 
         for manager in managers.keys():
             if shutil.which(manager):
-                managers[manager]['available'] = True
+                managers[manager]["available"] = True
 
                 # Try to get version
                 try:
                     result = subprocess.run(
-                        [manager, '--version'],
+                        [manager, "--version"],
                         capture_output=True,
                         text=True,
-                        timeout=10
+                        timeout=10,
                     )
                     if result.returncode == 0:
-                        managers[manager]['version'] = result.stdout.strip()
+                        managers[manager]["version"] = result.stdout.strip()
                 except (subprocess.TimeoutExpired, subprocess.SubprocessError):
                     pass
 
@@ -439,12 +467,14 @@ class FallbackImplementations:
                 headers = headers or {}
 
                 if json_data is not None:
-                    data = json.dumps(json_data).encode('utf-8')
-                    headers['Content-Type'] = 'application/json'
+                    data = json.dumps(json_data).encode("utf-8")
+                    headers["Content-Type"] = "application/json"
                 elif data:
-                    data = data.encode('utf-8') if isinstance(data, str) else data
+                    data = data.encode("utf-8") if isinstance(data, str) else data
 
-                req = urllib.request.Request(url, data=data, headers=headers, method='POST')
+                req = urllib.request.Request(
+                    url, data=data, headers=headers, method="POST"
+                )
                 try:
                     with urllib.request.urlopen(req, timeout=timeout) as response:
                         return FallbackResponse(response)
@@ -461,7 +491,7 @@ class FallbackImplementations:
             @property
             def text(self):
                 if self._text is None:
-                    self._text = self._response.read().decode('utf-8')
+                    self._text = self._response.read().decode("utf-8")
                 return self._text
 
             def json(self):
@@ -472,6 +502,7 @@ class FallbackImplementations:
     @staticmethod
     def colorama_fallback():
         """Fallback for colorama - no coloring."""
+
         class FallbackColorama:
             class Fore:
                 RED = ""
@@ -508,12 +539,13 @@ class FallbackImplementations:
     @staticmethod
     def rich_fallback():
         """Fallback for rich - basic print functionality."""
+
         class FallbackConsole:
             def print(self, *args, **kwargs):
                 # Remove rich-specific kwargs
-                kwargs.pop('style', None)
-                kwargs.pop('markup', None)
-                kwargs.pop('highlight', None)
+                kwargs.pop("style", None)
+                kwargs.pop("markup", None)
+                kwargs.pop("highlight", None)
                 print(*args, **kwargs)
 
             def log(self, *args, **kwargs):
@@ -531,30 +563,34 @@ class FallbackImplementations:
         from pathlib import Path
 
         class FallbackGit:
-            def __init__(self, repo_path='.'):
+            def __init__(self, repo_path="."):
                 self.repo_path = Path(repo_path)
 
             def git_command(self, *args):
                 try:
                     result = subprocess.run(
-                        ['git'] + list(args),
+                        ["git"] + list(args),
                         cwd=self.repo_path,
                         capture_output=True,
                         text=True,
-                        timeout=30
+                        timeout=30,
                     )
                     if result.returncode == 0:
                         return result.stdout.strip()
                     else:
                         raise Exception(f"Git command failed: {result.stderr}")
-                except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError) as e:
+                except (
+                    subprocess.TimeoutExpired,
+                    subprocess.SubprocessError,
+                    FileNotFoundError,
+                ) as e:
                     raise Exception(f"Git command failed: {e}")
 
             def get_current_branch(self):
-                return self.git_command('branch', '--show-current')
+                return self.git_command("branch", "--show-current")
 
             def is_dirty(self):
-                status = self.git_command('status', '--porcelain')
+                status = self.git_command("status", "--porcelain")
                 return bool(status.strip())
 
         return FallbackGit
@@ -563,10 +599,14 @@ class FallbackImplementations:
 # Register default fallback handlers
 def setup_default_fallbacks(manager: DependencyManager):
     """Setup default fallback handlers."""
-    manager.register_fallback_handler('requests', FallbackImplementations.requests_fallback)
-    manager.register_fallback_handler('colorama', FallbackImplementations.colorama_fallback)
-    manager.register_fallback_handler('rich', FallbackImplementations.rich_fallback)
-    manager.register_fallback_handler('git', FallbackImplementations.git_fallback)
+    manager.register_fallback_handler(
+        "requests", FallbackImplementations.requests_fallback
+    )
+    manager.register_fallback_handler(
+        "colorama", FallbackImplementations.colorama_fallback
+    )
+    manager.register_fallback_handler("rich", FallbackImplementations.rich_fallback)
+    manager.register_fallback_handler("git", FallbackImplementations.git_fallback)
 
 
 # Convenience functions
@@ -576,8 +616,11 @@ def check_dependencies(dependencies: list[Dependency] | None = None) -> dict[str
     return manager.check_dependencies(dependencies)
 
 
-def install_missing_dependencies(dependencies: list[Dependency] | None = None,
-                                interactive: bool = True, dry_run: bool = False) -> dict[str, Any]:
+def install_missing_dependencies(
+    dependencies: list[Dependency] | None = None,
+    interactive: bool = True,
+    dry_run: bool = False,
+) -> dict[str, Any]:
     """Quick function to install missing dependencies."""
     manager = DependencyManager()
     return manager.install_missing_dependencies(dependencies, interactive, dry_run)

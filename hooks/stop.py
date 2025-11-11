@@ -32,7 +32,7 @@ def get_completion_messages():
         "All done!",
         "Task finished!",
         "Job complete!",
-        "Ready for next task!"
+        "Ready for next task!",
     ]
 
 
@@ -44,24 +44,24 @@ def get_tts_script_path():
     # Get current script directory and construct utils/tts path
     script_dir = Path(__file__).parent
     tts_dir = script_dir / "utils" / "tts"
-    
+
     # Check for ElevenLabs API key (highest priority)
-    if os.getenv('ELEVENLABS_API_KEY'):
+    if os.getenv("ELEVENLABS_API_KEY"):
         elevenlabs_script = tts_dir / "elevenlabs_tts.py"
         if elevenlabs_script.exists():
             return str(elevenlabs_script)
-    
+
     # Check for OpenAI API key (second priority)
-    if os.getenv('OPENAI_API_KEY'):
+    if os.getenv("OPENAI_API_KEY"):
         openai_script = tts_dir / "openai_tts.py"
         if openai_script.exists():
             return str(openai_script)
-    
+
     # Fall back to pyttsx3 (no API key required)
     pyttsx3_script = tts_dir / "pyttsx3_tts.py"
     if pyttsx3_script.exists():
         return str(pyttsx3_script)
-    
+
     return None
 
 
@@ -69,67 +69,65 @@ def get_llm_completion_message():
     """
     Generate completion message using available LLM services.
     Priority order: OpenAI > Anthropic > Ollama > fallback to random message
-    
+
     Returns:
         str: Generated or fallback completion message
     """
     # Get current script directory and construct utils/llm path
     script_dir = Path(__file__).parent
     llm_dir = script_dir / "utils" / "llm"
-    
+
     # Try OpenAI first (highest priority)
-    if os.getenv('OPENAI_API_KEY'):
+    if os.getenv("OPENAI_API_KEY"):
         oai_script = llm_dir / "oai.py"
         if oai_script.exists():
             try:
-                result = subprocess.run([
-                    "uv", "run", str(oai_script), "--completion"
-                ], 
-                capture_output=True,
-                text=True,
-                timeout=10
+                result = subprocess.run(
+                    ["uv", "run", str(oai_script), "--completion"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 if result.returncode == 0 and result.stdout.strip():
                     return result.stdout.strip()
             except (subprocess.TimeoutExpired, subprocess.SubprocessError):
                 pass
-    
+
     # Try Anthropic second
-    if os.getenv('ANTHROPIC_API_KEY'):
+    if os.getenv("ANTHROPIC_API_KEY"):
         anth_script = llm_dir / "anth.py"
         if anth_script.exists():
             try:
-                result = subprocess.run([
-                    "uv", "run", str(anth_script), "--completion"
-                ], 
-                capture_output=True,
-                text=True,
-                timeout=10
+                result = subprocess.run(
+                    ["uv", "run", str(anth_script), "--completion"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 if result.returncode == 0 and result.stdout.strip():
                     return result.stdout.strip()
             except (subprocess.TimeoutExpired, subprocess.SubprocessError):
                 pass
-    
+
     # Try Ollama third (local LLM)
     ollama_script = llm_dir / "ollama.py"
     if ollama_script.exists():
         try:
-            result = subprocess.run([
-                "uv", "run", str(ollama_script), "--completion"
-            ], 
-            capture_output=True,
-            text=True,
-            timeout=10
+            result = subprocess.run(
+                ["uv", "run", str(ollama_script), "--completion"],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.strip()
         except (subprocess.TimeoutExpired, subprocess.SubprocessError):
             pass
-    
+
     # Fallback to random predefined message
     messages = get_completion_messages()
     return random.choice(messages)
+
 
 def announce_completion():
     """Announce completion using the best available TTS service."""
@@ -137,18 +135,17 @@ def announce_completion():
         tts_script = get_tts_script_path()
         if not tts_script:
             return  # No TTS scripts available
-        
+
         # Get completion message (LLM-generated or fallback)
         completion_message = get_llm_completion_message()
-        
+
         # Call the TTS script with the completion message
-        subprocess.run([
-            "uv", "run", tts_script, completion_message
-        ], 
-        capture_output=True,  # Suppress output
-        timeout=10  # 10-second timeout
+        subprocess.run(
+            ["uv", "run", tts_script, completion_message],
+            capture_output=True,  # Suppress output
+            timeout=10,  # 10-second timeout
         )
-        
+
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
         # Fail silently if TTS encounters issues
         pass
@@ -161,10 +158,14 @@ def main():
     try:
         # Parse command line arguments
         parser = argparse.ArgumentParser()
-        parser.add_argument('--chat', action='store_true', help='Copy transcript to chat.json')
-        parser.add_argument('--notify', action='store_true', help='Enable TTS completion announcement')
+        parser.add_argument(
+            "--chat", action="store_true", help="Copy transcript to chat.json"
+        )
+        parser.add_argument(
+            "--notify", action="store_true", help="Enable TTS completion announcement"
+        )
         args = parser.parse_args()
-        
+
         # Read JSON input from stdin
         input_data = json.load(sys.stdin)
 
@@ -185,17 +186,17 @@ def main():
                     log_data = []
         else:
             log_data = []
-        
+
         # Append new data
         log_data.append(input_data)
-        
+
         # Write back to file with formatting
-        with open(log_path, 'w') as f:
+        with open(log_path, "w") as f:
             json.dump(log_data, f, indent=2)
-        
+
         # Handle --chat switch
-        if args.chat and 'transcript_path' in input_data:
-            transcript_path = input_data['transcript_path']
+        if args.chat and "transcript_path" in input_data:
+            transcript_path = input_data["transcript_path"]
             if os.path.exists(transcript_path):
                 # Read .jsonl file and convert to JSON array
                 chat_data = []
@@ -208,10 +209,10 @@ def main():
                                     chat_data.append(json.loads(line))
                                 except json.JSONDecodeError:
                                     pass  # Skip invalid lines
-                    
+
                     # Write to AI_DATA/chat.json
-                    chat_file = log_dir / 'chat.json'
-                    with open(chat_file, 'w') as f:
+                    chat_file = log_dir / "chat.json"
+                    with open(chat_file, "w") as f:
                         json.dump(chat_data, f, indent=2)
                 except Exception:
                     pass  # Fail silently
