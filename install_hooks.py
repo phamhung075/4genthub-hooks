@@ -31,7 +31,6 @@ This installer will:
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 # Ensure we can import our utilities
 script_dir = Path(__file__).parent

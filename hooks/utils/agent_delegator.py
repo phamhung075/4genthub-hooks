@@ -10,7 +10,7 @@ Usage:
     delegate_to_agent("debugger-agent", "Fix this critical bug")
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class AgentDelegator:

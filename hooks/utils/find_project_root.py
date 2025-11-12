@@ -7,7 +7,6 @@ Works from any subdirectory within the project.
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 class ProjectRootFinder:

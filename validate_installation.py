@@ -24,7 +24,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 # Ensure we can import our utilities
 script_dir = Path(__file__).parent

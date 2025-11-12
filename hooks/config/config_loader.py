@@ -5,7 +5,7 @@ Provides centralized access to all configuration files in the config directory.
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 

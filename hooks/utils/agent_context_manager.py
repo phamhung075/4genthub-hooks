@@ -8,7 +8,7 @@ allowing the master orchestrator to switch to sub-agent mode and back.
 
 import json
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class AgentContextManager:

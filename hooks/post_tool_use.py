@@ -25,7 +25,7 @@ import sys
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Add hooks directory to path
 sys.path.insert(0, str(Path(__file__).parent))

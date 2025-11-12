@@ -6,7 +6,6 @@ Checks that all required configuration files exist before hook execution.
 
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
 class ConfigurationValidator:

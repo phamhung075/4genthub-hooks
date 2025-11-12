@@ -8,7 +8,7 @@ Saves ~800 tokens (80% reduction from 1,000 to 200 tokens).
 Formats context data into minimal, scannable output.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 
 class SimpleFormatter:
