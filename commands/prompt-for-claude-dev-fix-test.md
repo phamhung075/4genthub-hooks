@@ -1,4 +1,6 @@
-User need prompts to fix test failures in parallel sessions. Looking at the failures
+User need prompts to fix test failures in parallel sessions. Looking at the failures:
+$ARGUMENTS
+
 1. First call the master-orchestrator-agent to load my role
 2. Analyze the test failures
 3. Create MCP tasks for fixing these issues
