@@ -16,7 +16,11 @@ Quick and easy configuration for Claude Code and OpenAI Codex across different p
 cd your-project
 
 # Add as git submodule - enables easy updates across ALL projects!
+## SSH
 git submodule add git@github.com:phamhung075/4genthub-hooks.git .claude
+
+## Https
+git submodule add https://github.com/phamhung075/4genthub-hooks.git .claude
 
 # Initialize
 git submodule update --init --recursive
