@@ -178,9 +178,15 @@ class ClaudeSetup:
         print(
             f"  {Colors.BLUE}[1]{Colors.END} Economic (Balanced - saves tokens, good performance)"
         )
+        print("      • Disables Task tool (saves ~1200 tokens per delegation)")
+        print("      • Uses agent switching (role transformation in same session)")
+        print("      • Best for: Sequential workflows, token efficiency")
         print(
-            f"  {Colors.BLUE}[2]{Colors.END} Max Performance (Token burn — maximum context, best for multiple subagent delegation.)"
+            f"  {Colors.BLUE}[2]{Colors.END} Max Performance (Token burn — maximum context)"
         )
+        print("      • Enables Task tool (Claude Code's built-in delegation)")
+        print("      • Parallel subagent execution with visible terminals")
+        print("      • Best for: Complex tasks needing multiple agents simultaneously")
         print(
             f"\n  {Colors.YELLOW}Recommendation:{Colors.END} Use Economic for most projects"
         )
@@ -546,16 +552,67 @@ class ClaudeSetup:
         for placeholder, value in replacements.items():
             content = content.replace(placeholder, value)
 
-        # Validate JSON
+        # Parse JSON to modify deny list based on token strategy
         try:
-            json.loads(content)
+            settings = json.loads(content)
         except json.JSONDecodeError as e:
             print(f"{Colors.RED}✗ Generated invalid JSON: {e}{Colors.END}")
             return False
 
+        # Modify Task and cclaude permissions based on token strategy
+        deny_list = settings.get("permissions", {}).get("deny", [])
+        allow_list = settings.get("permissions", {}).get("allow", [])
+
+        cclaude_patterns = ["Bash(cclaude:*)", "Bash(cclaude-wait:*)", "Bash(cclaude-wait-parallel:*)"]
+
+        if self.token_strategy == "performance":
+            # Performance mode: Enable Task tool, disable cclaude
+            if "Task" in deny_list:
+                deny_list.remove("Task")
+            if "Task" not in allow_list:
+                allow_list.append("Task")
+
+            # Deny cclaude commands (use Task tool instead)
+            for pattern in cclaude_patterns:
+                if pattern not in deny_list:
+                    deny_list.append(pattern)
+
+            print(
+                f"  {Colors.GREEN}✓ Performance mode: Task tool enabled (built-in delegation){Colors.END}"
+            )
+            print(
+                f"  {Colors.YELLOW}✓ cclaude commands disabled (use Task tool for delegate or switch agent){Colors.END}"
+            )
+        else:  # economic
+            # Economic mode: Disable Task tool, allow cclaude
+            if "Task" in allow_list:
+                allow_list.remove("Task")
+            if "Task" not in deny_list:
+                deny_list.insert(0, "Task")
+
+            # Allow cclaude commands (remove from deny list if present)
+            for pattern in cclaude_patterns:
+                if pattern in deny_list:
+                    deny_list.remove(pattern)
+
+            print(
+                f"  {Colors.YELLOW}✓ Economic mode: Task tool disabled (saves ~1200 tokens){Colors.END}"
+            )
+            print(
+                f"  {Colors.GREEN}✓ cclaude commands enabled (use agent switching if on main){Colors.END}"
+            )
+
+        # Update both lists in settings
+        settings["permissions"]["deny"] = deny_list
+        settings["permissions"]["allow"] = allow_list
+
+        # Convert back to formatted JSON
+        content = json.dumps(settings, indent=2)
+
         # Write settings.json
         with open(output_path, "w") as f:
             f.write(content)
+            f.write("\n")  # Add trailing newline
 
         print(f"  ✓ Created: {Colors.GREEN}{output_path}{Colors.END}")
 
@@ -894,7 +951,10 @@ class ClaudeSetup:
         summary_items = [
             ("Python Environment", f"{self.python_path}"),
             ("AI Tool", f"{self.ai_tool_choice.title()}"),
-            ("Token Strategy", f"{self.token_strategy.title()}"),
+            (
+                "Token Strategy",
+                f"{self.token_strategy.title()} - Task tool {'enabled' if self.token_strategy == 'performance' else 'disabled'}",
+            ),
             (
                 "Virtual Environment",
                 "✓ Created at .claude/.venv" if self.use_venv else "System Python",
