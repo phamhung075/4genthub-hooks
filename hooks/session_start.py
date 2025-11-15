@@ -1695,14 +1695,14 @@ class SessionStartProcessor(SessionProcessor):
             # Try to get session ID from input data first
             session_id = input_data.get("session_id")
             if session_id:
-                # Return a shortened version for display (first 8 characters)
-                return session_id[:8] if len(session_id) > 8 else session_id
+                # Return the complete session ID
+                return session_id
 
             # Generate a new session ID if not provided
             timestamp = datetime.now().isoformat()
             full_session_id = hashlib.md5(timestamp.encode()).hexdigest()
-            # Return first 8 characters for readability
-            return full_session_id[:8]
+            # Return complete session ID
+            return full_session_id
         except Exception:
             # Fallback to a simple timestamp-based ID
             return datetime.now().strftime("%H%M%S")
