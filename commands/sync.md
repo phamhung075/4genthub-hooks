@@ -1,346 +1,73 @@
-================================================================================
-                    PROJECT SYNCHRONIZATION PROTOCOL - DECISION TREE
-================================================================================
+---
+description: Sync project docs, architecture, context layers (Global→Project→Branch→Task)
+---
 
-OBJECTIVE
----------
-Synchronize project documentation, architecture, and context layers to maintain consistency between codebase, git repository, and agenthub system. Ensure all documentation reflects current state and all context layers contain accurate project information.
+# Project Synchronization Protocol
 
-KEY REQUIREMENTS
-----------------
-- Document Location: All documentation in ai_docs/ with proper subfolders
-- PRD Location: ai_docs/architecture-design/PRD.md
-- Architecture: ai_docs/architecture-design/Architecture_Technique.md
-- Context Hierarchy: Global → Project → Branch → Task (inheritance flows downward)
-- Git Integration: Project and branch names must match actual git repository
-- No Duplicates: Check for existing documents before creating new ones
-- Clean Updates: Update existing documents, don't create new versions
+**Purpose**: Sync documentation, architecture, context layers with git state
 
-ENTRY POINT
------------
-READ PRD and Architecture
-START → Call master-orchestrator-agent or documentation-agent
-Or use MCP tools directly: mcp__agenthub_http__manage_context
+**Entry**: master-orchestrator-agent or documentation-agent
 
-SYNCHRONIZATION DECISION TREE
-------------------------------
-Start Synchronization Protocol
-    ↓
-Check Current Git State
-    ↓
-Git Info Available? → NO → Stop - Get Git Info First
-    ↓ YES
-Phase 1: Documentation Sync
-    ↓
-Documentation Updated? → NO → Stop - Create Todo List
-    ↓ YES
-Phase 2: Project/Branch Sync
-    ↓
-Names Match Git? → NO → Stop - Create Todo List
-    ↓ YES
-Phase 3: Context Layer Sync
-    ↓
-All Contexts Updated? → NO → Stop - Create Todo List
-    ↓ YES
-Phase 4: Verification
-    ↓
-All Synced? → NO → Return to Failed Phase
-    ↓ YES
-Complete Synchronization
+## Key Requirements
+- Docs: `ai_docs/` with subfolders
+- PRD: `ai_docs/architecture-design/PRD.md`
+- Architecture: `ai_docs/architecture-design/Architecture_Technique.md`
+- Context Hierarchy: Global → Project → Branch → Task (inheritance downward)
+- Git Integration: Project/branch names match actual git
+- No Duplicates: Check existing before creating
+- Clean Updates: Update existing, don't create new versions
 
-ERROR FLOW:
-Stop → Document Issues → Create Fix Plan → Apply Updates → Verify → Return to Failed Phase
+## Decision Tree
+```
+Start → Check Git? → Yes → Phase 1 Docs → Yes → Phase 2 Project/Branch → Yes
+  → Phase 3 Context Layers → Yes → Phase 4 Verification → All Synced? → Complete
+```
 
-SYNCHRONIZATION EXECUTION FLOW
-===============================
+**Error Flow**: Stop → Document Issues → Fix Plan → Apply Updates → Verify → Return to Failed Phase
 
-PHASE 1: DOCUMENTATION SYNCHRONIZATION
----------------------------------------
-IF synchronizing documentation:
-    CHECK existing PRD.md:
-        IF exists:
-            - UPDATE with current project state
-            - PRESERVE existing structure
-            - ADD new features/changes
-        ELSE:
-            - GENERATE comprehensive PRD.md
-            - INCLUDE all current features
-            - SAVE to ai_docs/architecture-design/PRD.md
-    
-    CHECK existing Architecture_Technique.md:
-        IF exists:
-            - UPDATE with current architecture
-            - REFLECT actual implementation
-            - DOCUMENT technology stack changes
-        ELSE:
-            - GENERATE detailed architecture document
-            - INCLUDE DDD patterns used
-            - SAVE to ai_docs/architecture-design/Architecture_Technique.md
-    
-    IF any_error:
-        STOP → CREATE todo_list → FIX → RETRY
-    ELSE:
-        PROCEED to Phase 2
+## Phase Summary
 
-PHASE 2: PROJECT AND BRANCH SYNCHRONIZATION
---------------------------------------------
-IF synchronizing project/branch:
-    GET current git info:
-        - PROJECT_NAME from git repo name
-        - BRANCH_NAME from current git branch
-    
-    CHECK agenthub project:
-        - CALL mcp__agenthub_http__manage_project(
-            action="list",
-            user_id=user_id
-          )
-        - FIND project matching git repo name
-        
-        IF not_found:
-            - CREATE project:
-              mcp__agenthub_http__manage_project(
-                action="create",
-                name=git_repo_name,
-                user_id=user_id
-              )
-        ELSE IF name_mismatch:
-            - UPDATE project name to match git
-    
-    CHECK agenthub branch:
-        - CALL mcp__agenthub_http__manage_git_branch(
-            action="list",
-            project_id=project_id,
-            user_id=user_id
-          )
-        - FIND branch matching current git branch
-        
-        IF not_found:
-            - CREATE branch:
-              mcp__agenthub_http__manage_git_branch(
-                action="create",
-                project_id=project_id,
-                git_branch_name=git_branch_name,
-                user_id=user_id
-              )
-        ELSE IF name_mismatch:
-            - UPDATE branch name to match git
-    
-    IF any_error:
-        STOP → CREATE todo_list → FIX → RETRY
-    ELSE:
-        PROCEED to Phase 3
+| Phase | Check | Error Action |
+|-------|-------|--------------|
+| 1 | Docs Updated | Stop → Create todo → Fix → Retry |
+| 2 | Names Match Git | Stop → Create todo → Fix → Retry |
+| 3 | Contexts Updated | Stop → Create todo → Fix → Retry |
+| 4 | All Synced | If fail → Return to failed phase |
 
-PHASE 3: CONTEXT LAYER SYNCHRONIZATION
----------------------------------------
-IF synchronizing contexts:
-    UPDATE Global Context:
-        - General project guidelines
-        - Cross-project standards
-        - User preferences
-        - System-wide configurations
-        
-        CALL mcp__agenthub_http__manage_context(
-            action="update",
-            level="global",
-            context_id="global",
-            user_id=user_id,
-            data={
-                "standards": {...},
-                "preferences": {...},
-                "guidelines": {...}
-            }
-        )
-    
-    UPDATE Project Context:
-        - Project-specific information
-        - Technology stack (from Architecture_Technique.md)
-        - Team preferences
-        - Project workflow
-        
-        CALL mcp__agenthub_http__manage_context(
-            action="update",
-            level="project",
-            context_id=project_id,
-            project_id=project_id,
-            user_id=user_id,
-            data={
-                "technology_stack": {...},
-                "team_preferences": {...},
-                "project_workflow": {...},
-                "local_standards": {...}
-            }
-        )
-    
-    UPDATE Branch Context:
-        - Current development focus
-        - Branch-specific decisions
-        - Active features
-        - Technical debt items
-        
-        CALL mcp__agenthub_http__manage_context(
-            action="update",
-            level="branch",
-            context_id=branch_id,
-            git_branch_id=branch_id,
-            project_id=project_id,
-            user_id=user_id,
-            data={
-                "current_focus": "...",
-                "active_features": [...],
-                "technical_decisions": {...},
-                "debt_items": [...]
-            }
-        )
-    
-    IF any_error:
-        STOP → CREATE todo_list → FIX → RETRY
-    ELSE:
-        PROCEED to Phase 4
+## Phase 1: Documentation Sync
+| Doc | Action |
+|-----|--------|
+| PRD.md | UPDATE if exists (preserve structure), else GENERATE → Save to ai_docs/architecture-design/ |
+| Architecture_Technique.md | UPDATE if exists (reflect actual impl), else GENERATE (DDD patterns) → Save |
 
-PHASE 4: VERIFICATION AND VALIDATION
--------------------------------------
-IF verifying synchronization:
-    VERIFY Documentation:
-        - CHECK PRD.md exists and is current
-        - CHECK Architecture_Technique.md reflects actual system
-        - CONFIRM both documents in correct locations
-    
-    VERIFY Project/Branch:
-        - CONFIRM project name matches git repo
-        - CONFIRM branch name matches git branch
-        - CHECK both are active in system
-    
-    VERIFY Context Layers:
-        - TEST context inheritance (global → project → branch)
-        - CONFIRM all layers have data
-        - CHECK data consistency across layers
-    
-    IF all_verified:
-        - DOCUMENT sync completion
-        - UPDATE sync timestamp in global context
-        - REPORT success
-    ELSE:
-        - IDENTIFY failed components
-        - RETURN to appropriate phase
-        - RETRY synchronization
+## Phase 2: Project/Branch Sync
+```python
+# Get git info
+project_name = git_repo_name
+branch_name = current_git_branch
 
-ERROR HANDLING PROTOCOL
-========================
+# Project: list → if not_found: create, if name_mismatch: update
+# Branch: list → if not_found: create, if name_mismatch: update
+```
 
-ON ERROR:
----------
-1. STOP current synchronization phase
-2. IDENTIFY specific failure point
-3. CREATE todo list with error details
-4. DETERMINE root cause:
-   - Missing permissions?
-   - Invalid data format?
-   - Network/connection issue?
-   - Data conflict?
-5. APPLY appropriate fix
-6. RETRY from failure point
-7. CONTINUE with remaining phases
+## Phase 3: Context Layer Sync
 
-TODO LIST CREATION
-------------------
-WHEN creating todo after sync error:
-1. SPECIFY which phase failed
-2. INCLUDE exact error message
-3. PROVIDE data that was being synced
-4. SUGGEST resolution approach
-5. MARK priority based on impact
+| Level | Contains | Fields |
+|-------|----------|--------|
+| Global | User preferences, standards | standards, preferences, guidelines, sync_history |
+| Project | Tech stack, workflow | technology_stack, team_preferences, project_workflow, local_standards |
+| Branch | Dev focus, features | data, branch_info, branch_workflow, feature_flags, discovered_patterns |
+| Task | Task-specific | (inherited from branch) |
 
-SUCCESS CRITERIA
-================
+## Phase 4: Verification
+- [ ] PRD.md exists & current
+- [ ] Architecture_Technique.md reflects actual
+- [ ] Project name matches git
+- [ ] Branch name matches git
+- [ ] All contexts have data
+- [ ] Inheritance working
 
-ALL PHASES MUST COMPLETE:
--------------------------
-✓ PRD.md generated/updated with current state
-✓ Architecture_Technique.md reflects actual architecture
-✓ Project name matches git repository name
-✓ Branch name matches current git branch
-✓ Global context contains system standards
-✓ Project context has technology and workflow data
-✓ Branch context reflects current development
-✓ All contexts show proper inheritance
-✓ Verification confirms all synced correctly
+## Success Criteria
+All phases complete ✓
 
-OUTPUT LOCATIONS
-================
-
-Files and Directories:
-----------------------
-- PRD: ai_docs/architecture-design/PRD.md
-- Architecture: ai_docs/architecture-design/Architecture_Technique.md
-- Issues Log: ai_docs/issues/sync-issues-{date}.md
-- Context Data: Stored in agenthub database (all 4 layers)
-
-CONTEXT DATA STRUCTURE
-======================
-
-Global Context:
----------------
-{
-    "standards": { coding, documentation, testing },
-    "preferences": { user settings, defaults },
-    "guidelines": { best practices, rules },
-    "sync_history": { last_sync, sync_count }
-}
-
-Project Context (Database Model):
----------------------------------
-{
-    "technology_stack": { frontend, backend, database },
-    "team_preferences": { review process, conventions },
-    "project_workflow": { phases, gates, approvals },
-    "local_standards": { naming, structure, patterns },
-    "project_settings": { build configs, deployment settings },
-    "technical_specifications": { API specs, schemas },
-    "delegation_rules": { project-specific rules }
-}
-
-Note: Additional fields like project_info, core_features go to local_standards._custom
-
-Branch Context (Database Model):
---------------------------------
-{
-    "data": { general branch data },
-    "branch_info": { feature name, type, status, parent branch },
-    "branch_workflow": { implementation status, dependencies },
-    "feature_flags": { feature toggles and configuration },
-    "discovered_patterns": { patterns found during development },
-    "branch_decisions": { technical decisions for this feature }
-}
-
-SYNCHRONIZATION NOTES
-=====================
-
-Best Practices:
----------------
-- ALWAYS check for existing documents before creating
-- PRESERVE existing content when updating
-- MAINTAIN consistent formatting across documents
-- USE proper markdown structure in all documents
-- FOLLOW DDD patterns in architecture documentation
-- ENSURE context data is JSON-serializable
-- VALIDATE all data before updating contexts
-
-Common Issues:
---------------
-- Git branch name contains special characters
-- Project already exists with different name
-- Context update fails due to large data size
-- Documentation file permissions issues
-- Network timeout during context updates
-
-Resolution Strategies:
-----------------------
-- Sanitize git branch names for agenthub
-- Use unique identifiers to prevent duplicates
-- Split large context updates into chunks
-- Check file permissions before writing
-- Implement retry logic for network operations
-
-================================================================================
-                                    END
-================================================================================
+**Sync Instructions**: $ARGUMENTS

@@ -1,7 +1,15 @@
-User need prompts to fix test failures in parallel sessions. Looking at the failures:
-$ARGUMENTS
+---
+description: Create prompts to fix test failures in parallel sessions
+---
 
-1. First call the master-orchestrator-agent to load my role
-2. Analyze the test failures
-3. Create MCP tasks for fixing these issues
+# Prompt For Claude Dev Fix Test
+
+**Purpose**: Generate prompts for parallel test failure fixes
+
+## Workflow
+1. Call master-orchestrator-agent → Load role
+2. Analyze test failures
+3. Create MCP tasks for issues
 4. Provide prompts for parallel execution
+
+**Test Failures**: $ARGUMENTS

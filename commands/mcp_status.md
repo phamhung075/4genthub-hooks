@@ -1,4 +1,13 @@
-Show complete MCP server status including project details, branch information, and all active tasks.
+---
+description: Show complete MCP server status (project/branch/tasks)
+---
 
-This command provides the full MCP context that is summarized in compact mode.
-Use this when you need detailed information about the current project, branch, and task status.
+# MCP Status
+
+**Purpose**: Display full MCP context (detailed mode)
+
+**Shows**: Project details | Branch info | Active tasks
+
+**Use When**: Need detailed current project/branch/task status
+
+**Additional Query**: $ARGUMENTS

@@ -1,5 +1,17 @@
+---
+description: List all available tools in TypeScript function signature format
+---
+
 # List All Tools
 
-List all available tools detailed in your system prompt. Display them in bullet points. Display them in typescript function signature format and suffix the purpose of the tool. Double line break between each tool for readability.
+**Purpose**: Display all available tools from system prompt
 
-# Output: ai_docs/tools_list.md
+## Format
+- TypeScript function signatures
+- Include tool purpose suffix
+- Double line break between tools
+- Bullet points
+
+**Output**: `ai_docs/tools_list.md`
+
+**Filter/Specific Tools**: $ARGUMENTS

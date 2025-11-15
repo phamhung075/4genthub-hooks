@@ -1,17 +1,20 @@
 ---
 allowed-tools: Bash(git:*)
-description: Understand the current state of the git repository
+description: Understand current git repository state
 ---
 
 # Git Status
 
-Read the `Files` and run the `Commands` and summarize the current state of the git repository.
+**Purpose**: Summarize git repository state
 
 ## Commands
-
-- Current Status: !`git status`
-- Current diff: !`git diff HEAD origin/main`
-- Current branch: !`git branch --show-current`
+| Command | Purpose |
+|---------|---------|
+| `git status` | Current status |
+| `git diff HEAD origin/main` | Current diff |
+| `git branch --show-current` | Current branch |
 
 ## Files
-@README.md
+`@README.md`
+
+**Additional Details**: $ARGUMENTS

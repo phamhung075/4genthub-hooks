@@ -1,41 +1,35 @@
 ---
 allowed-tools: Bash(git ls-files:*), Read
-description: Answer questions about the project structure and documentation without coding
+description: Answer questions about project structure/documentation without coding
 ---
 
 # Question
 
-Answer the user's question by analyzing the project structure and documentation. This prompt is designed to provide information and answer questions without making any code changes.
+**Purpose**: Answer questions by analyzing project structure - NO code changes
 
-## Instructions
-
-- **IMPORTANT: This is a question-answering task only - DO NOT write, edit, or create any files**
-- **IMPORTANT: Focus on understanding and explaining existing code and project structure**
-- **IMPORTANT: Provide clear, informative answers based on project analysis**
-- **IMPORTANT: If the question requires code changes, explain what would need to be done conceptually without implementing**
+| Rule | Action |
+|------|--------|
+| **NO** file creation/editing | Only read and analyze |
+| Focus | Understanding existing code/structure |
+| Response | Clear answers based on analysis |
+| Code changes requested | Explain conceptually, don't implement |
 
 ## Execute
-
-- `git ls-files` to understand the project structure
+`git ls-files` → Understand project structure
 
 ## Read
+`README.md` → Project overview
 
-- README.md for project overview and documentation
-
-## Analysis Approach
-
-- Review the project structure from git ls-files
-- Understand the project's purpose from README
-- Connect the question to relevant parts of the project
-- Provide comprehensive answers based on analysis
+## Workflow
+1. Review structure from git ls-files
+2. Understand project purpose from README
+3. Connect question to relevant parts
+4. Provide answer with evidence
 
 ## Response Format
+- Direct answer
+- Supporting evidence
+- Documentation references
+- Conceptual explanations
 
-- Direct answer to the question
-- Supporting evidence from project structure
-- References to relevant documentation
-- Conceptual explanations where applicable
-
-## Question
-
-$ARGUMENTS
+**Question**: $ARGUMENTS

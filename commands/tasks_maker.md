@@ -1,7 +1,18 @@
-#Details : 
-$ARGUMENTS
+---
+description: Analyze input and create MCP tasks with dependencies/agents
+---
 
+# Tasks Maker
+
+**Purpose**: Create MCP task hierarchy from user input
+
+## Workflow
 1. Analyze user input
-2. Create MCP tasks and subtasks with dependencies and assigned agents
-3. Use token-efficient descriptions so other agents can work correctly and smartly
-4. The document is an example plan for state management rewrite
+2. Create MCP tasks + subtasks
+3. Define dependencies
+4. Assign agents
+5. Use token-efficient descriptions
+
+**Use token economy** → Other agents work correctly
+
+**User Input**: $ARGUMENTS

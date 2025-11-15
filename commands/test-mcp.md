@@ -1,11 +1,21 @@
-**Test Plan for agenthub_http Tools Actions**
-   $ARGUMENTS
+---
+description: Complete MCP tools testing plan (project/branch/task/subtask)
+---
 
-**Test Checklist:**
-☐ Test project management actions (create 2 projects, get, list, update, health checks, set project context, delete 1 projet)
-☐ Test git branch management actions (create 2 branches, get, list, update, agent assignment, set branch context, delete 1 branch)  
-☐ Test task management actions (create 2 tasks on first branch, update, get, list, search, next, random dependencies to other tasks, assign agent)
-☐ Test task management actions on first branch (update, get, list, search, next, random dependencies to other tasks, assign agent)
-☐ Test subtask management actions (create 2 subtasks for each task on first branch, update, list, get, complete all subtask on a task then complete task)
-☐ Summarize all issues that appear during testing, write in .md file format in ai_docs folder
-☐ For each issue, write detailed prompts per issue for fixes in new chat, write in same .md file
+# Test MCP
+
+**Purpose**: Test all MCP tool actions systematically
+
+## Test Checklist
+
+| Test | Actions |
+|------|---------|
+| Projects | Create 2, get, list, update, health check, set context, delete 1 |
+| Branches | Create 2, get, list, update, assign agent, set context, delete 1 |
+| Tasks (Branch 1) | Create 2, update, get, list, search, next, dependencies, assign agent |
+| Tasks (Branch 2) | Same as Branch 1 |
+| Subtasks (Branch 1) | Create 2 per task, update, list, get, complete all for 1 task → complete task |
+| Issues | Summarize all issues in `.md` format → `ai_docs/` |
+| Fix Prompts | Write detailed prompts per issue in same `.md` |
+
+**Additional Test Parameters**: $ARGUMENTS

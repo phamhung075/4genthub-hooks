@@ -1,7 +1,17 @@
-Please create a comprehensive summary of our current session including:
+---
+description: Create session summary and save to ai_docs/sessions/
+---
+
+# Save Session
+
+**Purpose**: Comprehensive session summary for future reference
+
+## Include
 - Key decisions made
-- Code changes implemented  
+- Code changes implemented
 - Next steps planned
 - Important context to remember
 
-Save this summary to ai_docs/sessions/sessionYYMMDD-$ARGUMENTS.md for future reference.
+**Save To**: `ai_docs/sessions/sessionYYMMDD-$ARGUMENTS.md`
+
+**Session ID/Name**: $ARGUMENTS

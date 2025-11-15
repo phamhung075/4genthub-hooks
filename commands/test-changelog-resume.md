@@ -1,1 +1,12 @@
-rewrite the TEST-CHANGELOG.md file to create a more concise and organized version while keeping all the essential changes
+---
+description: Rewrite TEST-CHANGELOG.md - concise and organized, keep essential changes
+---
+
+# Test Changelog Resume
+
+**Purpose**: Create concise, organized TEST-CHANGELOG.md
+
+**Keep**: All essential changes
+**Make**: More organized and concise
+
+**Specific Instructions**: $ARGUMENTS

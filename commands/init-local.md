@@ -3,17 +3,17 @@ allowed-tools: Bash, Read, Write, Glob
 description: Quick alias for /generate-local-rules - auto-generate CLAUDE.local.md
 ---
 
-# Init Local Rules (Alias)
+# Init Local
 
-This is a shorter alias for `/generate-local-rules`.
+**Alias**: `/generate-local-rules`
 
-Execute the full command: `/generate-local-rules`
+## What It Does
+1. ✅ Analyze project structure
+2. ✅ Detect tech stack & frameworks
+3. ✅ Find test directories & build tools
+4. ✅ Generate customized `CLAUDE.local.md` at root
+5. ✅ Include only relevant sections
 
-This command will:
-1. ✅ Analyze your project structure
-2. ✅ Detect tech stack and frameworks
-3. ✅ Find test directories and build tools
-4. ✅ Generate a customized `CLAUDE.local.md` at project root
-5. ✅ Include only relevant sections for YOUR project
+**No manual editing needed** 🎉
 
-**No manual template editing needed!** 🎉
+**Additional Instructions**: $ARGUMENTS

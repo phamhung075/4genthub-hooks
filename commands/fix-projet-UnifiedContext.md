@@ -1,7 +1,14 @@
-ai_docs/unified_context_migration_guide.md
-ai_docs/unified_context_system_final.md
-ai_docs/context_system_audit.md
+---
+description: Fix project tests for unified context system
+---
 
-need fix test projet to valid with new systeme unified_context
-test fail/error:
-$ARGUMENTS
+# Fix Projet Unified Context
+
+**Purpose**: Validate tests with new unified_context system
+
+## Documents
+- `ai_docs/unified_context_migration_guide.md`
+- `ai_docs/unified_context_system_final.md`
+- `ai_docs/context_system_audit.md`
+
+**Test Fail/Error**: $ARGUMENTS

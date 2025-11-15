@@ -1,8 +1,30 @@
-Delegate to Agent via Task Tool to review document of context, analyze these document and actual modal of context on all level                                                                                                                          │
-│   deep thinking and virtualize usable of these properties, detect properties no useful, properties missing for make context better for can use                                                                                       │
-│   must know my server mcp is not on local, is on cloud , ai need update context each time, it not automatic update, ai may be forgot to update                                                                                       │
-│   thingking to metter modal for ai when complete subtask --> update context & detail on task, checklist on task, complete task --> update context & detail on branch, checklist on branch,  complete branch --> update context &     │
-│   detail on project, when get branch, context project need include, context sumary of task finish need include,  when get task, context branch need include, context sumary of subtask finish need include                           │
-│   all document create when analyze need put inside subfolder of ai_docs, separate par categorie file, need separate file for new modal |
- |  The MCP system is like a cloud-based notebook where AI agents can write and read notes, but it CANNOT modify the AI's built-in tools (file read/write). | 
-The AI must manually check this notebook and update it
+---
+description: Delegate to agent - analyze context documents and modal on all levels
+---
+
+# Analyze
+
+**Purpose**: Deep context analysis across all levels
+
+**Delegate**: Agent via Task Tool
+
+## Analysis Scope
+- Review context documentation
+- Analyze current modal on all levels
+- Deep thinking and virtualization of properties
+- Detect: Unused properties | Missing properties | Better modal structure
+
+## Critical Context
+- **MCP Server**: Cloud-based (NOT local)
+- **AI Updates**: Manual - NOT automatic (AI may forget)
+- **Update Pattern**:
+  - Complete subtask → Update context & task details
+  - Complete task → Update context & branch details
+  - Complete branch → Update context & project details
+
+## Output Structure
+- All documents → `ai_docs/` subfolders
+- Separate by category
+- Separate file for new modal
+
+**Analysis Focus**: $ARGUMENTS
