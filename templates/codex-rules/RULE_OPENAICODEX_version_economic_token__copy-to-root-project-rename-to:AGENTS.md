@@ -24,7 +24,7 @@
 ## 🚨 CLOCK IN FIRST
 
 ```typescript
-agenthub_http__call_agent("master-orchestrator-agent")
+mcp__agenthub_http__call_agent("master-orchestrator-agent")
 ```
 
 **Loads**: System access | Job description | Tools | Task management
@@ -36,10 +36,10 @@ agenthub_http__call_agent("master-orchestrator-agent")
 
 ```python
 # ✅ Check existing
-existing = agenthub_http__manage_task(action="list", git_branch_id="uuid")
+existing = mcp__agenthub_http__manage_task(action="list", git_branch_id="uuid")
 for task in existing:
     if "auth" in task.title.lower():
-        agenthub_http__manage_task(action="update", task_id=task.id, status="in_progress")
+        mcp__agenthub_http__manage_task(action="update", task_id=task.id, status="in_progress")
 ```
 
 **Purpose**: Permanent record | Visibility | Tracking | Updates | Documentation
@@ -119,13 +119,13 @@ for task in existing:
 
 ```python
 # BEFORE completing parent - MANDATORY
-subtasks = agenthub_http__manage_subtask(action="list", task_id=parent_id)
+subtasks = mcp__agenthub_http__manage_subtask(action="list", task_id=parent_id)
 incomplete = [st for st in subtasks if st.status != "done"]
 
 if incomplete:
     print(f"Must complete: {[st.title for st in incomplete]}")
 else:
-    agenthub_http__manage_task(action="complete", task_id=parent_id,
+    mcp__agenthub_http__manage_task(action="complete", task_id=parent_id,
         completion_summary="All verified")
 ```
 
