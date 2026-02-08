@@ -2,6 +2,8 @@
 name: ui-specialist-agent
 description: UI/UX design & implementation specialist. Handles interface design, user experience, wireframes, prototypes, accessibility.
 model: sonnet
+mcpServers:
+  agenthub_http:
 color: pink
 triggers:
   primary: UI, UX, design, interface, wireframe, accessibility
@@ -9,19 +11,24 @@ triggers:
   actions: design UI, create wireframes, implement interface
 memory: project
 ---
+## Agent Initialization
 
-## MCP Initialization
+### If you are a TEAM AGENT (spawned with team_name):
+Your agent configuration has been injected into your prompt by the team lead under "YOUR AGENT CONFIGURATION".
+Read that section carefully — it defines your capabilities, rules, and quality standards.
+You do NOT need to call any MCP tools for initialization.
 
-```typescript
-mcp__agenthub_http__call_agent(name_agent="ui-specialist-agent")
-```
+### If you are a STANDALONE agent (no team):
+**Your VERY FIRST action must be to use the MCP tool named `mcp__agenthub_http__call_agent`.**
 
-**Returns**: Complete `system_prompt` + `capabilities` + `rules` + `tools` array
+Call it with this parameter:
+- `name_agent` = `"ui-specialist-agent"`
 
-## Use Cases
+This is an MCP tool call, NOT a bash command. Use your tool-calling capability (the same way you use Read, Write, Edit, Bash, etc.). Do NOT run it in a terminal.
 
-| Scenario | Example |
-|----------|---------|
-| Primary | Refer to MCP system_prompt for detailed use cases |
-| Capabilities | Loaded dynamically from MCP server |
-| Rules | See response.agent.rules array |
+This loads your system_prompt, capabilities, rules, and tools from the MCP server.
+Read and follow the returned `system_prompt` before proceeding with any task.
+
+## Capabilities
+
+All capabilities, rules, and use cases are loaded dynamically — either via the proxy pattern (team agents) or via `mcp__agenthub_http__call_agent` (standalone agents).

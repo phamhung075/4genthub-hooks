@@ -50,7 +50,7 @@ class Component(ABC):
     """Base component interface."""
 
     @abstractmethod
-    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any, session_id: str = "") -> Any | None:
         """Process the tool execution data."""
         pass
 
@@ -113,7 +113,7 @@ class DocumentationUpdater(Component):
     def __init__(self, ai_docs_path: Path):
         self.ai_docs_path = ai_docs_path
 
-    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any, session_id: str = "") -> Any | None:
         """Update documentation index if needed."""
         modified_file = self._get_modified_file(tool_name, tool_input)
 
@@ -151,7 +151,7 @@ class HintGenerator(Component):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any, session_id: str = "") -> Any | None:
         """Generate hints based on tool execution."""
         if not tool_name.startswith("mcp__agenthub_http"):
             return None
@@ -191,7 +191,7 @@ class AgentStateTracker(Component):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any, session_id: str = "") -> Any | None:
         """Update agent state if call_agent was used."""
         if tool_name != "mcp__agenthub_http__call_agent":
             return None
@@ -204,12 +204,12 @@ class AgentStateTracker(Component):
             # Import agent state manager dynamically
             from utils.agent_state_manager import update_agent_state_from_call_agent
 
-            # Use default session if not provided
-            session_id = "default_session"
-            update_agent_state_from_call_agent(session_id, tool_input)
+            # Use real session_id from hook input (falls back to "default_session" only if empty)
+            effective_session_id = session_id if session_id else "default_session"
+            update_agent_state_from_call_agent(effective_session_id, tool_input)
 
-            self.logger.log("info", f"Agent state updated: {agent_name}")
-            return {"agent_state_updated": True, "agent": agent_name}
+            self.logger.log("info", f"Agent state updated: {agent_name} (session: {effective_session_id})")
+            return {"agent_state_updated": True, "agent": agent_name, "session_id": effective_session_id}
 
         except Exception as e:
             self.logger.log("error", f"Agent state update failed: {e}")
@@ -223,7 +223,7 @@ class ContextSynchronizer(Component):
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def process(self, tool_name: str, tool_input: dict, tool_result: Any) -> Any | None:
+    def process(self, tool_name: str, tool_input: dict, tool_result: Any, session_id: str = "") -> Any | None:
         """Synchronize context if needed."""
         try:
             # Import context updater dynamically
@@ -305,10 +305,11 @@ class PostToolUseHook:
         """Execute the post-tool use hook."""
         tool_name = data.get("tool_name", "")
         tool_input = data.get("tool_input", {})
-        tool_result = data.get("tool_result", None)
+        tool_result = data.get("tool_response", data.get("tool_result", None))
+        session_id = data.get("session_id", "")
 
         # Log the execution
-        self.logger.log("info", f"Post-processing: {tool_name}")
+        self.logger.log("info", f"Post-processing: {tool_name} (session: {session_id})")
 
         # Check for MCP post-action hints
         output_parts = []
@@ -331,7 +332,7 @@ class PostToolUseHook:
         results = {}
         for component in self.components:
             try:
-                result = component.process(tool_name, tool_input, tool_result)
+                result = component.process(tool_name, tool_input, tool_result, session_id)
                 if result:
                     results[component.__class__.__name__] = result
             except Exception as e:

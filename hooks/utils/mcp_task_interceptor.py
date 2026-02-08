@@ -22,11 +22,68 @@ logger = logging.getLogger(__name__)
 class MCPTaskInterceptor:
     """Intercepts MCP task operations for automatic tracking."""
 
+    # Session-level state file for tracking MCP task reminders
+    _SESSION_STATE_FILE = Path("/tmp/claude_mcp_task_state.json")
+
     def __init__(self):
         # Use correct path: .claude/data/task_tracking
         self.data_dir = Path(__file__).parent.parent.parent / "data" / "task_tracking"
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.log_file = self.data_dir / "mcp_task_operations.json"
+
+    def _get_session_state(self) -> dict:
+        """Load session state for MCP task reminder tracking."""
+        try:
+            if self._SESSION_STATE_FILE.exists():
+                with open(self._SESSION_STATE_FILE) as f:
+                    return json.load(f)
+        except Exception:
+            pass
+        return {"has_active_task": False, "reminder_shown": False}
+
+    def _save_session_state(self, state: dict):
+        """Save session state for MCP task reminder tracking."""
+        try:
+            with open(self._SESSION_STATE_FILE, "w") as f:
+                json.dump(state, f)
+        except Exception:
+            pass
+
+    def intercept_pre_tool(self, tool_name: str, tool_input: dict) -> str | None:
+        """
+        Check before file-modifying tools if an MCP task exists.
+        Returns a one-time reminder string if no task is active, None otherwise.
+        """
+        # Only check for file-modifying tools
+        if tool_name not in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
+            # If this IS an MCP task create/update, mark that we have an active task
+            if tool_name == "mcp__agenthub_http__manage_task":
+                action = tool_input.get("action", "")
+                if action in ("create", "update"):
+                    state = self._get_session_state()
+                    state["has_active_task"] = True
+                    self._save_session_state(state)
+            return None
+
+        state = self._get_session_state()
+
+        # If we already have an active task or already showed the reminder, skip
+        if state.get("has_active_task") or state.get("reminder_shown"):
+            return None
+
+        # Show one-time reminder
+        state["reminder_shown"] = True
+        self._save_session_state(state)
+
+        return (
+            "\n--- MCP Task Reminder ---\n"
+            "You are about to modify a file but no MCP task has been created yet.\n"
+            "Per CLAUDE.md workflow, create an MCP task FIRST:\n"
+            '  mcp__agenthub_http__manage_task(action="create", title="...", '
+            'assignees="coding-agent", git_branch_id="...")\n'
+            "This is a one-time reminder for this session.\n"
+            "------------------------\n"
+        )
 
     def intercept_task_operation(
         self, tool_name: str, parameters: dict[str, Any], session_id: str = None

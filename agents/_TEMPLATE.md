@@ -3,24 +3,32 @@ name: agent-name
 description: Brief 1-line purpose. Handles X, Y, Z.
 model: sonnet
 color: stone
+mcpServers:
+  agenthub_http:
 triggers:
   primary: keyword1, keyword2, keyword3
   tech: tool1, tool2, framework1
   actions: action1, action2, action3
 ---
 
-## MCP Initialization
+## Agent Initialization
 
-```typescript
-mcp__agenthub_http__call_agent(name_agent="agent-name")
-```
+### If you are a TEAM AGENT (spawned with team_name):
+Your agent configuration has been injected into your prompt by the team lead under "YOUR AGENT CONFIGURATION".
+Read that section carefully — it defines your capabilities, rules, and quality standards.
+You do NOT need to call any MCP tools for initialization.
 
-**Returns**: Complete `system_prompt` + `capabilities` + `rules` + `tools` array
+### If you are a STANDALONE agent (no team):
+**Your VERY FIRST action must be to use the MCP tool named `mcp__agenthub_http__call_agent`.**
 
-## Use Cases
+Call it with this parameter:
+- `name_agent` = `"agent-name"`
 
-| Scenario | Example Request |
-|----------|----------------|
-| Primary task | "Do X with Y" |
-| Secondary task | "Help with Z" |
-| Edge case | "Handle special situation" |
+This is an MCP tool call, NOT a bash command. Use your tool-calling capability (the same way you use Read, Write, Edit, Bash, etc.). Do NOT run it in a terminal.
+
+This loads your system_prompt, capabilities, rules, and tools from the MCP server.
+Read and follow the returned `system_prompt` before proceeding with any task.
+
+## Capabilities
+
+All capabilities, rules, and use cases are loaded dynamically — either via the proxy pattern (team agents) or via `mcp__agenthub_http__call_agent` (standalone agents).

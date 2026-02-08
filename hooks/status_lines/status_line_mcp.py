@@ -29,7 +29,6 @@ _hooks_dir = Path(__file__).resolve().parent.parent
 if str(_hooks_dir) not in sys.path:
     sys.path.insert(0, str(_hooks_dir))
 
-from utils.agent_state_manager import get_agent_role_from_session, get_current_agent
 from utils.env_loader import get_ai_data_path, get_project_root
 
 
@@ -523,25 +522,6 @@ def generate_status_line(input_data):
     else:
         # Error/Disconnected - Red
         parts.append(f"\033[91m🔗 MCP: {mcp_status}\033[0m")
-
-    # Get current agent from session state for consistent display
-    current_agent = (
-        get_current_agent(session_id) if session_id else "master-orchestrator-agent"
-    )
-
-    # Active agent display - use current_agent from session state
-    parts.append(
-        f"\033[92m🎯 Active: {current_agent}\033[0m"
-    )  # Green text showing active role
-
-    # Dynamic agent role display - Based on session state
-    agent_role = get_agent_role_from_session(session_id) if session_id else "Assistant"
-
-    if agent_role and agent_role != "Assistant":
-        # Show dynamic agent role format: [Agent] [Role]
-        parts.append(
-            f"\033[94m[Agent] [{agent_role}]\033[0m"
-        )  # Blue text for agent role
 
     # Cost information display - compact format with icons
     cost_data = input_data.get("cost", {})

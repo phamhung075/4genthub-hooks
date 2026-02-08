@@ -1573,6 +1573,11 @@ class AgentMessageProvider(ContextProvider):
     def _detect_agent_from_context(self, input_data: dict) -> str | None:
         """Detect agent type from input context."""
         try:
+            # Check direct agent_type field (provided by Claude Code for sub-agents via SessionStart)
+            direct_type = input_data.get("agent_type")
+            if direct_type:
+                return direct_type
+
             conversation = input_data.get("conversation_history", [])
 
             for message in reversed(conversation[-10:]):
@@ -1617,8 +1622,13 @@ class SessionStartProcessor(SessionProcessor):
     def process(self, input_data: dict) -> str | None:
         """Process session start and generate context output."""
         try:
-            # Log session start
-            self.logger.log("info", "Session started", input_data)
+            # Log session start with available keys for debugging agent detection
+            self.logger.log("info", "Session started", {
+                "input_keys": list(input_data.keys()),
+                "agent_type_field": input_data.get("agent_type"),
+                "source": input_data.get("source"),
+                "session_id": input_data.get("session_id"),
+            })
 
             # Get or generate session ID
             session_id = self._get_session_id(input_data)
@@ -1626,6 +1636,14 @@ class SessionStartProcessor(SessionProcessor):
             # Detect session type
             session_type = self._detect_session_type()
             agent_type = self._detect_agent_from_context(input_data)
+
+            # Store agent type in agent_state.json for status line display
+            if session_id and agent_type:
+                try:
+                    from utils.agent_state_manager import set_current_agent
+                    set_current_agent(session_id, agent_type)
+                except Exception:
+                    pass  # Don't block session start if state update fails
 
             output_parts = []
 
@@ -1640,6 +1658,25 @@ class SessionStartProcessor(SessionProcessor):
                 # Format session header with ID
                 session_header = f"🚀 Session {session_id} Context:"
                 output_parts.append(session_header + "\n" + "\n".join(session_info))
+
+            # Add MCP auto-init instructions for principal sessions
+            if session_type == "principal":
+                mcp_init = (
+                    "\n⚡ MANDATORY FIRST ACTIONS (before responding to user):\n"
+                    "1. Use MCP tool mcp__agenthub_http__call_agent with name_agent=\"master-orchestrator-agent\"\n"
+                    "2. For ANY task involving file changes: create an MCP task FIRST with mcp__agenthub_http__manage_task\n"
+                    "3. After completing work: mark the task done with mcp__agenthub_http__manage_task(action=\"complete\")\n"
+                    "See CLAUDE.md for tiered workflow (simple vs team-based)."
+                )
+                output_parts.append(mcp_init)
+
+                # Reset MCP task reminder state for new session
+                try:
+                    state_file = Path("/tmp/claude_mcp_task_state.json")
+                    if state_file.exists():
+                        state_file.unlink()
+                except Exception:
+                    pass
 
             return "\n\n".join(output_parts) if output_parts else None
 
@@ -1662,6 +1699,11 @@ class SessionStartProcessor(SessionProcessor):
     def _detect_agent_from_context(self, input_data: dict) -> str | None:
         """Detect agent type from input context."""
         try:
+            # Check direct agent_type field (provided by Claude Code for sub-agents via SessionStart)
+            direct_type = input_data.get("agent_type")
+            if direct_type:
+                return direct_type
+
             # Check conversation history for agent loading patterns
             conversation = input_data.get("conversation_history", [])
 
