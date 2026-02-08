@@ -7,6 +7,7 @@ triggers:
   primary: architecture, design, system, scalability, technical decision
   tech: architecture patterns, design patterns, diagrams
   actions: design architecture, make technical decisions, plan scalability
+memory: project
 ---
 
 ## MCP Initialization

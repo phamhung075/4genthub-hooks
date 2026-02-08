@@ -1,7 +1,6 @@
 ---
 name: changelog-updater
 description: Update CHANGELOG.md and TEST-CHANGELOG.md with new entries following Keep a Changelog format and token optimization principles. Use when adding changes to the changelog, documenting new features, fixes, or optimizations.
-allowed-tools: Read, Edit, Grep
 ---
 
 # Changelog Updater

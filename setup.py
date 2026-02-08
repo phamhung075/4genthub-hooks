@@ -559,48 +559,18 @@ class ClaudeSetup:
             print(f"{Colors.RED}✗ Generated invalid JSON: {e}{Colors.END}")
             return False
 
-        # Modify Task and cclaude permissions based on token strategy
+        # Ensure Task tool is enabled (built-in delegation via TeamCreate/Task)
         deny_list = settings.get("permissions", {}).get("deny", [])
         allow_list = settings.get("permissions", {}).get("allow", [])
 
-        cclaude_patterns = ["Bash(cclaude:*)", "Bash(cclaude-wait:*)", "Bash(cclaude-wait-parallel:*)"]
+        if "Task" in deny_list:
+            deny_list.remove("Task")
+        if "Task" not in allow_list:
+            allow_list.append("Task")
 
-        if self.token_strategy == "performance":
-            # Performance mode: Enable Task tool, disable cclaude
-            if "Task" in deny_list:
-                deny_list.remove("Task")
-            if "Task" not in allow_list:
-                allow_list.append("Task")
-
-            # Deny cclaude commands (use Task tool instead)
-            for pattern in cclaude_patterns:
-                if pattern not in deny_list:
-                    deny_list.append(pattern)
-
-            print(
-                f"  {Colors.GREEN}✓ Performance mode: Task tool enabled (built-in delegation){Colors.END}"
-            )
-            print(
-                f"  {Colors.YELLOW}✓ cclaude commands disabled (use Task tool for delegate or switch agent){Colors.END}"
-            )
-        else:  # economic
-            # Economic mode: Disable Task tool, allow cclaude
-            if "Task" in allow_list:
-                allow_list.remove("Task")
-            if "Task" not in deny_list:
-                deny_list.insert(0, "Task")
-
-            # Allow cclaude commands (remove from deny list if present)
-            for pattern in cclaude_patterns:
-                if pattern in deny_list:
-                    deny_list.remove(pattern)
-
-            print(
-                f"  {Colors.YELLOW}✓ Economic mode: Task tool disabled (saves ~1200 tokens){Colors.END}"
-            )
-            print(
-                f"  {Colors.GREEN}✓ cclaude commands enabled (use agent switching if on main){Colors.END}"
-            )
+        print(
+            f"  {Colors.GREEN}✓ Task tool enabled (built-in delegation + TeamCreate for parallel){Colors.END}"
+        )
 
         # Update both lists in settings
         settings["permissions"]["deny"] = deny_list

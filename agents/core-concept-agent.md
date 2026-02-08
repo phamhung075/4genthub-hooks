@@ -7,6 +7,7 @@ triggers:
   primary: requirements, user story, acceptance criteria
   tech: domain modeling, BDD, specification
   actions: define requirements, create stories, model domain
+memory: project
 ---
 
 ## MCP Initialization

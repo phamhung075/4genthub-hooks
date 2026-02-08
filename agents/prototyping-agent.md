@@ -7,6 +7,7 @@ triggers:
   primary: prototype, MVP, POC, mockup, quick iteration
   tech: Figma, CodePen, prototyping tools
   actions: build prototype, create MVP, mockup design
+memory: project
 ---
 
 ## MCP Initialization

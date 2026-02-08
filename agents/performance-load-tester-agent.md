@@ -7,6 +7,7 @@ triggers:
   primary: load test, performance test, stress test, benchmark
   tech: JMeter, k6, Locust, Gatling
   actions: load test, stress test, benchmark performance
+memory: project
 ---
 
 ## MCP Initialization

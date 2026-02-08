@@ -7,6 +7,7 @@ triggers:
   primary: marketing, campaign, growth, strategy
   tech: marketing tools, analytics, CRM
   actions: plan campaign, strategize growth, analyze marketing
+memory: project
 ---
 
 ## MCP Initialization

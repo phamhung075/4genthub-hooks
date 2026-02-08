@@ -7,6 +7,7 @@ triggers:
   primary: branding, logo, identity, design system
   tech: Figma, Adobe, brand guidelines
   actions: create brand, design identity, establish guidelines
+memory: project
 ---
 
 ## MCP Initialization

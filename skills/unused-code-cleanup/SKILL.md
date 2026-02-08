@@ -1,7 +1,6 @@
 ---
 name: unused-code-cleanup
 description: Systematically identify and remove unused imports, variables, and dead code from TypeScript/React projects using --noUnusedLocals and --noUnusedParameters compiler flags
-allowed-tools: Read, Edit, Bash, Grep
 ---
 
 # Unused Code Cleanup

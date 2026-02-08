@@ -30,16 +30,9 @@ class AgentStateManager:
         """Get the current agent for a session, defaulting to master-orchestrator-agent.
 
         Priority order:
-        1. CCLAUDE_AGENT environment variable (highest - set by cclaude CLI)
-        2. Session state from persistent storage
-        3. Default to master-orchestrator-agent
+        1. Session state from persistent storage
+        2. Default to master-orchestrator-agent
         """
-        # CHECK CCLAUDE_AGENT ENVIRONMENT VARIABLE FIRST (highest priority)
-        cclaude_agent = os.getenv("CCLAUDE_AGENT")
-        if cclaude_agent:
-            return cclaude_agent
-
-        # Fall back to session state
         state_data = self._load_state()
         session_state = state_data.get(session_id, {})
         return session_state.get("current_agent", "master-orchestrator-agent")

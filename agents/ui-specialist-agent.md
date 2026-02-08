@@ -7,6 +7,7 @@ triggers:
   primary: UI, UX, design, interface, wireframe, accessibility
   tech: Figma, React, CSS, ARIA
   actions: design UI, create wireframes, implement interface
+memory: project
 ---
 
 ## MCP Initialization

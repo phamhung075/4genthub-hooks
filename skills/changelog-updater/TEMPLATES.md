@@ -84,10 +84,10 @@ Copy-paste templates for common changelog entry types. Replace [PLACEHOLDERS] wi
 ```
 **Example**:
 ```markdown
-**CLI Tools** (2025-11-03)
-- `cclaude` (async) - separate terminals, non-blocking, parallel execution
-- `cclaude-wait` (sync) - blocking + JSON results, sequential workflows
-- Both support task_id and subtask_id delegation
+**Built-in Team System** (2026-02-08)
+- `TeamCreate` - spawn coordinated agent teams with shared task lists
+- `Task` tool - delegate to single or multiple agents in background
+- `SendMessage` - inter-agent communication with automatic delivery
 ```
 
 ### Skill/Capability

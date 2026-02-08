@@ -7,6 +7,7 @@ triggers:
   primary: monitor, health, uptime, alerting, incident
   tech: Prometheus, Grafana, PagerDuty, Datadog
   actions: monitor system, alert incidents, check health
+memory: project
 ---
 
 ## MCP Initialization

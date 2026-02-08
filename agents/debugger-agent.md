@@ -7,6 +7,7 @@ triggers:
   primary: debug, fix, error, bug, crash, troubleshoot
   tech: debugger, profiler, logging, stack trace
   actions: fix bug, resolve error, troubleshoot issue
+memory: project
 ---
 
 ## MCP Initialization

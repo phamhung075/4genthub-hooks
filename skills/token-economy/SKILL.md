@@ -1,7 +1,6 @@
 ---
 name: token-economy
 description: Apply token optimization when writing docs, changelogs, MCP tasks. Quality #1, Tokens #2.
-allowed-tools: Read, Edit, Grep
 ---
 
 # Token Economy

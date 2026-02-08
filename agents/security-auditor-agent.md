@@ -7,6 +7,7 @@ triggers:
   primary: security, audit, vulnerability, compliance, pentest
   tech: OWASP, security scanners, compliance frameworks
   actions: audit security, scan vulnerabilities, assess compliance
+memory: project
 ---
 
 ## MCP Initialization

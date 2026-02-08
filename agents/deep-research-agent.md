@@ -7,6 +7,7 @@ triggers:
   primary: research, analysis, evaluate, investigate
   tech: research tools, data analysis
   actions: research technology, analyze options, evaluate feasibility
+memory: project
 ---
 
 ## MCP Initialization

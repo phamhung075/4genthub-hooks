@@ -7,6 +7,7 @@ triggers:
   primary: optimize, performance, efficiency, speed
   tech: profiler, benchmarking, performance tools
   actions: optimize code, improve performance, reduce latency
+memory: project
 ---
 
 ## MCP Initialization

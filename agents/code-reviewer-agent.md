@@ -7,6 +7,7 @@ triggers:
   primary: review, code quality, PR, audit
   tech: ESLint, SonarQube, code standards
   actions: review code, check quality, audit security
+memory: project
 ---
 
 ## MCP Initialization

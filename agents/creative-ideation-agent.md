@@ -7,6 +7,7 @@ triggers:
   primary: ideate, brainstorm, innovate, creative
   tech: design thinking, mind mapping
   actions: generate ideas, brainstorm solutions, innovate
+memory: project
 ---
 
 ## MCP Initialization

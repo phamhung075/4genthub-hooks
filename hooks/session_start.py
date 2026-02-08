@@ -1534,12 +1534,7 @@ class AgentMessageProvider(ContextProvider):
             # Determine which agent to use
             agent_name = None
 
-            # CHECK FOR CCLAUDE_AGENT ENVIRONMENT VARIABLE FIRST (highest priority)
-            cclaude_agent = os.getenv("CCLAUDE_AGENT")
-            if cclaude_agent:
-                agent_name = cclaude_agent
-            elif session_type == "principal":
-                # Principal session defaults to master-orchestrator-agent (unless CCLAUDE_AGENT is set)
+            if session_type == "principal":
                 agent_name = "master-orchestrator-agent"
             else:
                 # Try to detect agent from context

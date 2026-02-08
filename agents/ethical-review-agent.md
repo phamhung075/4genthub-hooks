@@ -7,6 +7,7 @@ triggers:
   primary: ethics, bias, fairness, responsible AI
   tech: bias detection, fairness metrics
   actions: audit ethics, detect bias, ensure fairness
+memory: project
 ---
 
 ## MCP Initialization

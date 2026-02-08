@@ -7,6 +7,7 @@ triggers:
   primary: plan, task, sprint, estimation, backlog
   tech: Jira, planning tools, estimation
   actions: plan tasks, break down work, estimate effort
+memory: project
 ---
 
 ## MCP Initialization

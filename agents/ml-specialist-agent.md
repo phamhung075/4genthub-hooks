@@ -7,6 +7,7 @@ triggers:
   primary: machine learning, ML, model, training, data science
   tech: TensorFlow, PyTorch, scikit-learn, Jupyter
   actions: train model, engineer features, deploy ML
+memory: project
 ---
 
 ## MCP Initialization

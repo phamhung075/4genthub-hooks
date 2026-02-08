@@ -7,6 +7,7 @@ triggers:
   primary: design system, components, UI library
   tech: Storybook, Figma, design tokens
   actions: create components, build library, establish patterns
+memory: project
 ---
 
 ## MCP Initialization

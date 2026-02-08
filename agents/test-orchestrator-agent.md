@@ -7,6 +7,7 @@ triggers:
   primary: test, testing, qa, quality assurance, unit test
   tech: Jest, Pytest, Cypress, Playwright
   actions: write tests, test automation, ensure quality
+memory: project
 ---
 
 ## MCP Initialization

@@ -7,6 +7,7 @@ triggers:
   primary: LLM, AI agents, prompt engineering, research
   tech: GPT, Claude, agent frameworks
   actions: research LLMs, engineer prompts, evaluate AI
+memory: project
 ---
 
 ## MCP Initialization

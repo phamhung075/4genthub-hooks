@@ -7,6 +7,7 @@ triggers:
   primary: initialize, setup, scaffold, bootstrap
   tech: npm, yarn, create-react-app, cookiecutter
   actions: initialize project, setup environment, scaffold structure
+memory: project
 ---
 
 ## MCP Initialization

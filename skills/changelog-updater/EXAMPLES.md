@@ -57,14 +57,14 @@ Real-world examples from agenthub demonstrating optimal changelog format.
 ```
 **Use for**: Major features | Quantified scope | Key mechanism | Comparison metric
 
-### CLI Tools
+### Built-in Parallel Agents
 ```markdown
-**CLI Tools** (2025-11-03)
-- `cclaude` (async) - separate terminals, non-blocking, parallel execution
-- `cclaude-wait` (sync) - blocking + JSON results, sequential workflows
-- Both support task_id and subtask_id delegation
+**Built-in Team System** (2026-02-08)
+- `TeamCreate` - spawn coordinated agent teams with shared task lists
+- `Task` tool - delegate to single or multiple agents in background
+- `SendMessage` - inter-agent communication with automatic delivery
 ```
-**Use for**: New tools | Clear async vs sync | Common features noted
+**Use for**: New tools | Clear delegation modes | Common features noted
 
 ### Skills/Capabilities
 ```markdown

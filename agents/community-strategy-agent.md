@@ -7,6 +7,7 @@ triggers:
   primary: community, engagement, social, forum
   tech: Discord, Slack, Reddit, community platforms
   actions: build community, engage users, moderate
+memory: project
 ---
 
 ## MCP Initialization

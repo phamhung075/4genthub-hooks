@@ -7,6 +7,7 @@ triggers:
   primary: elicit, gather requirements, interview, research
   tech: user research, interview techniques
   actions: gather requirements, interview stakeholders, research needs
+memory: project
 ---
 
 ## MCP Initialization

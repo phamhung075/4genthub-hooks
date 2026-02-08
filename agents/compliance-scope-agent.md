@@ -7,6 +7,7 @@ triggers:
   primary: compliance, GDPR, regulation, audit
   tech: compliance frameworks, legal standards
   actions: audit compliance, ensure regulation, document requirements
+memory: project
 ---
 
 ## MCP Initialization

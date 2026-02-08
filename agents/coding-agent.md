@@ -7,6 +7,7 @@ triggers:
   primary: implement, code, write, program, develop, build
   tech: TypeScript, Python, React, FastAPI, SQL
   actions: feature, API, component, integration
+memory: project
 ---
 
 ## MCP Initialization

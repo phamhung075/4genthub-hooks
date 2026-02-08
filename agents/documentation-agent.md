@@ -7,6 +7,7 @@ triggers:
   primary: documentation, docs, readme, guide, API docs
   tech: Markdown, Sphinx, Swagger, GitBook
   actions: write docs, create guide, document API
+memory: project
 ---
 
 ## MCP Initialization

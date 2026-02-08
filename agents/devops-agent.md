@@ -7,6 +7,7 @@ triggers:
   primary: devops, infrastructure, docker, CI/CD, deploy
   tech: Docker, Kubernetes, AWS, Terraform, Jenkins
   actions: deploy, containerize, orchestrate, automate
+memory: project
 ---
 
 ## MCP Initialization

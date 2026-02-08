@@ -7,6 +7,7 @@ triggers:
   primary: analytics, tracking, metrics, events
   tech: GA4, Mixpanel, Amplitude, Segment
   actions: setup analytics, track events, measure conversion
+memory: project
 ---
 
 ## MCP Initialization

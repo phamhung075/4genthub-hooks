@@ -7,6 +7,7 @@ triggers:
   primary: technology, tech stack, library, framework, tool selection
   tech: technology landscape, evaluation criteria
   actions: select technology, evaluate options, advise on tools
+memory: project
 ---
 
 ## MCP Initialization

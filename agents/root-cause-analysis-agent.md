@@ -7,6 +7,7 @@ triggers:
   primary: root cause, postmortem, failure analysis, incident
   tech: 5-whys, fishbone, RCA tools
   actions: analyze root cause, investigate incident, conduct postmortem
+memory: project
 ---
 
 ## MCP Initialization

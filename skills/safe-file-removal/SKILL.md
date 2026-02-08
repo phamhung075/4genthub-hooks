@@ -1,7 +1,6 @@
 ---
 name: safe-file-removal
 description: Use safe-rm command to safely 'remove' files by renaming them to .obsolete instead of permanent deletion. Reversible, collision-safe, hook-compliant.
-allowed-tools: Bash, Read, Grep
 ---
 
 # Safe File Removal

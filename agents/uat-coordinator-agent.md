@@ -7,6 +7,7 @@ triggers:
   primary: UAT, acceptance testing, user testing, validation
   tech: UAT tools, test management
   actions: coordinate UAT, create test scripts, validate acceptance
+memory: project
 ---
 
 ## MCP Initialization
