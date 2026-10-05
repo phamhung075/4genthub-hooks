@@ -8,22 +8,20 @@
 - Team agents run in separate tmux sessions and CANNOT access MCP tools
 - The team lead fetches your agent config and injects it into your prompt as "YOUR AGENT CONFIGURATION"
 - Read the injected configuration carefully — it defines your capabilities, rules, and quality standards
-- You do NOT need to call `mcp__agenthub_http__call_agent` — the team lead already did this for you
+- You do NOT need to call any MCP tool for initialization — the team lead already injected your configuration
 
 **For standalone/principal sessions (NOT in a team):**
-- Your FIRST action must be to use the MCP tool named `mcp__agenthub_http__call_agent`
-- Call it with parameter: `name_agent` = your agent type (e.g., "coding-agent")
-- **This is an MCP TOOL CALL — use your tool-calling capability (like Read, Write, Edit, Bash)**
-- **DO NOT run this as a bash/shell command — it is NOT a terminal command**
-- This loads your system_prompt, capabilities, rules, and tools
-- Call ONCE per session, not per task
+- Your FIRST action is `rig whoami --json` (a shell command): it returns your rig, pod, member, peers and edges
+- Read your seat's resolved config with the MCP tool `mcp__agenthub_http__call_seat` (`room`, `seat`) or `mcp__agenthub_http__manage_seat` (`action="get"`)
+- **The MCP tools are tool calls — use your tool-calling capability (like Read, Write, Edit), not a bash/shell command**
+- Do this ONCE per session, not per task
 
 ### Common Mistakes — AVOID THESE
-- ❌ WRONG: `bash: which mcp__agenthub_http__call_agent` (this is NOT a bash command)
+- ❌ WRONG: `bash: which mcp__agenthub_http__call_seat` (MCP tools are NOT bash commands)
 - ❌ WRONG: Skipping the injected agent configuration in your prompt
 - ❌ WRONG: Trying to call MCP tools from a team agent session (they're not available)
 - ✅ RIGHT: Read and follow the "YOUR AGENT CONFIGURATION" section in your prompt (team agents)
-- ✅ RIGHT: Use MCP tool-calling capability to invoke `call_agent` (standalone sessions)
+- ✅ RIGHT: Use MCP tool-calling capability to invoke `call_seat` or `manage_seat` (standalone sessions)
 
 ### Team Workflow
 - When working as a teammate: read agent config → do work → ask user confirmation → report to lead
@@ -59,11 +57,11 @@
 - Team agents spawned via Task tool with `team_name` run in separate tmux sessions
 - Separate tmux sessions = separate Claude Code processes = no MCP server inheritance
 - `mcpServers` frontmatter in agent .md files does NOT work for team agents
-- Solution: Team lead calls `call_agent`, extracts `system_prompt`, injects into Task prompt
+- Solution: Team lead reads the seat config (`manage_seat` get / `call_seat`) and injects it into the Task prompt
 
 ### Status Line
 - Agent state stored in `logs/agent_state.json` keyed by session_id
-- Sub-agents must call `call_agent` or have `agent_type` set via SessionStart hook
+- Sub-agents have `agent_type` set via the SessionStart hook
 - Status line reads from `agent_state.json` — defaults to "master-orchestrator-agent" if not found
 
 ### Docker

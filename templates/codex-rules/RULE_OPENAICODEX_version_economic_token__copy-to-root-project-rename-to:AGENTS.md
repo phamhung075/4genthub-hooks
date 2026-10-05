@@ -24,7 +24,7 @@
 ## 🚨 CLOCK IN FIRST
 
 ```typescript
-mcp__agenthub_http__call_agent("master-orchestrator-agent")
+mcp__agenthub_http__call_seat(room="<room>", seat="master-orchestrator-agent")
 ```
 
 **Loads**: System access | Job description | Tools | Task management
@@ -50,7 +50,7 @@ for task in existing:
 
 ## 🚀 AGENT SWITCHING MODEL
 
-### `call_agent` Function
+### `call_seat` Function
 
 **What It Does**: Loads complete agent instructions | Transforms you into that agent | Provides system prompt, tools, rules
 **Critical**: MUST call first | Can call multiple times | Each call transforms role
@@ -68,17 +68,17 @@ for task in existing:
 ### Workflow
 
 **First Time Loading (per session)**:
-1. call_agent("master-orchestrator-agent") → YOU ARE orchestrator (loads instructions)
-2. call_agent("coding-agent") → YOU ARE coding-agent (loads instructions)
+1. call_seat(room="<room>", seat="master-orchestrator-agent") → YOU ARE orchestrator (loads instructions)
+2. call_seat(room="<room>", seat="coding-agent") → YOU ARE coding-agent (loads instructions)
 3. Do work directly
 4. **Restate**: "Switching back to master-orchestrator-agent" (NO call needed - saves ~1200 tokens)
 
 **Subsequent Switches (same session)**:
 - Already loaded agent: Just restate role ("Switching to coding-agent")
-- New agent: Must call call_agent("new-agent-name")
+- New agent: Must call call_seat(room="<room>", seat="new-agent-name")
 
 **New Session**:
-- ALL agents must be loaded again with call_agent()
+- ALL agents must be loaded again with call_seat()
 - Previous session's loaded agents are NOT available
 
 **Token Economy**: Load once per session (~1200 tokens) → Restate unlimited times same session (0 tokens)
@@ -100,14 +100,14 @@ for task in existing:
 | **coding-agent** | Read, Write, Edit, Bash, Grep, Glob | Task |
 | **documentation-agent** | Read, Write, Edit, Grep, WebFetch | Bash, Task |
 
-**Best Practices**: Call call_agent first | Check tools array | Switch agents when need unavailable tools | Respect boundaries
+**Best Practices**: Establish your seat first (rig whoami --json) | Check tools array | Switch agents when need unavailable tools | Respect boundaries
 
 ---
 
 ## 📊 COMPLETE WORKFLOW
 
 1. Session Start
-2. call_agent("master-orchestrator-agent") - Load once per session
+2. call_seat(room="<room>", seat="master-orchestrator-agent") - Load once per session
 3. Receive & Process (system_prompt = instructions)
 4. Confirm loaded
 5. Evaluate Complexity: SIMPLE (<1%) handle directly | COMPLEX (>99%) create MCP task → switch agent (load if new, restate if loaded) → work → switch back (restate) → complete
@@ -211,7 +211,7 @@ task_id = response["task"]["id"]
 ### 2. Switch Agent → 3. Do Work → 4. Switch Back & Complete
 
 ```python
-call_agent("coding-agent")  # First time: load instructions
+call_seat(room="<room>", seat="coding-agent")  # First time: load instructions
 # Write code, edit files
 manage_task(action="update", task_id=task_id, progress_percentage=50)
 
@@ -326,7 +326,7 @@ echo "$result" | jq '.subtasks[0].completion_data.completion_summary'
 
 - Master Orchestrator: Plans, reviews, coordinates
 - Specialized Agents: Execute expertise
-- Know Current Role: Check tools after call_agent
+- Know Current Role: rig whoami --json; read the seat files
 
 ### 4. Task Management
 
@@ -340,7 +340,7 @@ echo "$result" | jq '.subtasks[0].completion_data.completion_summary'
 ## 🎯 QUICK CHECKLISTS
 
 ### Before Session
-- [ ] Called `call_agent("master-orchestrator-agent")`?
+- [ ] Called `call_seat(room="<room>", seat="master-orchestrator-agent")`?
 - [ ] Checked `tools` array?
 - [ ] Understand capabilities?
 
@@ -354,7 +354,7 @@ echo "$result" | jq '.subtasks[0].completion_data.completion_summary'
 ### When Switching
 - [ ] Agent already loaded this session?
 - [ ] **YES**: Just restate role (0 tokens)
-- [ ] **NO**: Call `call_agent("specialized-agent")` (~1200 tokens)
+- [ ] **NO**: Resolve the seat with call_seat(room="<room>", seat="<seat>")
 - [ ] Confirmed right tools?
 - [ ] Know what to do?
 - [ ] Will update progress?
@@ -362,7 +362,7 @@ echo "$result" | jq '.subtasks[0].completion_data.completion_summary'
 ### When Switching Back
 - [ ] Orchestrator already loaded?
 - [ ] **YES**: Just restate "Switching to master-orchestrator-agent" (0 tokens)
-- [ ] **NO**: Call `call_agent("master-orchestrator-agent")` (~1200 tokens)
+- [ ] **NO**: Establish your seat (rig whoami --json)
 - [ ] Review work complete?
 - [ ] Update MCP status?
 - [ ] Objectives met?
@@ -384,13 +384,13 @@ echo "$result" | jq '.subtasks[0].completion_data.completion_summary'
 | Question | Answer |
 |----------|--------|
 | When call? | **First time per agent** in session (loads instructions) |
-| **New session?** | **MUST call call_agent() again - old session agents not available** |
+| **New session?** | **Establish your seat per session (rig whoami --json)** |
 | How many? | Multiple (orchestrator → specialists → back) |
 | Forget? | Call immediately |
 | First agent? | master-orchestrator-agent |
 | Switch multiple? | YES - that's the point |
 | **Already loaded (same session)?** | **Just restate role - NO call needed (0 tokens)** |
-| **New agent (same session)?** | **Must call call_agent() first time (~1200 tokens)** |
+| **New agent (same session)?** | **Resolve the seat with call_seat(room=..., seat=...)** |
 | Response? | Read `system_prompt` + check `tools` |
 | Tool blocked? | Switch to agent with that tool |
 | Check tools? | `tools` array in response |
@@ -401,9 +401,9 @@ echo "$result" | jq '.subtasks[0].completion_data.completion_summary'
 | Question | Answer |
 |----------|--------|
 | Can't use Write as orchestrator? | Switch to coding-agent for edits |
-| Coding-agent can't use Task? | Task deprecated - use call_agent |
+| Coding-agent can't use Task? | Task deprecated - resolve the seat with call_seat |
 | Bypass restrictions? | NO - switch agents instead |
-| Wrong agent role? | Call call_agent("correct-agent") |
+| Wrong agent role? | Call call_seat(room="<room>", seat="correct-agent") |
 
 ### MCP Tasks
 
@@ -484,6 +484,6 @@ and follow best practices. Start by looking at auth module then...
 | **cclaude (async)** | Create MCP → Delegate `cclaude agent "task_id: XXX"` → Monitor → Non-blocking → Parallel |
 | **cclaude-wait (sync)** | Create MCP → Delegate `cclaude-wait agent "task_id: XXX"` → Monitor → Blocking → Returns JSON |
 | **cclaude-wait-parallel** | Create MCP → Create subtasks → Delegate `cclaude-wait-parallel agent task_id sub1 sub2` → WebSocket monitoring → Blocking → Returns aggregated JSON |
-| **Agent Switching** | call_agent("master-orchestrator") **once** → Switch to agent (load if new, restate if loaded) → Check tools → MCP → Progress → Sequential |
+| **Seat resolution** | rig whoami --json **once** → read seat files → check scope → MCP → progress → sequential |
 
 **Remember**: Four models | cclaude = parallel (fire-forget) | cclaude-wait = single+results | cclaude-wait-parallel = multiple+results | Agent switching = efficient | Manager = human | Work system = MCP | Smart choice each situation

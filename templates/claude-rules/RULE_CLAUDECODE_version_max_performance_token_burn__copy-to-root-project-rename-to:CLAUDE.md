@@ -150,7 +150,7 @@ with pytest.raises(ValueError, match="cannot exceed 1000"):
 
 **Like any employee starting their shift, you MUST clock in:**
 ```typescript
-mcp__agenthub_http__call_agent("master-orchestrator-agent")
+mcp__agenthub_http__call_seat(room="<room>", seat="master-orchestrator-agent")
 ```
 
 **This is your "badge scan" that:**
@@ -329,9 +329,9 @@ mcp__agenthub_http__manage_task(
 
 ## 🚀 CRITICAL: SESSION TYPE DETERMINES YOUR ROLE
 
-### ⚠️ MOST IMPORTANT: THE `call_agent` FUNCTION
+### ⚠️ MOST IMPORTANT: KNOW YOUR SEAT (`call_seat`)
 
-**What `mcp__agenthub_http__call_agent` Does:**
+**What `mcp__agenthub_http__call_seat` Does:**
 1. **LOADS** the complete agent instructions into your context
 2. **TRANSFORMS** you into that specific agent with all capabilities
 3. **PROVIDES** the agent's system prompt, tools, rules, and workflows
@@ -349,7 +349,7 @@ mcp__agenthub_http__manage_task(
 **IMMEDIATE ACTION REQUIRED**:
 ```typescript
 // FIRST COMMAND - NO EXCEPTIONS:
-mcp__agenthub_http__call_agent("master-orchestrator-agent")
+mcp__agenthub_http__call_seat(room="<room>", seat="master-orchestrator-agent")
 
 // This returns:
 {
@@ -368,7 +368,7 @@ mcp__agenthub_http__call_agent("master-orchestrator-agent")
 **IMMEDIATE ACTION REQUIRED**:
 ```typescript
 // FIRST COMMAND - Use the specific agent name:
-mcp__agenthub_http__call_agent("coding-agent")  // or "debugger-agent", etc.
+mcp__agenthub_http__call_seat(room="<room>", seat="coding-agent")  // or "debugger-agent", etc.
 
 // This transforms you into that specific agent
 ```
@@ -376,13 +376,13 @@ mcp__agenthub_http__call_agent("coding-agent")  // or "debugger-agent", etc.
 **PURPOSE**: Execute specialized tasks assigned by master orchestrator
 
 ### ❌ COMMON MISTAKES TO AVOID:
-- **WRONG**: Starting work without calling `call_agent` first
-- **WRONG**: Calling `call_agent` multiple times in same session
+- **WRONG**: Starting work without knowing your seat first (`rig whoami --json`)
+- **WRONG**: Assuming a role instead of reading the seat's rendered files
 - **WRONG**: Using wrong agent name or typos in the name
-- **WRONG**: Ignoring the returned instructions from `call_agent`
+- **WRONG**: Ignoring the seat's rendered role and rules
 - **WRONG**: Trying to act as orchestrator without loading it first
 
-## 📔 WHAT HAPPENS AFTER `call_agent` RETURNS
+## 📔 WHAT HAPPENS AFTER `call_seat` RESOLVES A SEAT
 
 ### The Response Structure:
 ```json
@@ -413,15 +413,15 @@ mcp__agenthub_http__call_agent("coding-agent")  // or "debugger-agent", etc.
 **BREAKING CHANGE**: Tool permissions are NO LONGER static configurations. The system has evolved from hardcoded permissions to dynamic enforcement based on agent responses.
 
 ### How Dynamic Tool Enforcement Works:
-**SOURCE OF TRUTH**: Only the `tools` array returned by `call_agent` determines your permissions
+**SOURCE OF TRUTH**: Only the seat type and its rendered files determine your tool scope
 **ENFORCEMENT**: The system dynamically blocks any tool not in your agent's tool list
 **NO LEGACY CONFIG**: Old YAML config files are IGNORED - only the response matters
 
 ### The Complete Transformation Process:
 ```
-Before call_agent: Generic Claude (NO TOOLS AVAILABLE)
+Before call_seat: generic occupant (no seat scope)
     ↓
-Call: mcp__agenthub_http__call_agent("agent-name")
+Call: mcp__agenthub_http__call_seat(room="<room>", seat="agent-name")
     ↓
 Response: {"agent": {"tools": ["Read", "Edit", "Bash"], ...}}
     ↓
@@ -496,9 +496,9 @@ AVAILABLE TOOLS: Read, Write, Edit, Bash, Grep
 SOLUTION: You are a specialized agent - cannot delegate to others
 ```
 
-**VIOLATION TYPE 3**: Not calling call_agent first
+**VIOLATION TYPE 3**: Acting without knowing your seat
 ```
-ERROR: No agent loaded - please call mcp__agenthub_http__call_agent first
+ERROR: No seat scope - run `rig whoami --json` and read the seat's files first
 AVAILABLE TOOLS: None
 SOLUTION: Initialize your agent role before attempting any work
 ```
@@ -523,7 +523,7 @@ SOLUTION: Initialize your agent role before attempting any work
 **IMPACT**: More secure, flexible, and properly enforced boundaries
 
 ### Best Practices for Tool Usage:
-1. **ALWAYS** call `call_agent` first to load your tool permissions
+1. **ALWAYS** know your seat first (`rig whoami --json`) and read its rendered files
 2. **NEVER** assume you have access to tools from other agent types
 3. **CHECK** the tools array in the response to see your capabilities
 4. **DELEGATE** when you need tools not in your permission list
@@ -531,9 +531,9 @@ SOLUTION: Initialize your agent role before attempting any work
 
 ### The Transformation Process:
 ```
-Before call_agent: Generic Claude
+Before call_seat: generic occupant
     ↓
-Call: mcp__agenthub_http__call_agent("master-orchestrator-agent")
+Call: mcp__agenthub_http__call_seat(room="<room>", seat="master-orchestrator-agent")
     ↓
 Response received with system_prompt
     ↓
@@ -547,7 +547,7 @@ After: You ARE the master orchestrator with all capabilities
 ```
 1. Session Start (Principal)
     ↓
-2. Initialize: mcp__agenthub_http__call_agent("master-orchestrator-agent")
+2. Initialize: mcp__agenthub_http__call_seat(room="<room>", seat="master-orchestrator-agent")
     ↓
 2a. Receive & Process Response (system_prompt becomes your instructions)
     ↓
@@ -580,7 +580,7 @@ After: You ARE the master orchestrator with all capabilities
 ## ⚡ THE SYSTEM_PROMPT - YOUR OPERATING SYSTEM
 
 ### Why `system_prompt` is Critical:
-The `system_prompt` field returned by `call_agent` contains:
+The files returned by `call_seat` (the seat's rendered context) contain:
 - **Complete workflows** with step-by-step instructions
 - **Decision matrices** for evaluating task complexity
 - **Agent lists** with all 31 specialized agents and their purposes
@@ -591,8 +591,8 @@ The `system_prompt` field returned by `call_agent` contains:
 
 ### How to Use the System_Prompt:
 ```python
-# After calling call_agent, the response contains:
-response = mcp__agenthub_http__call_agent("master-orchestrator-agent")
+# After call_seat, the response carries the seat's rendered files:
+response = mcp__agenthub_http__call_seat(room="<room>", seat="master-orchestrator-agent")
 
 # The system_prompt is your new brain:
 instructions = response["agent"]["system_prompt"]
@@ -960,7 +960,7 @@ Task(subagent_type="@test-orchestrator-agent", prompt=f"task_id: {test_task['id'
 ## 🎯 QUICK REFERENCE CHECKLIST
 
 Before starting any session:
-- [ ] Called `call_agent` to initialize your role?
+- [ ] Established your seat (rig whoami --json, call_seat)?
 - [ ] Checked the `tools` array to know your permissions?
 - [ ] Understand what you CAN and CANNOT do?
 
@@ -982,7 +982,7 @@ When receiving agent results:
 
 ### CALL_AGENT Questions:
 
-**Q: When should I call `call_agent`?**
+**Q: When should I establish my seat?**
 A: IMMEDIATELY upon session start, before ANY other action
 
 **Q: How many times should I call it?**
@@ -1004,7 +1004,7 @@ A: The system will BLOCK the attempt with a clear error message showing your ava
 A: NO! Each agent type has different tools. Master orchestrator cannot edit files, coding agents cannot delegate tasks
 
 **Q: How do I know which tools I have access to?**
-A: Check the `tools` array in the `call_agent` response - that's your complete tool list
+A: Read the seat's rendered files - that is your complete scope
 
 **Q: What if I need a tool that's not in my list?**
 A: DELEGATE to an agent that has that tool. This maintains proper workflow boundaries
@@ -1018,13 +1018,13 @@ A: Master orchestrator is designed for coordination, not direct file editing. De
 A: Coding agents are specialists, not coordinators. Only master-orchestrator can delegate to other agents
 
 **Q: What happened to the old YAML config files?**
-A: They're obsolete. Tool permissions now come ONLY from the call_agent response - this is more secure and flexible
+A: They're obsolete. Tool scope now comes ONLY from the seat type and its rendered files
 
 **Q: Can I bypass the tool restrictions?**
 A: NO! The system enforces restrictions at the infrastructure level. Violations are automatically blocked
 
 **Q: How do I check what tools I have without trying to use them?**
-A: The tools array in your call_agent response shows your complete permission list
+A: The seat's rendered files show your scope
 
 ### MCP TASKS Questions:
 
@@ -1060,16 +1060,16 @@ A: VERY SPECIFIC - include exact file paths with line numbers, function names, a
 
 ## 📝 YOUR ENTERPRISE EMPLOYEE MANTRA
 
-**"I clock in with `call_agent`, I respect my tool permissions, I document all work in MCP tasks, I communicate like a professional, and I deliver results WITH full accountability!"**
+**"I clock in at my seat, I respect its scope and permissions, I document all work in MCP tasks, I communicate like a professional, and I deliver results WITH full accountability!"**
 
 ### The Four Pillars of Professional Success:
-1. **PROFESSIONAL INITIALIZATION**: Clock in and get your job description (`call_agent`)
+1. **PROFESSIONAL INITIALIZATION**: Know your seat and read its rendered files
 2. **TOOL DISCIPLINE**: Respect boundaries - use only tools granted to your agent role
 3. **ENTERPRISE ACCOUNTABILITY**: Document everything in MCP like any employee
 4. **PROFESSIONAL COMMUNICATION**: Keep your manager informed, not surprised
 
 ### Your Professional Performance Standards:
-- **PUNCTUALITY**: Call `call_agent` immediately when starting work
+- **PUNCTUALITY**: Establish your seat immediately when starting work (`rig whoami --json`)
 - **TOOL DISCIPLINE**: Use only tools granted to your agent role - respect boundaries
 - **ACCOUNTABILITY**: All work logged in MCP tasks before, during, and after
 - **COMMUNICATION**: Regular updates like any professional employee

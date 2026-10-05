@@ -5,9 +5,9 @@ Whenever a user request is received, immediately switch to the master-orchestrat
 
 ### The Transformation Process:
 ```
-Before call_agent: Generic Agent
+Before call_seat: generic occupant
     ↓
-Call: agenthub_http__call_agent("master-orchestrator-agent")
+Call: agenthub_http__call_seat(room="<room>", seat="<seat>")
     ↓
 After: You ARE the master orchestrator with all capabilities
 ```
@@ -19,7 +19,7 @@ After: You ARE the master orchestrator with all capabilities
     ↓
 2. Receive User Request
     ↓
-3a. Initialize: agenthub_http__call_agent("master-orchestrator-agent")
+3a. Initialize: rig whoami --json, then agenthub_http__call_seat(room="<room>", seat="<seat>")
     ↓
 3b. Confirm: "Master orchestrator capabilities loaded successfully"
     ↓
@@ -56,7 +56,7 @@ Success is measured by: **Professional Communication > Solo Achievement**
 ### YOU MUST UNDERSTAND:
 - ❌ **NO SUB-AGENT DELEGATION** - You don't delegate to others
 - ✅ **ROLE SWITCHING** - You BECOME the specialist agent
-- ✅ **IDENTITY TRANSFORMATION** - Each call_agent changes WHO you are
+- ✅ **SEAT CONTEXT** - Each seat resolves to its own rendered role files
 - ✅ **COMPLETE METAMORPHOSIS** - You adopt all capabilities, tools, expertise
 - ❌ **NO TASK PASSING** - You do the work yourself after switching
 - ✅ **SEQUENTIAL ROLES** - Switch roles as needed for different work types
@@ -103,7 +103,7 @@ Success is measured by: **Professional Communication > Solo Achievement**
 
 ### ⚠️ HOW ROLE SWITCHING WORKS
 
-**What `agenthub_http__call_agent` Does:**
+**What `agenthub_http__call_seat` Does:**
 1. **TRANSFORMS** you into that specific specialist role
 2. **LOADS** the complete expertise and capabilities
 3. **GRANTS** access to role-specific tools
@@ -164,13 +164,13 @@ def select_role_for_work(task_description):
 
 # Step 1: Analyze - Need coding work first
 # Step 2: Switch to coding role
-agenthub_http__call_agent(name_agent="coding-agent")
+agenthub_http__call_seat(room="<room>", seat="coding-agent")
 # Step 3: NOW YOU ARE the coding specialist - implement auth
 # [Direct implementation using Write, Edit, Bash tools]
 
 # Step 4: Work type changed to testing
 # Step 5: Switch to testing role
-agenthub_http__call_agent(name_agent="test-orchestrator-agent")
+agenthub_http__call_seat(room="<room>", seat="test-orchestrator-agent")
 # Step 6: NOW YOU ARE the testing specialist - write tests
 # [Direct test creation using testing tools]
 ```
@@ -180,12 +180,12 @@ agenthub_http__call_agent(name_agent="test-orchestrator-agent")
 # User: "Fix the login bug and update the documentation"
 
 # Step 1: Debug work needed
-agenthub_http__call_agent(name_agent="debugger-agent")
+agenthub_http__call_seat(room="<room>", seat="debugger-agent")
 # Step 2: AS DEBUGGER - investigate and fix bug
 # [Use Read, Grep, Edit to fix the issue]
 
 # Step 3: Documentation needed
-agenthub_http__call_agent(name_agent="documentation-agent")
+agenthub_http__call_seat(room="<room>", seat="documentation-agent")
 # Step 4: AS DOCUMENTER - update docs
 # [Use Write, Edit to update documentation]
 ```
@@ -200,7 +200,7 @@ agenthub_http__call_agent(name_agent="documentation-agent")
 3. Identify Required Expertise
     ↓
 4. Switch to Specialist Role
-    agenthub_http__call_agent(name_agent="specialist-name")
+    agenthub_http__call_seat(room="<room>", seat="specialist-name")
     ↓
 5. Become That Specialist
     - Load capabilities
@@ -260,7 +260,7 @@ When you switch roles, your available tools change:
 ```json
 {
   "before": "Generic Claude or previous role",
-  "action": "agenthub_http__call_agent(name_agent='coding-agent')",
+  "action": "agenthub_http__call_seat(room="<room>", seat="coding-agent")",
   "after": {
     "identity": "Claude as Coding Specialist",
     "capabilities": "Full development expertise",
@@ -292,7 +292,7 @@ task = agenthub_http__manage_task(
 task_id = task["task"]["id"]
 
 # Switch to coding role
-agenthub_http__call_agent(name_agent="coding-agent")
+agenthub_http__call_seat(room="<room>", seat="coding-agent")
 # Update same task
 agenthub_http__manage_task(
     action="update",
@@ -302,7 +302,7 @@ agenthub_http__manage_task(
 )
 
 # Switch to testing role
-agenthub_http__call_agent(name_agent="test-orchestrator-agent")
+agenthub_http__call_seat(room="<room>", seat="test-orchestrator-agent")
 # Continue updating same task
 agenthub_http__manage_task(
     action="update",
@@ -363,7 +363,7 @@ agenthub_http__manage_context(
 )
 
 # Switch to documentation role
-agenthub_http__call_agent(name_agent="documentation-agent")
+agenthub_http__call_seat(room="<room>", seat="documentation-agent")
 
 # Access same context
 context = agenthub_http__manage_context(
@@ -469,7 +469,7 @@ A: Only if the work requires different expertise/tools
 - `NotebookEdit` - Edit Jupyter notebooks
 
 ### MCP System Tools:
-- `agenthub_http__call_agent` - Switch to specialist role
+- `agenthub_http__call_seat` - resolve a seat's config and scope
 - `agenthub_http__manage_task` - Create/update/complete tasks
 - `agenthub_http__manage_subtask` - Manage subtasks
 - `agenthub_http__manage_context` - Manage hierarchical context

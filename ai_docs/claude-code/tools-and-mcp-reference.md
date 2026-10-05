@@ -72,8 +72,8 @@ mcp__agenthub_http__manage_agent(
   project_id, agent_id?, name?, ...
 )
 
-// Load agent capabilities
-mcp__agenthub_http__call_agent(name_agent: string)
+// Resolve one seat: runtime, policy, rendered role files
+mcp__agenthub_http__call_seat(room: string, seat: string)
 
 // System health
 mcp__agenthub_http__manage_connection(include_details?, user_id?)

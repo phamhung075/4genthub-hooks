@@ -61,7 +61,7 @@ browser_wait
 json, text/event-stream --headers Authorization Bearer
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMGRlNGM1ZC0yYTk3LTQzMjQtYWJ
 jZC05ZGFlMzkyMjc2MWUiLCJzY2vyBfVA... --transport streamablehttp http://localhost:8000/mcp
-    • Tools: call_agent, generate_token, get_auth_status,
+    • Tools: call_seat, manage_seat, generate_token, get_auth_status,
 get_rate_limit_status, manage_agent, manage_connection, manage_context,
 manage_git_branch, manage_project, manage_subtask, manage_task,
 revoke_token, validate_token

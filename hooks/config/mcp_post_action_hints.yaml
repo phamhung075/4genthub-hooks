@@ -22,7 +22,6 @@ headers:
   manage_project_project_health_check: "🏥 HEALTH CHECK - STATUS"
   manage_git_branch_create: "🌿 BRANCH CREATED - NEXT"
   manage_git_branch_assign_agent: "✅ AGENT ASSIGNED - READY"
-  call_agent_default: "🤖 AGENT LOADED - READY"
 
 # Task operation hints
 task_hints:

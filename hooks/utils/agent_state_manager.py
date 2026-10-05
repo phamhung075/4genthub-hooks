@@ -162,15 +162,6 @@ def get_agent_role_from_session(session_id: str) -> str:
     return role_mapping.get(agent_name, "Assistant")
 
 
-def update_agent_state_from_call_agent(session_id: str, tool_input: dict) -> None:
-    """Update agent state when call_agent tool is executed."""
-    agent_name = tool_input.get("name_agent", "")
-    if agent_name and session_id:
-        # Create a new manager instance to pick up any patched paths in tests
-        manager = AgentStateManager()
-        manager.set_current_agent(session_id, agent_name)
-
-
 if __name__ == "__main__":
     # Simple test/demo
     import uuid

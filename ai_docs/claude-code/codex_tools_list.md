@@ -79,8 +79,6 @@
 - function ElevenLabs__voice_clone(args: { name: string; files: string[]; description?: string; }): Promise<any>; — Clones a voice instantly by supplying audio samples to ElevenLabs.
 
 
-- function agenthub_http__call_agent(args: { name_agent: string; }): Promise<any>; — Loads and invokes a specialized agent by name within the AgentHub system.
-
 
 - function agenthub_http__generate_token(): Promise<any>; — Provides information about generating new authentication tokens (deprecated helper).
 

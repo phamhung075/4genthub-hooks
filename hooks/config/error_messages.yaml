@@ -178,9 +178,9 @@ tool_permission_denied:
   action: "Available tools: {available_tools}"
 
 agent_not_loaded:
-  message: "BLOCKED: No agent loaded - please call mcp__agenthub_http__call_agent first"
-  hint: "Initialize your agent role before attempting any work"
-  action: "Call mcp__agenthub_http__call_agent with appropriate agent name"
+  message: "BLOCKED: No seat established - run `rig whoami --json` first"
+  hint: "Establish your seat before attempting any work"
+  action: "Run `rig whoami --json`, then read your seat with mcp__agenthub_http__call_seat"
 
 # MCP task management errors
 task_not_found:

@@ -145,9 +145,9 @@ class RoleEnforcer:
         # Fallback default
         return {
             "name": "uninitialized",
-            "allowed_tools": ["mcp__agenthub_http__call_agent", "Read", "Grep", "Glob"],
+            "allowed_tools": ["Read", "Grep", "Glob"],
             "blocked_tools": "*",
-            "warning": "[NO ROLE] Must call mcp__agenthub_http__call_agent first!",
+            "warning": "[NO ROLE] Run 'rig whoami --json' to establish your seat, then read your seat files.",
         }
 
     def _check_path_restrictions(

@@ -29,7 +29,7 @@ agent_switching:
 
 no_agent_loaded:
   message: "⚠️ No Agent Loaded"
-  hint: "Call mcp__agenthub_http__call_agent to initialize"
+  hint: "Run rig whoami --json to establish your seat"
 
 # Task status indicators
 active_tasks:

@@ -185,38 +185,6 @@ class HintGenerator(Component):
         return None
 
 
-class AgentStateTracker(Component):
-    """Tracks agent state changes."""
-
-    def __init__(self, logger: Logger):
-        self.logger = logger
-
-    def process(self, tool_name: str, tool_input: dict, tool_result: Any, session_id: str = "") -> Any | None:
-        """Update agent state if call_agent was used."""
-        if tool_name != "mcp__agenthub_http__call_agent":
-            return None
-
-        agent_name = tool_input.get("name_agent", "")
-        if not agent_name:
-            return None
-
-        try:
-            # Import agent state manager dynamically
-            from utils.agent_state_manager import update_agent_state_from_call_agent
-
-            # Use real session_id from hook input (falls back to "default_session" only if empty)
-            effective_session_id = session_id if session_id else "default_session"
-            update_agent_state_from_call_agent(effective_session_id, tool_input)
-
-            self.logger.log("info", f"Agent state updated: {agent_name} (session: {effective_session_id})")
-            return {"agent_state_updated": True, "agent": agent_name, "session_id": effective_session_id}
-
-        except Exception as e:
-            self.logger.log("error", f"Agent state update failed: {e}")
-
-        return None
-
-
 class ContextSynchronizer(Component):
     """Synchronizes context with MCP."""
 
@@ -263,11 +231,6 @@ class ComponentFactory:
         return HintGenerator(logger)
 
     @staticmethod
-    def create_agent_tracker(logger: Logger) -> AgentStateTracker:
-        """Create agent state tracker."""
-        return AgentStateTracker(logger)
-
-    @staticmethod
     def create_context_synchronizer(logger: Logger) -> ContextSynchronizer:
         """Create context synchronizer."""
         return ContextSynchronizer(logger)
@@ -297,7 +260,6 @@ class PostToolUseHook:
         self.components: list[Component] = [
             self.factory.create_documentation_updater(self.ai_docs_path),
             self.factory.create_hint_generator(self.logger),
-            self.factory.create_agent_tracker(self.logger),
             self.factory.create_context_synchronizer(self.logger),
         ]
 

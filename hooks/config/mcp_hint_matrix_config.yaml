@@ -244,17 +244,6 @@ mcp__agenthub_http__manage_agent:
       agent_types: "🤖 33 AGENTS: coding, debugging, testing, architecture, etc."
       auto_id: "🔑 INFO: agent_id auto-generated if not provided"
 
-# Agent Invocation Tool Hints
-mcp__agenthub_http__call_agent:
-  default:  # No action field for this tool
-    required_fields:
-      - name_agent
-    field_hints:
-      first_call: "🚨 CRITICAL: Call this FIRST in any session"
-      master_orchestrator: "🎯 DEFAULT: Use 'master-orchestrator-agent' for principal sessions"
-      one_time: "⚠️ IMPORTANT: Call only ONCE per session"
-      response_usage: "📖 CRITICAL: Read 'system_prompt' from response - it's your instructions"
-
 # Headers for different contexts
 hint_headers:
   manage_task:
@@ -270,8 +259,6 @@ hint_headers:
   manage_context:
     update: "🔄 CONTEXT UPDATE HINTS"
     add_insight: "💡 INSIGHT ADDITION HINTS"
-  call_agent:
-    default: "🚨 AGENT LOADING CRITICAL REMINDERS"
 
 # Complex task detection patterns
 complex_task_indicators:

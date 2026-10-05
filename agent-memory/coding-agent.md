@@ -1,8 +1,8 @@
 # Coding Agent Memory
 
 ## Initialization Checklist
-1. Call `mcp__agenthub_http__call_agent(name_agent="coding-agent")` — FIRST ACTION
-2. Read returned `system_prompt` for capabilities and rules
+1. Run `rig whoami --json` — FIRST ACTION
+2. Read your seat's role files for capabilities and rules
 3. Read target files before making changes
 4. Follow DDD patterns when modifying backend code
 

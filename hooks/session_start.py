@@ -1580,26 +1580,6 @@ class AgentMessageProvider(ContextProvider):
 
             conversation = input_data.get("conversation_history", [])
 
-            for message in reversed(conversation[-10:]):
-                content = message.get("content", "")
-                if "mcp__agenthub_http__call_agent" in content:
-                    import re
-
-                    # Check for agent name in various patterns
-                    match = re.search(r'"name_agent":\s*"([^"]+)"', content)
-                    if match:
-                        return match.group(1)
-
-                    match = re.search(r'call_agent\(["\']([^"\']+)["\']', content)
-                    if match:
-                        return match.group(1)
-
-                    match = re.search(
-                        r"name_agent.*?([a-z-]+agent)", content, re.IGNORECASE
-                    )
-                    if match:
-                        return match.group(1).lower()
-
             # Check for task_id pattern suggesting sub-agent
             for message in reversed(conversation[-5:]):
                 content = message.get("content", "")
@@ -1663,7 +1643,7 @@ class SessionStartProcessor(SessionProcessor):
             if session_type == "principal":
                 mcp_init = (
                     "\n⚡ MANDATORY FIRST ACTIONS (before responding to user):\n"
-                    "1. Use MCP tool mcp__agenthub_http__call_agent with name_agent=\"master-orchestrator-agent\"\n"
+                    "1. Run `rig whoami --json` to know which seat you are; reach the team with mcp__agenthub_http__manage_seat (action=list, room=<room>)\n"
                     "2. For ANY task involving file changes: create an MCP task FIRST with mcp__agenthub_http__manage_task\n"
                     "3. After completing work: mark the task done with mcp__agenthub_http__manage_task(action=\"complete\")\n"
                     "See CLAUDE.md for tiered workflow (simple vs team-based)."
@@ -1703,24 +1683,6 @@ class SessionStartProcessor(SessionProcessor):
             direct_type = input_data.get("agent_type")
             if direct_type:
                 return direct_type
-
-            # Check conversation history for agent loading patterns
-            conversation = input_data.get("conversation_history", [])
-
-            for message in reversed(conversation[-10:]):  # Last 10 messages
-                content = message.get("content", "")
-                if "mcp__agenthub_http__call_agent" in content:
-                    # Extract agent name
-                    import re
-
-                    match = re.search(r'"name_agent":\s*"([^"]+)"', content)
-                    if match:
-                        return match.group(1)
-
-                    # Alternative pattern
-                    match = re.search(r'call_agent\(["\']([^"\']+)["\']', content)
-                    if match:
-                        return match.group(1)
 
             return None
         except:
