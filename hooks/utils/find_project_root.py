@@ -12,10 +12,14 @@ from pathlib import Path
 class ProjectRootFinder:
     """Utility class to find project root and construct paths."""
 
+    # The project rules file carries two ecosystem names; either one marks the root.
+    RULES_FILES = ("AGENTS.md", "CLAUDE.md")
+
     # Marker files that indicate project root
     MARKER_FILES = [
         ".git",
         "package.json",
+        "AGENTS.md",
         "CLAUDE.md",
         ".env",
         "docker-compose.yml",
@@ -37,7 +41,7 @@ class ProjectRootFinder:
     def find_project_root(self) -> Path | None:
         """
         Find the project root by looking for marker files.
-        Prefers the highest level directory with CLAUDE.md file.
+        Prefers the highest level directory with a project rules file (AGENTS.md or CLAUDE.md).
 
         Returns:
             Path to project root or None if not found
@@ -50,8 +54,8 @@ class ProjectRootFinder:
 
         # Search upward and collect all potential roots
         while current_dir != current_dir.parent:
-            # Check for CLAUDE.md first (most specific marker)
-            if (current_dir / "CLAUDE.md").exists():
+            # Check for the project rules file first (most specific marker)
+            if any((current_dir / name).exists() for name in self.RULES_FILES):
                 found_roots.append(current_dir)
 
             # Check for other marker files
@@ -65,9 +69,9 @@ class ProjectRootFinder:
             # Go up one directory
             current_dir = current_dir.parent
 
-        # Prefer the root with CLAUDE.md file
+        # Prefer the root that also carries the development environment marker
         for root in found_roots:
-            if (root / "CLAUDE.md").exists() and (root / ".env.dev").exists():
+            if any((root / name).exists() for name in self.RULES_FILES) and (root / ".env.dev").exists():
                 self._project_root = root
                 return self._project_root
 
@@ -117,6 +121,7 @@ class ProjectRootFinder:
             "frontend": root / "agenthub-frontend",
             "tests": root / "agenthub_main" / "src" / "tests",
             "env_file": root / ".env",
+            "agents_md": root / "AGENTS.md",
             "claude_md": root / "CLAUDE.md",
             "claude_local": root / "CLAUDE.local.md",
         }

@@ -19,7 +19,7 @@ description: Auto-generate CLAUDE.local.md from template + project analysis
 | `ls -la docker*` | Docker files |
 | `find . -maxdepth 2 -type d \( -name "frontend" -o -name "backend" ... \)` | Monorepo/nested |
 
-**Read**: README.md, package.json, requirements.txt, .gitignore, docker-compose.yml, CLAUDE.md
+**Read**: README.md, package.json, requirements.txt, .gitignore, docker-compose.yml, AGENTS.md (or CLAUDE.md)
 
 ## Phase 2: Detect Patterns
 

@@ -183,6 +183,7 @@ class RootFileValidator(Validator):
             "README.md",
             "CHANGELOG.md",
             "TEST-CHANGELOG.md",
+            "AGENTS.md",
             "CLAUDE.md",
             "CLAUDE.local.md",
             ".gitignore",

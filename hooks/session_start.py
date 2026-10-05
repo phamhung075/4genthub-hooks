@@ -1646,7 +1646,7 @@ class SessionStartProcessor(SessionProcessor):
                     "1. Run `rig whoami --json` to know which seat you are; reach the team with mcp__agenthub_http__manage_seat (action=list, room=<room>)\n"
                     "2. For ANY task involving file changes: create an MCP task FIRST with mcp__agenthub_http__manage_task\n"
                     "3. After completing work: mark the task done with mcp__agenthub_http__manage_task(action=\"complete\")\n"
-                    "See CLAUDE.md for tiered workflow (simple vs team-based)."
+                    "See AGENTS.md for tiered workflow (simple vs team-based)."
                 )
                 output_parts.append(mcp_init)
 

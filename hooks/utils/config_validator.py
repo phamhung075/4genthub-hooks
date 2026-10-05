@@ -11,6 +11,11 @@ from pathlib import Path
 class ConfigurationValidator:
     """Validates that all required configuration files exist."""
 
+    # The project rules file carries two ecosystem names. AGENTS.md is the cross-tool
+    # convention (Claude Code, Codex and Gemini all read it); CLAUDE.md is its older name.
+    # A project needs one of them, so either one satisfies the check.
+    RULES_FILES = ("AGENTS.md", "CLAUDE.md")
+
     def __init__(self):
         """Initialize validator with project root and required files."""
         # Find project root and hook directory
@@ -60,16 +65,6 @@ class ConfigurationValidator:
                 ),
                 "purpose": "Connects Claude Code to 4genthub service",
             },
-            self.project_root / "CLAUDE.md": {
-                "description": "Project AI rules configuration",
-                "fix": (
-                    "1. Copy from template:\n"
-                    f"   cp {self.claude_dir}/copy-to-root-project-rename-to:CLAUDE.md \\\n"
-                    f"      {self.project_root}/CLAUDE.md\n"
-                    "2. Edit to define your project's AI behavior"
-                ),
-                "purpose": "Defines AI agent behavior for your project",
-            },
         }
 
     def _find_project_root(self) -> Path:
@@ -115,6 +110,23 @@ class ConfigurationValidator:
                         "purpose": info["purpose"],
                     }
                 )
+
+        if not any((self.project_root / name).exists() for name in self.RULES_FILES):
+            errors.append(
+                {
+                    "file": f"{self.project_root}/AGENTS.md (or CLAUDE.md)",
+                    "description": "Project AI rules configuration",
+                    "fix": (
+                        "1. Copy from template:\n"
+                        f"   cp {self.claude_dir}/templates/codex-rules/"
+                        "RULE_OPENAICODEX__copy-to-root-project-rename-to:AGENTS.md \\\n"
+                        f"      {self.project_root}/AGENTS.md\n"
+                        "   (or rename an existing CLAUDE.md rules file to AGENTS.md)\n"
+                        "2. Edit to define your project's AI behavior"
+                    ),
+                    "purpose": "Defines AI agent behavior for your project",
+                }
+            )
 
         return len(errors) == 0, errors
 

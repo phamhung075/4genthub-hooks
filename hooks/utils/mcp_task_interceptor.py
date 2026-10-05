@@ -75,7 +75,7 @@ class MCPTaskInterceptor:
         return (
             "\n--- MCP Task Reminder ---\n"
             "You are about to modify a file but no MCP task has been created yet.\n"
-            "Per CLAUDE.md workflow, create an MCP task FIRST:\n"
+            "Per the project rules file, create an MCP task FIRST:\n"
             '  mcp__agenthub_http__manage_task(action="create", title="...", '
             'assignees="coding-agent", git_branch_id="...")\n'
             "This is a one-time reminder for this session.\n"

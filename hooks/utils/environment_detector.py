@@ -271,6 +271,7 @@ class EnvironmentDetector:
 
         # Check for various project files
         files_to_check = {
+            "has_agents_md": "AGENTS.md",
             "has_claude_md": "CLAUDE.md",
             "has_claude_local_md": "CLAUDE.local.md",
             "has_mcp_json": ".mcp.json",
@@ -385,7 +386,8 @@ class EnvironmentDetector:
         """Find the project root directory."""
         # Marker files that indicate project root (ordered by priority)
         markers = [
-            "CLAUDE.md",  # Most specific to Claude projects
+            "AGENTS.md",  # Project rules file, cross-tool convention
+            "CLAUDE.md",  # Project rules file, older name
             ".env.dev",  # Development environment marker
             ".env.claude",  # Claude-specific environment
             "CLAUDE.local.md",  # Local Claude configuration

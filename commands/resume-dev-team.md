@@ -40,7 +40,7 @@ Read the lead's screen: `rig capture 4genthub-dev-lead@4genthub-dev --lines 40`.
 - Update `CHANGELOG.md` and `TEST-CHANGELOG.md`. No compatibility code. The GitHub pipeline test job is NOT to be fixed.
 - Record new owner demands in `agenthub_go/NEXT_GEN.md`.
 - The owner approves every push. A push to main deploys production; confirm via `/health` after bumping `healthVersion` in `agenthub_go/fastmcp/server/httpapp/http.go` and `http_health_test.go` (currently 0.0.12 at HEAD 8a7598ec).
-- Seats commit locally only, stage by explicit path, never `git add -A`, keep `CLAUDE.md`, `.claude`, `agenthub_go/seatcheck` out of commits.
+- Seats commit locally only, stage by explicit path, never `git add -A`, keep `.claude`, `agenthub_go/seatcheck` out of commits.
 - Production access (ssh `4genthub`, rebuilds, editing `../openrig` through the team) is already granted; the daemon restart for OpenRig is NOT, ask first.
 
 ## 5. Open work (verify, it may be done)
