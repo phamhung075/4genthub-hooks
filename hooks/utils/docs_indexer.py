@@ -118,6 +118,9 @@ def update_index(ai_docs_path):
 
     with open(index_path, "w") as f:
         json.dump(index, f, indent=2, sort_keys=True)
+        # json.dump writes no terminal newline, and every repository this runs in
+        # gates its commits on end-of-file-fixer, which requires one.
+        f.write("\n")
 
     return index
 
