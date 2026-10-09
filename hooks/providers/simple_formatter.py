@@ -186,11 +186,10 @@ class SimpleFormatter:
                 env_lines.extend(
                     [
                         "",
-                        "🐍 Backend (agenthub_main/)",
-                        "   • Framework: FastMCP + FastAPI",
+                        "🐹 Backend (agenthub_go/)",
+                        "   • Framework: Go + MCP",
                         "   • Architecture: DDD (Domain-Driven Design)",
-                        f"   • Language: Python {env.get('python_version', '?')}",
-                        "   • ORM: SQLAlchemy",
+                        "   • Storage: PostgreSQL (pgx)",
                         f"   • Port: {env.get('backend_port', 8000)}",
                     ]
                 )

@@ -44,8 +44,8 @@
 | Path | Purpose |
 |------|---------|
 | `agenthub-frontend/` | React/TypeScript frontend (port 3800) |
-| `agenthub_main/src/` | Python/FastMCP/DDD backend (port 8000) |
-| `agenthub_main/src/tests/` | All test files |
+| `agenthub_go/` | Go/DDD backend (port 8000) |
+| `agenthub_go/**/*_test.go`, `agenthub_client/tests/` | All test files |
 | `.claude/agents/` | Agent definitions (32 agents) |
 | `.claude/skills/` | Reusable skill definitions |
 | `.claude/hooks/` | Pre/post tool use hooks |

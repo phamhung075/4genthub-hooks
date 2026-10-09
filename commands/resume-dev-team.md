@@ -46,7 +46,7 @@ Read the lead's screen: `rig capture 4genthub-dev-lead@4genthub-dev --lines 40`.
 ## 5. Open work (verify, it may be done)
 
 1. OpenRig: `rig send` for agy seats (`native-process-lineage.ts`, `session-transport.ts`). Lead reviews; when the reviewer clears it, review the diff and run `npx vitest run` in `packages/daemon` and `npx tsc --noEmit -p packages/daemon` yourself, then ask the owner before build and daemon restart.
-2. NEXT_GEN backlog: retire `agenthub_main/agent-library`, AgentSpec route and `-seed-agents`; bridge room naming; 23 pre-existing TS errors; wire seatcheck to seats (G3) and hash-drift badges; record the OpenRig rig-send defect in NEXT_GEN.md.
+2. NEXT_GEN backlog: bridge room naming; 23 pre-existing TS errors; wire seatcheck to seats (G3) and hash-drift badges; record the OpenRig rig-send defect in NEXT_GEN.md.
 3. OpenRig/seat tooling defects go to `handover/openrig-defects.md`; route them to the OpenRig fix work.
 
 ## 6. Output

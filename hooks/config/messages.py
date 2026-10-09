@@ -74,11 +74,11 @@ ERROR_MESSAGES = {
     "test_wrong_location": {
         "message": "BLOCKED: Test files must be in designated test directories",
         "hint": "Place test files in approved test directories",
-        "valid_paths": ["agenthub_main/src/tests", "agenthub-frontend/src/tests"],
+        "valid_paths": ["agenthub_client/tests", "agenthub-frontend/src/tests"],
     },
     "venv_wrong_location": {
-        "message": "BLOCKED: Virtual environment must be in agenthub_main/.venv",
-        "hint": "Create .venv only at: agenthub_main/.venv",
+        "message": "BLOCKED: Virtual environment must be in agenthub_client/.venv",
+        "hint": "Create .venv only at: agenthub_client/.venv",
     },
     "logs_not_in_root": {
         "message": "BLOCKED: 'logs' folder can only exist in project root",

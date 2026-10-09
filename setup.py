@@ -545,7 +545,7 @@ class ClaudeSetup:
         replacements = {
             "{{PYTHON_PATH}}": self.python_path,
             "{{PROJECT_ROOT}}": str(self.project_root),
-            "{{PYTHON_PATH_ENV}}": "agenthub_main/src",  # This can be customized
+            "{{PYTHON_PATH_ENV}}": "agenthub_client/src",  # This can be customized
         }
 
         content = template_content

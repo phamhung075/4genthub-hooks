@@ -1334,11 +1334,11 @@ class DevelopmentContextProvider(ContextProvider):
     def _detect_backend(self, project_root: Path) -> dict[str, Any] | None:
         """Detect backend project (Python/FastMCP/DDD)."""
         try:
-            backend_dir = project_root / "agenthub_main"
+            backend_dir = project_root / "agenthub_go"
             if not backend_dir.exists():
                 return None
 
-            info = {"detected": True, "path": "agenthub_main/"}
+            info = {"detected": True, "path": "agenthub_go/"}
 
             # Parse pyproject.toml for dependencies
             pyproject = backend_dir / "pyproject.toml"
@@ -1461,9 +1461,7 @@ class DevelopmentContextProvider(ContextProvider):
                     databases.append("PostgreSQL (Docker)")
 
             # Check for SQLite database
-            if (project_root / "data").exists() or (
-                project_root / "agenthub_main" / "data"
-            ).exists():
+            if (project_root / "data").exists():
                 databases.append("SQLite (dev)")
 
             if databases:

@@ -265,7 +265,7 @@ class TestPathValidator(Validator):
 
         # Default valid test paths for this project
         default_test_paths = [
-            "agenthub_main/src/tests",
+            "agenthub_client/tests",
             "agenthub-frontend/src/tests",
             "agenthub-frontend/src/__tests__",
             ".claude/hooks/tests",
